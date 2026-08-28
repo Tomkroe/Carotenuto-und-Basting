@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, Trash2, Send, Square, CheckSquare } from "lucide-react";
+import { CircleDot, Clock, CheckCircle2, Trash2, Send, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -16,8 +16,23 @@ import {
   useDeleteTodo,
   useKommentare,
   useCreateKommentar,
+  useLabels,
+  useCreateLabel,
+  useAttachLabel,
+  useDetachLabel,
 } from "@/lib/hooks";
 import { AppHeader } from "@/components/AppHeader";
+
+const LABEL_COLORS = [
+  "#3b82f6",
+  "#f59e0b",
+  "#10b981",
+  "#8b5cf6",
+  "#f43f5e",
+  "#f97316",
+  "#06b6d4",
+  "#64748b",
+];
 
 const STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
   [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
@@ -55,9 +70,17 @@ export default function VorgangDetailPage() {
   const { data: kommentare } = useKommentare(vorgangId);
   const createKommentar = useCreateKommentar(vorgangId);
 
+  const { data: alleLabels } = useLabels();
+  const createLabel = useCreateLabel();
+  const attachLabel = useAttachLabel(vorgangId);
+  const detachLabel = useDetachLabel(vorgangId);
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
   const [newKommentar, setNewKommentar] = useState("");
+  const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const [newLabelName, setNewLabelName] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -84,6 +107,15 @@ export default function VorgangDetailPage() {
     if (!newKommentar.trim()) return;
     createKommentar.mutate({ text: newKommentar });
     setNewKommentar("");
+  }
+
+  async function handleCreateAndAttachLabel(e: FormEvent) {
+    e.preventDefault();
+    if (!newLabelName.trim()) return;
+    const label = await createLabel.mutateAsync({ name: newLabelName, farbe: newLabelColor });
+    await attachLabel.mutateAsync(label.id);
+    setNewLabelName("");
+    setNewLabelColor(LABEL_COLORS[0]);
   }
 
   if (isLoading || !vorgang) {
@@ -143,6 +175,85 @@ export default function VorgangDetailPage() {
               >
                 Abbrechen
               </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {vorgang.labels.map((l) => (
+              <span
+                key={l.id}
+                className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                style={{ backgroundColor: l.farbe }}
+              >
+                {l.name}
+                <button
+                  onClick={() => detachLabel.mutate(l.id)}
+                  aria-label={`Label ${l.name} entfernen`}
+                  className="opacity-80 hover:opacity-100"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={() => setShowLabelPicker((v) => !v)}
+              className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-text-muted transition hover:border-primary hover:text-primary"
+            >
+              <Tag size={12} />
+              Label
+            </button>
+          </div>
+
+          {showLabelPicker && (
+            <div className="mt-2 space-y-3 rounded-lg border border-border bg-surface p-3">
+              {alleLabels && alleLabels.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {alleLabels
+                    .filter((l) => !vorgang.labels.some((vl) => vl.id === l.id))
+                    .map((l) => (
+                      <button
+                        key={l.id}
+                        onClick={() => attachLabel.mutate(l.id)}
+                        className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white transition hover:opacity-80"
+                        style={{ backgroundColor: l.farbe }}
+                      >
+                        <Plus size={11} />
+                        {l.name}
+                      </button>
+                    ))}
+                </div>
+              )}
+              <form onSubmit={handleCreateAndAttachLabel} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newLabelName}
+                  onChange={(e) => setNewLabelName(e.target.value)}
+                  placeholder="Neues Label…"
+                  className="flex-1 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm outline-none focus:border-primary"
+                />
+                <div className="flex items-center gap-1">
+                  {LABEL_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNewLabelColor(c)}
+                      aria-label={`Farbe ${c}`}
+                      className={`h-5 w-5 rounded-full transition ${
+                        newLabelColor === c ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+                >
+                  Anlegen
+                </button>
+              </form>
             </div>
           )}
         </div>

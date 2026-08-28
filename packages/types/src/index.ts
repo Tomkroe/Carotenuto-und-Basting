@@ -137,6 +137,17 @@ export interface KontaktRef {
   firma: string | null;
 }
 
+export interface Label {
+  id: string;
+  name: string;
+  farbe: string;
+}
+
+export interface CreateLabelRequest {
+  name: string;
+  farbe: string;
+}
+
 export interface Vorgang {
   id: string;
   nummer: number;
@@ -147,6 +158,7 @@ export interface Vorgang {
   createdAt: string;
   objekt: ObjektRef | null;
   kontakt: KontaktRef | null;
+  labels: Label[];
 }
 
 export interface CreateVorgangRequest {

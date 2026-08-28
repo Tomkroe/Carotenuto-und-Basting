@@ -7,6 +7,7 @@ import { UpdateVorgangDto } from "./dto/update-vorgang.dto";
 const INCLUDE = {
   objekt: { select: { id: true, name: true } },
   kontakt: { select: { id: true, vorname: true, nachname: true, firma: true } },
+  labels: { include: { label: { select: { id: true, name: true, farbe: true } } } },
 } as const;
 
 @Injectable()
@@ -89,6 +90,7 @@ function toVorgang(vorgang: {
   createdAt: Date;
   objekt: { id: string; name: string } | null;
   kontakt: { id: string; vorname: string | null; nachname: string | null; firma: string | null } | null;
+  labels: { label: { id: string; name: string; farbe: string } }[];
 }): Vorgang {
   return {
     id: vorgang.id,
@@ -100,5 +102,6 @@ function toVorgang(vorgang: {
     createdAt: vorgang.createdAt.toISOString(),
     objekt: vorgang.objekt,
     kontakt: vorgang.kontakt,
+    labels: vorgang.labels.map((l) => l.label),
   };
 }

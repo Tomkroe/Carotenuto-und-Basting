@@ -208,6 +208,19 @@ export default function VorgaengePage() {
                         {v.kontakt && <span>· {kontaktName(v.kontakt)}</span>}
                         {v.faelligkeit && <span>· fällig {new Date(v.faelligkeit).toLocaleDateString("de-DE")}</span>}
                       </div>
+                      {v.labels.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {v.labels.map((l) => (
+                            <span
+                              key={l.id}
+                              className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                              style={{ backgroundColor: l.farbe }}
+                            >
+                              {l.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
                       <Icon size={13} />

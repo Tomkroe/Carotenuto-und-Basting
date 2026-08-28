@@ -6,6 +6,7 @@ import type {
   CreateEinheitRequest,
   CreateKommentarRequest,
   CreateKontaktRequest,
+  CreateLabelRequest,
   CreateMietvertragRequest,
   CreateNebenkostenabrechnungRequest,
   CreateNebenkostenPositionRequest,
@@ -20,6 +21,7 @@ import type {
   EinheitListItem,
   Kommentar,
   Kontakt,
+  Label,
   MeResponse,
   Mietvertrag,
   Nebenkostenabrechnung,
@@ -527,6 +529,58 @@ export function useDeleteNebenkostenPosition(abrechnungId: string) {
     mutationFn: (id: string) => apiFetch<void>(`/positionen/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen", abrechnungId, "positionen"] });
+    },
+  });
+}
+
+export function useLabels() {
+  return useQuery<Label[]>({
+    queryKey: ["labels"],
+    queryFn: () => apiFetch<Label[]>("/labels"),
+  });
+}
+
+export function useCreateLabel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateLabelRequest) =>
+      apiFetch<Label>("/labels", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels"] });
+    },
+  });
+}
+
+export function useDeleteLabel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/labels/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
+    },
+  });
+}
+
+export function useAttachLabel(vorgangId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (labelId: string) => apiFetch<void>(`/vorgaenge/${vorgangId}/labels/${labelId}`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId] });
+    },
+  });
+}
+
+export function useDetachLabel(vorgangId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (labelId: string) =>
+      apiFetch<void>(`/vorgaenge/${vorgangId}/labels/${labelId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId] });
     },
   });
 }
