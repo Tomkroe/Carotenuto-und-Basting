@@ -76,6 +76,21 @@ export class DokumenteService {
     });
   }
 
+  async findAllForKontakt(mandantId: string, kontaktId: string): Promise<Dokument[]> {
+    await this.assertKontaktOwnership(mandantId, kontaktId);
+    return this.findAll({ kontaktId });
+  }
+
+  async uploadForKontakt(
+    mandantId: string,
+    kontaktId: string,
+    hochgeladenVonId: string,
+    file: Express.Multer.File,
+  ): Promise<Dokument> {
+    await this.assertKontaktOwnership(mandantId, kontaktId);
+    return this.upload(mandantId, hochgeladenVonId, file, `kontakte/${kontaktId}`, { kontaktId });
+  }
+
   async getDownloadUrl(mandantId: string, id: string): Promise<string> {
     const dokument = await this.prisma.dokument.findFirst({ where: { id, mandantId } });
     if (!dokument) throw new NotFoundException("Dokument nicht gefunden.");
@@ -104,7 +119,10 @@ export class DokumenteService {
     file: Express.Multer.File,
     keyPrefix: string,
     fk: Partial<
-      Pick<Prisma.DokumentUncheckedCreateInput, "objektId" | "vorgangId" | "mietvertragId" | "nebenkostenabrechnungId">
+      Pick<
+        Prisma.DokumentUncheckedCreateInput,
+        "objektId" | "vorgangId" | "mietvertragId" | "nebenkostenabrechnungId" | "kontaktId"
+      >
     >,
   ): Promise<Dokument> {
     const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -148,6 +166,11 @@ export class DokumenteService {
       where: { id, objekt: { mandantId } },
     });
     if (!abrechnung) throw new NotFoundException("Nebenkostenabrechnung nicht gefunden.");
+  }
+
+  private async assertKontaktOwnership(mandantId: string, kontaktId: string): Promise<void> {
+    const kontakt = await this.prisma.kontakt.findFirst({ where: { id: kontaktId, mandantId } });
+    if (!kontakt) throw new NotFoundException("Kontakt nicht gefunden.");
   }
 }
 

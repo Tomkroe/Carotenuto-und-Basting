@@ -135,6 +135,28 @@ export class NebenkostenabrechnungDokumenteController {
   }
 }
 
+@Controller("kontakte/:kontaktId/dokumente")
+@UseGuards(JwtAuthGuard)
+export class KontaktDokumenteController {
+  constructor(private readonly dokumenteService: DokumenteService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload, @Param("kontaktId") kontaktId: string): Promise<Dokument[]> {
+    return this.dokumenteService.findAllForKontakt(user.mandantId, kontaktId);
+  }
+
+  @Post()
+  @UseInterceptors(UPLOAD_INTERCEPTOR)
+  upload(
+    @CurrentUser() user: JwtPayload,
+    @Param("kontaktId") kontaktId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Dokument> {
+    if (!file) throw new BadRequestException("Keine Datei übermittelt.");
+    return this.dokumenteService.uploadForKontakt(user.mandantId, kontaktId, user.sub, file);
+  }
+}
+
 @Controller("dokumente")
 @UseGuards(JwtAuthGuard)
 export class DokumenteController {

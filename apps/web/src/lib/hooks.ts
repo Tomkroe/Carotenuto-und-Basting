@@ -121,6 +121,14 @@ export function useKontakte() {
   });
 }
 
+export function useKontakt(id: string) {
+  return useQuery<Kontakt>({
+    queryKey: ["kontakte", id],
+    queryFn: () => apiFetch<Kontakt>(`/kontakte/${id}`),
+    enabled: !!id,
+  });
+}
+
 export function useCreateKontakt() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -310,7 +318,7 @@ export function useDeleteMietvertrag() {
 }
 
 export type DokumentParent = {
-  path: "mietvertraege" | "objekte" | "vorgaenge" | "nebenkostenabrechnungen";
+  path: "mietvertraege" | "objekte" | "vorgaenge" | "nebenkostenabrechnungen" | "kontakte";
   id: string;
 };
 

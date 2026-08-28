@@ -5,6 +5,7 @@ import {
   ObjektDokumenteController,
   VorgangDokumenteController,
   NebenkostenabrechnungDokumenteController,
+  KontaktDokumenteController,
   DokumenteController,
 } from "./dokumente.controller";
 import { DokumenteService } from "./dokumente.service";
@@ -16,6 +17,7 @@ import { DokumenteService } from "./dokumente.service";
     ObjektDokumenteController,
     VorgangDokumenteController,
     NebenkostenabrechnungDokumenteController,
+    KontaktDokumenteController,
     DokumenteController,
   ],
   providers: [DokumenteService],

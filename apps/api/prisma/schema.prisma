@@ -128,6 +128,7 @@ model Kontakt {
   mietvertraege       Mietvertrag[]
   eigentuemerschaften Eigentuemerschaft[]
   vorgaenge           Vorgang[]
+  dokumente           Dokument[]
 
   @@index([mandantId])
 }
@@ -347,6 +348,9 @@ model Dokument {
 
   kommentarId String?
   kommentar   Kommentar? @relation(fields: [kommentarId], references: [id])
+
+  kontaktId String?
+  kontakt   Kontakt? @relation(fields: [kontaktId], references: [id])
 
   nebenkostenabrechnungId String?
   nebenkostenabrechnung   Nebenkostenabrechnung? @relation(fields: [nebenkostenabrechnungId], references: [id])

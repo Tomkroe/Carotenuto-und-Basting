@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -9,13 +10,12 @@ import {
   Phone,
   Plus,
   Sparkles,
-  Trash2,
   UserRound,
   Wrench,
   X,
 } from "lucide-react";
 import { KontaktTyp } from "@maklerprogram/types";
-import { useCurrentUser, useKontakte, useCreateKontakt, useDeleteKontakt } from "@/lib/hooks";
+import { useCurrentUser, useKontakte, useCreateKontakt } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -55,7 +55,6 @@ export default function KontaktePage() {
   const { isError: authError } = useCurrentUser();
   const { data: kontakte, isLoading } = useKontakte();
   const createKontakt = useCreateKontakt();
-  const deleteKontakt = useDeleteKontakt();
 
   const [showForm, setShowForm] = useState(false);
   const [typ, setTyp] = useState<KontaktTyp>(KontaktTyp.MIETER);
@@ -65,7 +64,6 @@ export default function KontaktePage() {
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -228,11 +226,11 @@ export default function KontaktePage() {
                 [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
 
               return (
-                <li
-                  key={k.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3"
-                >
-                  <div className="flex items-center gap-3">
+                <li key={k.id}>
+                  <Link
+                    href={`/kontakte/${k.id}`}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 transition hover:border-primary"
+                  >
                     <span className={`flex h-10 w-10 items-center justify-center rounded-full ${meta.className}`}>
                       <Icon size={18} />
                     </span>
@@ -252,35 +250,7 @@ export default function KontaktePage() {
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  {pendingDelete === k.id ? (
-                    <div className="flex items-center gap-2 text-sm">
-                      <button
-                        onClick={() => {
-                          deleteKontakt.mutate(k.id);
-                          setPendingDelete(null);
-                        }}
-                        className="rounded-full bg-red-500 px-3 py-1 text-white transition hover:opacity-90"
-                      >
-                        Ja, löschen
-                      </button>
-                      <button
-                        onClick={() => setPendingDelete(null)}
-                        className="rounded-full border border-border px-3 py-1 text-text-muted"
-                      >
-                        Abbrechen
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setPendingDelete(k.id)}
-                      className="text-text-muted transition hover:text-red-500"
-                      aria-label="Kontakt löschen"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+                  </Link>
                 </li>
               );
             })}
