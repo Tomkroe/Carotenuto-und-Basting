@@ -59,6 +59,23 @@ export class DokumenteService {
     return this.upload(mandantId, hochgeladenVonId, file, `mietvertraege/${mietvertragId}`, { mietvertragId });
   }
 
+  async findAllForNebenkostenabrechnung(mandantId: string, nebenkostenabrechnungId: string): Promise<Dokument[]> {
+    await this.assertNebenkostenabrechnungOwnership(mandantId, nebenkostenabrechnungId);
+    return this.findAll({ nebenkostenabrechnungId });
+  }
+
+  async uploadForNebenkostenabrechnung(
+    mandantId: string,
+    nebenkostenabrechnungId: string,
+    hochgeladenVonId: string,
+    file: Express.Multer.File,
+  ): Promise<Dokument> {
+    await this.assertNebenkostenabrechnungOwnership(mandantId, nebenkostenabrechnungId);
+    return this.upload(mandantId, hochgeladenVonId, file, `nebenkostenabrechnungen/${nebenkostenabrechnungId}`, {
+      nebenkostenabrechnungId,
+    });
+  }
+
   async getDownloadUrl(mandantId: string, id: string): Promise<string> {
     const dokument = await this.prisma.dokument.findFirst({ where: { id, mandantId } });
     if (!dokument) throw new NotFoundException("Dokument nicht gefunden.");
@@ -86,7 +103,9 @@ export class DokumenteService {
     hochgeladenVonId: string,
     file: Express.Multer.File,
     keyPrefix: string,
-    fk: Partial<Pick<Prisma.DokumentUncheckedCreateInput, "objektId" | "vorgangId" | "mietvertragId">>,
+    fk: Partial<
+      Pick<Prisma.DokumentUncheckedCreateInput, "objektId" | "vorgangId" | "mietvertragId" | "nebenkostenabrechnungId">
+    >,
   ): Promise<Dokument> {
     const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
     const key = `${mandantId}/${keyPrefix}/${randomUUID()}-${safeName}`;
@@ -122,6 +141,13 @@ export class DokumenteService {
       where: { id: mietvertragId, einheit: { objekt: { mandantId } } },
     });
     if (!mietvertrag) throw new NotFoundException("Mietvertrag nicht gefunden.");
+  }
+
+  private async assertNebenkostenabrechnungOwnership(mandantId: string, id: string): Promise<void> {
+    const abrechnung = await this.prisma.nebenkostenabrechnung.findFirst({
+      where: { id, objekt: { mandantId } },
+    });
+    if (!abrechnung) throw new NotFoundException("Nebenkostenabrechnung nicht gefunden.");
   }
 }
 

@@ -105,6 +105,36 @@ export class MietvertragDokumenteController {
   }
 }
 
+@Controller("nebenkostenabrechnungen/:nebenkostenabrechnungId/dokumente")
+@UseGuards(JwtAuthGuard)
+export class NebenkostenabrechnungDokumenteController {
+  constructor(private readonly dokumenteService: DokumenteService) {}
+
+  @Get()
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Param("nebenkostenabrechnungId") nebenkostenabrechnungId: string,
+  ): Promise<Dokument[]> {
+    return this.dokumenteService.findAllForNebenkostenabrechnung(user.mandantId, nebenkostenabrechnungId);
+  }
+
+  @Post()
+  @UseInterceptors(UPLOAD_INTERCEPTOR)
+  upload(
+    @CurrentUser() user: JwtPayload,
+    @Param("nebenkostenabrechnungId") nebenkostenabrechnungId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Dokument> {
+    if (!file) throw new BadRequestException("Keine Datei übermittelt.");
+    return this.dokumenteService.uploadForNebenkostenabrechnung(
+      user.mandantId,
+      nebenkostenabrechnungId,
+      user.sub,
+      file,
+    );
+  }
+}
+
 @Controller("dokumente")
 @UseGuards(JwtAuthGuard)
 export class DokumenteController {

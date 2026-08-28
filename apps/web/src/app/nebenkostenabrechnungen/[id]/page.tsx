@@ -17,6 +17,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { AppHeader } from "@/components/AppHeader";
 import { KommentareSection } from "@/components/KommentareSection";
+import { DokumenteSection } from "@/components/DokumenteSection";
 
 const STATUS_META: Record<NebenkostenStatus, { label: string; icon: typeof FileEdit; className: string }> = {
   [NebenkostenStatus.ENTWURF]: { label: "Entwurf", icon: FileEdit, className: "bg-blue-500/10 text-blue-500" },
@@ -256,6 +257,10 @@ export default function NebenkostenabrechnungDetailPage() {
             </div>
           </>
         )}
+
+        <div className="mt-8">
+          <DokumenteSection parent={{ path: "nebenkostenabrechnungen", id: abrechnungId }} />
+        </div>
 
         <div className="mt-8">
           <KommentareSection parent={{ path: "nebenkostenabrechnungen", id: abrechnungId }} />

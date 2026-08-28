@@ -309,7 +309,10 @@ export function useDeleteMietvertrag() {
   });
 }
 
-export type DokumentParent = { path: "mietvertraege" | "objekte" | "vorgaenge"; id: string };
+export type DokumentParent = {
+  path: "mietvertraege" | "objekte" | "vorgaenge" | "nebenkostenabrechnungen";
+  id: string;
+};
 
 export function useDokumente(parent: DokumentParent) {
   return useQuery<Dokument[]>({

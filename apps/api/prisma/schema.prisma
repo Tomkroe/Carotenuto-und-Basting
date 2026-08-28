@@ -348,6 +348,9 @@ model Dokument {
   kommentarId String?
   kommentar   Kommentar? @relation(fields: [kommentarId], references: [id])
 
+  nebenkostenabrechnungId String?
+  nebenkostenabrechnung   Nebenkostenabrechnung? @relation(fields: [nebenkostenabrechnungId], references: [id])
+
   @@index([mandantId])
 }
 
@@ -377,6 +380,7 @@ model Nebenkostenabrechnung {
 
   positionen NebenkostenPosition[]
   kommentare Kommentar[]
+  dokumente  Dokument[]
 
   @@index([objektId])
 }

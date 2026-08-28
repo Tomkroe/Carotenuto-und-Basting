@@ -4,6 +4,7 @@ import {
   MietvertragDokumenteController,
   ObjektDokumenteController,
   VorgangDokumenteController,
+  NebenkostenabrechnungDokumenteController,
   DokumenteController,
 } from "./dokumente.controller";
 import { DokumenteService } from "./dokumente.service";
@@ -14,6 +15,7 @@ import { DokumenteService } from "./dokumente.service";
     MietvertragDokumenteController,
     ObjektDokumenteController,
     VorgangDokumenteController,
+    NebenkostenabrechnungDokumenteController,
     DokumenteController,
   ],
   providers: [DokumenteService],
