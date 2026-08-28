@@ -1,0 +1,11 @@
+# Produktions-Reverse-Proxy für den Hetzner-VPS.
+# Domain vor dem Deployment ersetzen (Caddy holt automatisch ein Let's-Encrypt-Zertifikat).
+verwaltung.example.com {
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy api:3001
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}
