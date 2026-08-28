@@ -1,9 +1,10 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
+RUN apk add --no-cache openssl
 RUN corepack enable
 WORKDIR /repo
 
 FROM base AS deps
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/types/package.json packages/types/package.json
 COPY apps/api/package.json apps/api/package.json
 RUN pnpm install --frozen-lockfile
@@ -12,7 +13,7 @@ FROM deps AS build
 COPY packages/types packages/types
 COPY apps/api apps/api
 RUN pnpm --filter @maklerprogram/types build
-RUN pnpm --filter api prisma generate
+RUN pnpm --filter api prisma:generate
 RUN pnpm --filter api build
 
 FROM base AS runner
