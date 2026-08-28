@@ -5,19 +5,24 @@ import type {
   CreateEinheitRequest,
   CreateKommentarRequest,
   CreateKontaktRequest,
+  CreateMietvertragRequest,
   CreateObjektRequest,
   CreateToDoRequest,
   CreateVorgangRequest,
+  Dokument,
   Einheit,
+  EinheitListItem,
   Kommentar,
   Kontakt,
   MeResponse,
+  Mietvertrag,
   Objekt,
   ToDo,
+  UpdateMietvertragRequest,
   UpdateVorgangRequest,
   Vorgang,
 } from "@maklerprogram/types";
-import { apiFetch } from "./api";
+import { apiFetch, apiUpload } from "./api";
 
 export function useCurrentUser() {
   return useQuery<MeResponse>({
@@ -229,6 +234,93 @@ export function useCreateKommentar(vorgangId: string) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "kommentare"] });
+    },
+  });
+}
+
+export function useEinheitenFlat() {
+  return useQuery<EinheitListItem[]>({
+    queryKey: ["einheiten"],
+    queryFn: () => apiFetch<EinheitListItem[]>("/einheiten"),
+  });
+}
+
+export function useMietvertraege() {
+  return useQuery<Mietvertrag[]>({
+    queryKey: ["mietvertraege"],
+    queryFn: () => apiFetch<Mietvertrag[]>("/mietvertraege"),
+  });
+}
+
+export function useMietvertrag(id: string) {
+  return useQuery<Mietvertrag>({
+    queryKey: ["mietvertraege", id],
+    queryFn: () => apiFetch<Mietvertrag>(`/mietvertraege/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateMietvertrag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateMietvertragRequest) =>
+      apiFetch<Mietvertrag>("/mietvertraege", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege"] });
+    },
+  });
+}
+
+export function useUpdateMietvertrag(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateMietvertragRequest) =>
+      apiFetch<Mietvertrag>(`/mietvertraege/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege"] });
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege", id] });
+    },
+  });
+}
+
+export function useDeleteMietvertrag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/mietvertraege/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege"] });
+    },
+  });
+}
+
+export function useDokumente(mietvertragId: string) {
+  return useQuery<Dokument[]>({
+    queryKey: ["mietvertraege", mietvertragId, "dokumente"],
+    queryFn: () => apiFetch<Dokument[]>(`/mietvertraege/${mietvertragId}/dokumente`),
+    enabled: !!mietvertragId,
+  });
+}
+
+export function useUploadDokument(mietvertragId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return apiUpload<Dokument>(`/mietvertraege/${mietvertragId}/dokumente`, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege", mietvertragId, "dokumente"] });
+    },
+  });
+}
+
+export function useDeleteDokument(mietvertragId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mietvertraege", mietvertragId, "dokumente"] });
     },
   });
 }

@@ -12,6 +12,8 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1119.0",
+    "@aws-sdk/s3-request-presigner": "^3.1119.0",
     "@maklerprogram/types": "workspace:*",
     "@nestjs/common": "^10.4.6",
     "@nestjs/config": "^3.3.0",
@@ -36,6 +38,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^22.7.5",
     "@types/passport-jwt": "^4.0.1",
     "prisma": "^5.20.0",

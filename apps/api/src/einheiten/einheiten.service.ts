@@ -1,11 +1,20 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { Einheit } from "@maklerprogram/types";
+import { Einheit, EinheitListItem } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateEinheitDto } from "./dto/create-einheit.dto";
 
 @Injectable()
 export class EinheitenService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findAllForMandant(mandantId: string): Promise<EinheitListItem[]> {
+    const einheiten = await this.prisma.einheit.findMany({
+      where: { objekt: { mandantId } },
+      include: { objekt: { select: { id: true, name: true } } },
+      orderBy: [{ objekt: { name: "asc" } }, { name: "asc" }],
+    });
+    return einheiten.map((e) => ({ ...toEinheit(e), objekt: e.objekt }));
+  }
 
   async findAllForObjekt(mandantId: string, objektId: string): Promise<Einheit[]> {
     await this.assertObjektOwnership(mandantId, objektId);

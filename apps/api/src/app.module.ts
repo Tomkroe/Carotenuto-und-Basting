@@ -9,6 +9,9 @@ import { KontakteModule } from "./kontakte/kontakte.module";
 import { VorgaengeModule } from "./vorgaenge/vorgaenge.module";
 import { TodosModule } from "./todos/todos.module";
 import { KommentareModule } from "./kommentare/kommentare.module";
+import { StorageModule } from "./storage/storage.module";
+import { MietvertraegeModule } from "./mietvertraege/mietvertraege.module";
+import { DokumenteModule } from "./dokumente/dokumente.module";
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { KommentareModule } from "./kommentare/kommentare.module";
     VorgaengeModule,
     TodosModule,
     KommentareModule,
+    StorageModule,
+    MietvertraegeModule,
+    DokumenteModule,
   ],
 })
 export class AppModule {}

@@ -183,3 +183,65 @@ export interface Kommentar {
 export interface CreateKommentarRequest {
   text: string;
 }
+
+export interface EinheitListItem {
+  id: string;
+  name: string;
+  kategorie: string;
+  flaeche: number | null;
+  objektId: string;
+  createdAt: string;
+  objekt: { id: string; name: string };
+}
+
+export enum MietvertragStatus {
+  GEPLANT = "GEPLANT",
+  AKTIV = "AKTIV",
+  BEENDET = "BEENDET",
+}
+
+export interface MietvertragEinheitRef {
+  id: string;
+  name: string;
+  objekt: { id: string; name: string };
+}
+
+export interface MietvertragMieterRef {
+  id: string;
+  vorname: string | null;
+  nachname: string | null;
+  firma: string | null;
+}
+
+export interface Mietvertrag {
+  id: string;
+  kaltmiete: number;
+  nebenkostenVorauszahlung: number;
+  beginn: string;
+  ende: string | null;
+  status: MietvertragStatus;
+  createdAt: string;
+  einheit: MietvertragEinheitRef;
+  mieter: MietvertragMieterRef;
+}
+
+export interface CreateMietvertragRequest {
+  einheitId: string;
+  mieterId: string;
+  kaltmiete: number;
+  nebenkostenVorauszahlung?: number;
+  beginn: string;
+  ende?: string;
+  status?: MietvertragStatus;
+}
+
+export type UpdateMietvertragRequest = Partial<CreateMietvertragRequest>;
+
+export interface Dokument {
+  id: string;
+  dateiname: string;
+  mimeType: string;
+  groesseBytes: number;
+  createdAt: string;
+  hochgeladenVon: { id: string; name: string };
+}

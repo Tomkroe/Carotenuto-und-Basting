@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
-import { Einheit } from "@maklerprogram/types";
+import { Einheit, EinheitListItem } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -30,6 +30,11 @@ export class ObjektEinheitenController {
 @UseGuards(JwtAuthGuard)
 export class EinheitenController {
   constructor(private readonly einheitenService: EinheitenService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload): Promise<EinheitListItem[]> {
+    return this.einheitenService.findAllForMandant(user.mandantId);
+  }
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
