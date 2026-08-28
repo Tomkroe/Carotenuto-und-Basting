@@ -13,6 +13,6 @@ export class AssistantController {
 
   @Post("chat")
   chat(@CurrentUser() user: JwtPayload, @Body() dto: ChatDto): Promise<AssistantChatResponse> {
-    return this.assistantService.chat(user.mandantId, user.sub, dto.messages);
+    return this.assistantService.chat(user.mandantId, user.sub, dto.messages, dto.attachment);
   }
 }

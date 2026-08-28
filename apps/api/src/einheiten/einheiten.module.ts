@@ -5,5 +5,6 @@ import { EinheitenService } from "./einheiten.service";
 @Module({
   controllers: [ObjektEinheitenController, EinheitenController],
   providers: [EinheitenService],
+  exports: [EinheitenService],
 })
 export class EinheitenModule {}

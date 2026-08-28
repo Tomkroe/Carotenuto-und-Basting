@@ -368,11 +368,25 @@ export interface AssistantAction {
   label: string;
 }
 
+export interface AssistantAttachment {
+  filename: string;
+  mimeType: string;
+  dataBase64: string;
+}
+
+export interface AssistantEmailDraft {
+  an: string;
+  betreff: string;
+  text: string;
+}
+
 export interface AssistantChatRequest {
   messages: AssistantChatMessage[];
+  attachment?: AssistantAttachment;
 }
 
 export interface AssistantChatResponse {
   reply: string;
   actions: AssistantAction[];
+  emailDraft: AssistantEmailDraft | null;
 }

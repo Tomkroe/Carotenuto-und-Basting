@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  AssistantAttachment,
   AssistantChatMessage,
   AssistantChatResponse,
   CreateEigentuemerschaftRequest,
@@ -655,10 +656,10 @@ export function useDetachLabel(vorgangId: string) {
 export function useAssistantChat() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (messages: AssistantChatMessage[]) =>
+    mutationFn: (data: { messages: AssistantChatMessage[]; attachment?: AssistantAttachment }) =>
       apiFetch<AssistantChatResponse>("/assistant/chat", {
         method: "POST",
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify(data),
       }),
     onSuccess: (data) => {
       if (data.actions.length > 0) {

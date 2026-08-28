@@ -21,5 +21,6 @@ import { DokumenteService } from "./dokumente.service";
     DokumenteController,
   ],
   providers: [DokumenteService],
+  exports: [DokumenteService],
 })
 export class DokumenteModule {}
