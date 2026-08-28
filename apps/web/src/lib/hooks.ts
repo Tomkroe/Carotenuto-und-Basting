@@ -10,6 +10,8 @@ import type {
   CreateObjektRequest,
   CreateToDoRequest,
   CreateVorgangRequest,
+  CreateZaehlerRequest,
+  CreateZaehlerstandRequest,
   Dokument,
   Eigentuemerschaft,
   Einheit,
@@ -22,7 +24,10 @@ import type {
   ToDo,
   UpdateMietvertragRequest,
   UpdateVorgangRequest,
+  UpdateZaehlerRequest,
   Vorgang,
+  Zaehler,
+  Zaehlerstand,
 } from "@maklerprogram/types";
 import { apiFetch, apiUpload } from "./api";
 
@@ -351,6 +356,86 @@ export function useDeleteEigentuemerschaft() {
     mutationFn: (id: string) => apiFetch<void>(`/eigentuemerschaften/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eigentuemerschaften"] });
+    },
+  });
+}
+
+export function useZaehlerListe() {
+  return useQuery<Zaehler[]>({
+    queryKey: ["zaehler"],
+    queryFn: () => apiFetch<Zaehler[]>("/zaehler"),
+  });
+}
+
+export function useZaehler(id: string) {
+  return useQuery<Zaehler>({
+    queryKey: ["zaehler", id],
+    queryFn: () => apiFetch<Zaehler>(`/zaehler/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateZaehler() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateZaehlerRequest) =>
+      apiFetch<Zaehler>("/zaehler", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zaehler"] });
+    },
+  });
+}
+
+export function useUpdateZaehler(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateZaehlerRequest) =>
+      apiFetch<Zaehler>(`/zaehler/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zaehler"] });
+      queryClient.invalidateQueries({ queryKey: ["zaehler", id] });
+    },
+  });
+}
+
+export function useDeleteZaehler() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/zaehler/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zaehler"] });
+    },
+  });
+}
+
+export function useZaehlerstaende(zaehlerId: string) {
+  return useQuery<Zaehlerstand[]>({
+    queryKey: ["zaehler", zaehlerId, "zaehlerstaende"],
+    queryFn: () => apiFetch<Zaehlerstand[]>(`/zaehler/${zaehlerId}/zaehlerstaende`),
+    enabled: !!zaehlerId,
+  });
+}
+
+export function useCreateZaehlerstand(zaehlerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateZaehlerstandRequest) =>
+      apiFetch<Zaehlerstand>(`/zaehler/${zaehlerId}/zaehlerstaende`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zaehler", zaehlerId, "zaehlerstaende"] });
+    },
+  });
+}
+
+export function useDeleteZaehlerstand(zaehlerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/zaehlerstaende/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zaehler", zaehlerId, "zaehlerstaende"] });
     },
   });
 }

@@ -13,6 +13,8 @@ import { StorageModule } from "./storage/storage.module";
 import { MietvertraegeModule } from "./mietvertraege/mietvertraege.module";
 import { DokumenteModule } from "./dokumente/dokumente.module";
 import { EigentuemerschaftenModule } from "./eigentuemerschaften/eigentuemerschaften.module";
+import { ZaehlerModule } from "./zaehler/zaehler.module";
+import { ZaehlerstaendeModule } from "./zaehlerstaende/zaehlerstaende.module";
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { EigentuemerschaftenModule } from "./eigentuemerschaften/eigentuemerscha
     MietvertraegeModule,
     DokumenteModule,
     EigentuemerschaftenModule,
+    ZaehlerModule,
+    ZaehlerstaendeModule,
   ],
 })
 export class AppModule {}

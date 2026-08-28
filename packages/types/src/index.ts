@@ -125,12 +125,12 @@ export enum VorgangStatus {
   ABGESCHLOSSEN = "ABGESCHLOSSEN",
 }
 
-export interface VorgangObjektRef {
+export interface ObjektRef {
   id: string;
   name: string;
 }
 
-export interface VorgangKontaktRef {
+export interface KontaktRef {
   id: string;
   vorname: string | null;
   nachname: string | null;
@@ -145,8 +145,8 @@ export interface Vorgang {
   status: VorgangStatus;
   faelligkeit: string | null;
   createdAt: string;
-  objekt: VorgangObjektRef | null;
-  kontakt: VorgangKontaktRef | null;
+  objekt: ObjektRef | null;
+  kontakt: KontaktRef | null;
 }
 
 export interface CreateVorgangRequest {
@@ -206,13 +206,6 @@ export interface EinheitRef {
   objekt: { id: string; name: string };
 }
 
-export interface KontaktRef {
-  id: string;
-  vorname: string | null;
-  nachname: string | null;
-  firma: string | null;
-}
-
 export interface Mietvertrag {
   id: string;
   kaltmiete: number;
@@ -263,3 +256,46 @@ export interface CreateEigentuemerschaftRequest {
 }
 
 export type UpdateEigentuemerschaftRequest = Partial<CreateEigentuemerschaftRequest>;
+
+export enum ZaehlerTyp {
+  STROM = "STROM",
+  GAS = "GAS",
+  WASSER = "WASSER",
+}
+
+export interface Zaehler {
+  id: string;
+  typ: ZaehlerTyp;
+  zaehlernummer: string;
+  hauptzaehler: boolean;
+  versorger: string | null;
+  vertragsNr: string | null;
+  createdAt: string;
+  objekt: ObjektRef | null;
+  einheit: EinheitRef | null;
+}
+
+export interface CreateZaehlerRequest {
+  typ: ZaehlerTyp;
+  zaehlernummer: string;
+  hauptzaehler?: boolean;
+  versorger?: string;
+  vertragsNr?: string;
+  objektId?: string;
+  einheitId?: string;
+}
+
+export type UpdateZaehlerRequest = Partial<CreateZaehlerRequest>;
+
+export interface Zaehlerstand {
+  id: string;
+  datum: string;
+  wert: number;
+  zaehlerId: string;
+  createdAt: string;
+}
+
+export interface CreateZaehlerstandRequest {
+  datum: string;
+  wert: number;
+}

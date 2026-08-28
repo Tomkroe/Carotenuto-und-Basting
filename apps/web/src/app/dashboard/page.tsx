@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, ClipboardList, FileSignature, KeyRound, Users } from "lucide-react";
+import { Building2, ClipboardList, FileSignature, Gauge, KeyRound, Users } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -35,7 +35,7 @@ export default function DashboardPage() {
           Ausbaustufen.
         </p>
 
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:max-w-xl sm:grid-cols-5">
+        <div className="mt-8 grid grid-cols-3 gap-4 sm:max-w-xl sm:grid-cols-3">
           <Link
             href="/objekte"
             className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition hover:border-primary"
@@ -70,6 +70,13 @@ export default function DashboardPage() {
           >
             <KeyRound className="text-primary" size={20} />
             <span className="font-medium">Eigentümer</span>
+          </Link>
+          <Link
+            href="/zaehler"
+            className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition hover:border-primary"
+          >
+            <Gauge className="text-primary" size={20} />
+            <span className="font-medium">Zähler</span>
           </Link>
         </div>
       </section>
