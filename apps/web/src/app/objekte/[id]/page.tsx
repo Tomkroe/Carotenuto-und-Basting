@@ -14,6 +14,7 @@ import {
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { AppHeader } from "@/components/AppHeader";
+import { DokumenteSection } from "@/components/DokumenteSection";
 
 const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
   [ObjektTyp.WOHN_GESCHAEFTSHAUS]: "Wohn-/Geschäftshaus",
@@ -203,6 +204,10 @@ export default function ObjektDetailPage() {
             ))}
           </ul>
         )}
+
+        <div className="mt-8">
+          <DokumenteSection parent={{ path: "objekte", id: objektId }} />
+        </div>
       </section>
     </main>
   );

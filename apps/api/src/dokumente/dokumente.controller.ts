@@ -28,6 +28,61 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
+const UPLOAD_INTERCEPTOR = FileInterceptor("file", {
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter: (_req, file, callback) => {
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      callback(new BadRequestException("Dateityp nicht erlaubt."), false);
+      return;
+    }
+    callback(null, true);
+  },
+});
+
+@Controller("objekte/:objektId/dokumente")
+@UseGuards(JwtAuthGuard)
+export class ObjektDokumenteController {
+  constructor(private readonly dokumenteService: DokumenteService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload, @Param("objektId") objektId: string): Promise<Dokument[]> {
+    return this.dokumenteService.findAllForObjekt(user.mandantId, objektId);
+  }
+
+  @Post()
+  @UseInterceptors(UPLOAD_INTERCEPTOR)
+  upload(
+    @CurrentUser() user: JwtPayload,
+    @Param("objektId") objektId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Dokument> {
+    if (!file) throw new BadRequestException("Keine Datei übermittelt.");
+    return this.dokumenteService.uploadForObjekt(user.mandantId, objektId, user.sub, file);
+  }
+}
+
+@Controller("vorgaenge/:vorgangId/dokumente")
+@UseGuards(JwtAuthGuard)
+export class VorgangDokumenteController {
+  constructor(private readonly dokumenteService: DokumenteService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload, @Param("vorgangId") vorgangId: string): Promise<Dokument[]> {
+    return this.dokumenteService.findAllForVorgang(user.mandantId, vorgangId);
+  }
+
+  @Post()
+  @UseInterceptors(UPLOAD_INTERCEPTOR)
+  upload(
+    @CurrentUser() user: JwtPayload,
+    @Param("vorgangId") vorgangId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Dokument> {
+    if (!file) throw new BadRequestException("Keine Datei übermittelt.");
+    return this.dokumenteService.uploadForVorgang(user.mandantId, vorgangId, user.sub, file);
+  }
+}
+
 @Controller("mietvertraege/:mietvertragId/dokumente")
 @UseGuards(JwtAuthGuard)
 export class MietvertragDokumenteController {
@@ -39,18 +94,7 @@ export class MietvertragDokumenteController {
   }
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor("file", {
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (_req, file, callback) => {
-        if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-          callback(new BadRequestException("Dateityp nicht erlaubt."), false);
-          return;
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(UPLOAD_INTERCEPTOR)
   upload(
     @CurrentUser() user: JwtPayload,
     @Param("mietvertragId") mietvertragId: string,

@@ -307,34 +307,36 @@ export function useDeleteMietvertrag() {
   });
 }
 
-export function useDokumente(mietvertragId: string) {
+export type DokumentParent = { path: "mietvertraege" | "objekte" | "vorgaenge"; id: string };
+
+export function useDokumente(parent: DokumentParent) {
   return useQuery<Dokument[]>({
-    queryKey: ["mietvertraege", mietvertragId, "dokumente"],
-    queryFn: () => apiFetch<Dokument[]>(`/mietvertraege/${mietvertragId}/dokumente`),
-    enabled: !!mietvertragId,
+    queryKey: [parent.path, parent.id, "dokumente"],
+    queryFn: () => apiFetch<Dokument[]>(`/${parent.path}/${parent.id}/dokumente`),
+    enabled: !!parent.id,
   });
 }
 
-export function useUploadDokument(mietvertragId: string) {
+export function useUploadDokument(parent: DokumentParent) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      return apiUpload<Dokument>(`/mietvertraege/${mietvertragId}/dokumente`, formData);
+      return apiUpload<Dokument>(`/${parent.path}/${parent.id}/dokumente`, formData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mietvertraege", mietvertragId, "dokumente"] });
+      queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
     },
   });
 }
 
-export function useDeleteDokument(mietvertragId: string) {
+export function useDeleteDokument(parent: DokumentParent) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mietvertraege", mietvertragId, "dokumente"] });
+      queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
     },
   });
 }

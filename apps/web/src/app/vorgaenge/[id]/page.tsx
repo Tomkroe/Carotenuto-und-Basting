@@ -22,6 +22,7 @@ import {
   useDetachLabel,
 } from "@/lib/hooks";
 import { AppHeader } from "@/components/AppHeader";
+import { DokumenteSection } from "@/components/DokumenteSection";
 
 const LABEL_COLORS = [
   "#3b82f6",
@@ -358,6 +359,10 @@ export default function VorgangDetailPage() {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="mt-8">
+          <DokumenteSection parent={{ path: "vorgaenge", id: vorgangId }} />
         </div>
       </section>
     </main>
