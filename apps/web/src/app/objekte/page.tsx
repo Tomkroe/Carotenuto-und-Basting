@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ObjektTyp } from "@maklerprogram/types";
 import { useCurrentUser, useObjekte, useCreateObjekt } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppHeader } from "@/components/AppHeader";
 
 const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
   [ObjektTyp.WOHN_GESCHAEFTSHAUS]: "Wohn-/Geschäftshaus",
@@ -52,17 +52,7 @@ export default function ObjektePage() {
 
   return (
     <main className="min-h-screen bg-bg text-text">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold text-primary">
-            maklerprogram
-          </Link>
-          <nav className="text-sm text-text-muted">
-            <span className="text-text">Objekte</span>
-          </nav>
-        </div>
-        <ThemeToggle />
-      </header>
+      <AppHeader />
 
       <section className="mx-auto max-w-3xl px-6 py-10">
         <div className="mb-6 flex items-center justify-between">

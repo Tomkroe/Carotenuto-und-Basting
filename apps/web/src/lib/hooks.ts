@@ -3,8 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreateEinheitRequest,
+  CreateKontaktRequest,
   CreateObjektRequest,
   Einheit,
+  Kontakt,
   MeResponse,
   Objekt,
 } from "@maklerprogram/types";
@@ -82,6 +84,34 @@ export function useDeleteEinheit(objektId: string) {
     mutationFn: (id: string) => apiFetch<void>(`/einheiten/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["objekte", objektId, "einheiten"] });
+    },
+  });
+}
+
+export function useKontakte() {
+  return useQuery<Kontakt[]>({
+    queryKey: ["kontakte"],
+    queryFn: () => apiFetch<Kontakt[]>("/kontakte"),
+  });
+}
+
+export function useCreateKontakt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateKontaktRequest) =>
+      apiFetch<Kontakt>("/kontakte", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kontakte"] });
+    },
+  });
+}
+
+export function useDeleteKontakt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/kontakte/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kontakte"] });
     },
   });
 }

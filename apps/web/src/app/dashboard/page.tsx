@@ -3,25 +3,17 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { Building2, Users } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks";
-import { apiFetch } from "@/lib/api";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppHeader } from "@/components/AppHeader";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useCurrentUser();
 
   useEffect(() => {
     if (isError) router.replace("/login");
   }, [isError, router]);
-
-  async function handleLogout() {
-    await apiFetch("/auth/logout", { method: "POST" });
-    queryClient.clear();
-    router.replace("/login");
-  }
 
   if (isLoading || !data) {
     return (
@@ -33,18 +25,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-bg text-text">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <span className="text-lg font-semibold text-primary">maklerprogram</span>
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <button
-            onClick={handleLogout}
-            className="rounded-full border border-border px-3 py-1.5 text-sm text-text-muted transition hover:border-primary hover:text-primary"
-          >
-            Abmelden
-          </button>
-        </div>
-      </header>
+      <AppHeader />
 
       <section className="mx-auto max-w-3xl px-6 py-16">
         <p className="text-sm text-text-muted">{data.mandant.name}</p>
@@ -54,12 +35,22 @@ export default function DashboardPage() {
           Module folgen in den nächsten Ausbaustufen.
         </p>
 
-        <Link
-          href="/objekte"
-          className="mt-6 inline-block rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          Zu den Objekten
-        </Link>
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:max-w-md">
+          <Link
+            href="/objekte"
+            className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition hover:border-primary"
+          >
+            <Building2 className="text-primary" size={20} />
+            <span className="font-medium">Objekte</span>
+          </Link>
+          <Link
+            href="/kontakte"
+            className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition hover:border-primary"
+          >
+            <Users className="text-primary" size={20} />
+            <span className="font-medium">Kontakte</span>
+          </Link>
+        </div>
       </section>
     </main>
   );

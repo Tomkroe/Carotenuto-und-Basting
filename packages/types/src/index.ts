@@ -88,3 +88,33 @@ export interface CreateEinheitRequest {
   kategorie: string;
   flaeche?: number;
 }
+
+export enum KontaktTyp {
+  MIETER = "MIETER",
+  EIGENTUEMER = "EIGENTUEMER",
+  HAUSVERWALTUNG = "HAUSVERWALTUNG",
+  DIENSTLEISTER = "DIENSTLEISTER",
+  SONSTIGE = "SONSTIGE",
+}
+
+export interface Kontakt {
+  id: string;
+  typ: KontaktTyp;
+  vorname: string | null;
+  nachname: string | null;
+  firma: string | null;
+  email: string | null;
+  telefon: string | null;
+  createdAt: string;
+}
+
+export interface CreateKontaktRequest {
+  typ: KontaktTyp;
+  vorname?: string;
+  nachname?: string;
+  firma?: string;
+  email?: string;
+  telefon?: string;
+}
+
+export type UpdateKontaktRequest = Partial<CreateKontaktRequest>;

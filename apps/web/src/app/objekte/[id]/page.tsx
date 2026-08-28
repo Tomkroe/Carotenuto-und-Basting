@@ -13,7 +13,7 @@ import {
   useDeleteObjekt,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppHeader } from "@/components/AppHeader";
 
 const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
   [ObjektTyp.WOHN_GESCHAEFTSHAUS]: "Wohn-/Geschäftshaus",
@@ -76,23 +76,17 @@ export default function ObjektDetailPage() {
 
   return (
     <main className="min-h-screen bg-bg text-text">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold text-primary">
-            maklerprogram
-          </Link>
-          <nav className="flex items-center gap-2 text-sm text-text-muted">
-            <Link href="/objekte" className="hover:text-primary">
-              Objekte
-            </Link>
-            <span>/</span>
-            <span className="text-text">{objekt.name}</span>
-          </nav>
-        </div>
-        <ThemeToggle />
-      </header>
+      <AppHeader />
 
       <section className="mx-auto max-w-3xl px-6 py-10">
+        <nav className="mb-4 flex items-center gap-2 text-sm text-text-muted">
+          <Link href="/objekte" className="hover:text-primary">
+            Objekte
+          </Link>
+          <span>/</span>
+          <span className="text-text">{objekt.name}</span>
+        </nav>
+
         <div className="mb-6 flex items-start justify-between">
           <div>
             <p className="text-sm text-text-muted">{OBJEKT_TYP_LABEL[objekt.typ]}</p>
