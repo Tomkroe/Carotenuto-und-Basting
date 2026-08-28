@@ -39,6 +39,7 @@ import type {
   UpdateObjektRequest,
   UpdateVorgangRequest,
   UpdateZaehlerRequest,
+  UserListItem,
   Vorgang,
   Zaehler,
   Zaehlerstand,
@@ -50,6 +51,13 @@ export function useCurrentUser() {
     queryKey: ["me"],
     queryFn: () => apiFetch<MeResponse>("/users/me"),
     retry: false,
+  });
+}
+
+export function useUsers() {
+  return useQuery<UserListItem[]>({
+    queryKey: ["users"],
+    queryFn: () => apiFetch<UserListItem[]>("/users"),
   });
 }
 

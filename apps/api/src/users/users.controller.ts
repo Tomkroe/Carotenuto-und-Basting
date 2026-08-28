@@ -1,5 +1,5 @@
 import { Controller, Get, NotFoundException, UseGuards } from "@nestjs/common";
-import { MeResponse, UserRole } from "@maklerprogram/types";
+import { MeResponse, UserListItem, UserRole } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -9,6 +9,16 @@ import { PrismaService } from "../prisma/prisma.service";
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly prisma: PrismaService) {}
+
+  @Get()
+  async findAll(@CurrentUser() currentUser: JwtPayload): Promise<UserListItem[]> {
+    const users = await this.prisma.user.findMany({
+      where: { mandantId: currentUser.mandantId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    return users;
+  }
 
   @Get("me")
   async me(@CurrentUser() currentUser: JwtPayload): Promise<MeResponse> {

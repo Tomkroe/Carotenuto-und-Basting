@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CircleDot, Clock, CheckCircle2, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
-import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte } from "@/lib/hooks";
+import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
@@ -34,6 +34,7 @@ export default function VorgaengePage() {
   const { data: vorgaenge, isLoading } = useVorgaenge();
   const { data: objekte } = useObjekte();
   const { data: kontakte } = useKontakte();
+  const { data: users } = useUsers();
   const createVorgang = useCreateVorgang();
 
   const [showForm, setShowForm] = useState(false);
@@ -41,6 +42,7 @@ export default function VorgaengePage() {
   const [beschreibung, setBeschreibung] = useState("");
   const [objektId, setObjektId] = useState("");
   const [kontaktId, setKontaktId] = useState("");
+  const [verantwortlicherId, setVerantwortlicherId] = useState("");
   const [faelligkeit, setFaelligkeit] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -72,12 +74,14 @@ export default function VorgaengePage() {
         beschreibung: beschreibung || undefined,
         objektId: objektId || undefined,
         kontaktId: kontaktId || undefined,
+        verantwortlicherId: verantwortlicherId || undefined,
         faelligkeit: faelligkeit || undefined,
       });
       setTitel("");
       setBeschreibung("");
       setObjektId("");
       setKontaktId("");
+      setVerantwortlicherId("");
       setFaelligkeit("");
       setShowForm(false);
     } catch (err) {
@@ -176,6 +180,24 @@ export default function VorgaengePage() {
             </div>
           </div>
           <div>
+            <label className="mb-1 block text-sm text-text-muted" htmlFor="verantwortlicherId">
+              Verantwortlich (optional)
+            </label>
+            <select
+              id="verantwortlicherId"
+              value={verantwortlicherId}
+              onChange={(e) => setVerantwortlicherId(e.target.value)}
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+            >
+              <option value="">–</option>
+              {users?.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="faelligkeit">
               Fälligkeit (optional)
             </label>
@@ -216,6 +238,7 @@ export default function VorgaengePage() {
             { key: "nr", header: "Nr." },
             { key: "titel", header: "Titel" },
             { key: "objekt", header: "Objekt/Kontakt" },
+            { key: "verantwortlicher", header: "Verantwortlich" },
             { key: "faelligkeit", header: "Fälligkeit" },
             { key: "status", header: "Status" },
           ]}
@@ -251,6 +274,7 @@ export default function VorgaengePage() {
                   {v.objekt && v.kontakt && " · "}
                   {v.kontakt && kontaktName(v.kontakt)}
                 </td>
+                <td className="px-4 py-3 text-text-muted">{v.verantwortlicher?.name ?? "–"}</td>
                 <td className="px-4 py-3 text-text-muted">
                   {v.faelligkeit ? new Date(v.faelligkeit).toLocaleDateString("de-DE") : "–"}
                 </td>

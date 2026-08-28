@@ -18,6 +18,7 @@ import {
   useCreateLabel,
   useAttachLabel,
   useDetachLabel,
+  useUsers,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
@@ -60,6 +61,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const createLabel = useCreateLabel();
   const attachLabel = useAttachLabel(vorgangId);
   const detachLabel = useDetachLabel(vorgangId);
+  const { data: users } = useUsers();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
@@ -71,6 +73,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const [editTitel, setEditTitel] = useState("");
   const [editBeschreibung, setEditBeschreibung] = useState("");
   const [editFaelligkeit, setEditFaelligkeit] = useState("");
+  const [editVerantwortlicherId, setEditVerantwortlicherId] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -98,6 +101,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
     setEditTitel(vorgang.titel);
     setEditBeschreibung(vorgang.beschreibung ?? "");
     setEditFaelligkeit(vorgang.faelligkeit ? vorgang.faelligkeit.slice(0, 10) : "");
+    setEditVerantwortlicherId(vorgang.verantwortlicher?.id ?? "");
     setEditError(null);
     setEditing(true);
   }
@@ -110,6 +114,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
         titel: editTitel,
         beschreibung: editBeschreibung || undefined,
         faelligkeit: editFaelligkeit || undefined,
+        verantwortlicherId: editVerantwortlicherId || undefined,
       });
       setEditing(false);
     } catch (err) {
@@ -149,6 +154,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
               {vorgang.objekt && <span>{vorgang.objekt.name}</span>}
               {vorgang.kontakt && <span>· {kontaktName(vorgang.kontakt)}</span>}
               {vorgang.faelligkeit && <span>· fällig {new Date(vorgang.faelligkeit).toLocaleDateString("de-DE")}</span>}
+              {vorgang.verantwortlicher && <span>· {vorgang.verantwortlicher.name}</span>}
             </div>
           </div>
         )}
@@ -231,6 +237,24 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
               onChange={(e) => setEditFaelligkeit(e.target.value)}
               className="rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-text-muted" htmlFor="editVerantwortlicherId">
+              Verantwortlich
+            </label>
+            <select
+              id="editVerantwortlicherId"
+              value={editVerantwortlicherId}
+              onChange={(e) => setEditVerantwortlicherId(e.target.value)}
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+            >
+              <option value="">–</option>
+              {users?.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {editError && <p className="text-sm text-red-500">{editError}</p>}

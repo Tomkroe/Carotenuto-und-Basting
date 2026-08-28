@@ -7,6 +7,7 @@ import { UpdateVorgangDto } from "./dto/update-vorgang.dto";
 const INCLUDE = {
   objekt: { select: { id: true, name: true } },
   kontakt: { select: { id: true, vorname: true, nachname: true, firma: true } },
+  verantwortlicher: { select: { id: true, name: true } },
   labels: { include: { label: { select: { id: true, name: true, farbe: true } } } },
 } as const;
 
@@ -33,7 +34,7 @@ export class VorgaengeService {
   }
 
   async create(mandantId: string, dto: CreateVorgangDto): Promise<Vorgang> {
-    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId);
+    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.create({
       data: {
         titel: dto.titel,
@@ -42,6 +43,7 @@ export class VorgaengeService {
         faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
         objektId: dto.objektId,
         kontaktId: dto.kontaktId,
+        verantwortlicherId: dto.verantwortlicherId,
         mandantId,
       },
       include: INCLUDE,
@@ -51,7 +53,7 @@ export class VorgaengeService {
 
   async update(mandantId: string, id: string, dto: UpdateVorgangDto): Promise<Vorgang> {
     await this.findOne(mandantId, id);
-    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId);
+    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.update({
       where: { id },
       data: {
@@ -68,7 +70,12 @@ export class VorgaengeService {
     await this.prisma.vorgang.delete({ where: { id } });
   }
 
-  private async assertRefsBelongToMandant(mandantId: string, objektId?: string, kontaktId?: string) {
+  private async assertRefsBelongToMandant(
+    mandantId: string,
+    objektId?: string,
+    kontaktId?: string,
+    verantwortlicherId?: string,
+  ) {
     if (objektId) {
       const objekt = await this.prisma.objekt.findFirst({ where: { id: objektId, mandantId } });
       if (!objekt) throw new NotFoundException("Objekt nicht gefunden.");
@@ -76,6 +83,10 @@ export class VorgaengeService {
     if (kontaktId) {
       const kontakt = await this.prisma.kontakt.findFirst({ where: { id: kontaktId, mandantId } });
       if (!kontakt) throw new NotFoundException("Kontakt nicht gefunden.");
+    }
+    if (verantwortlicherId) {
+      const user = await this.prisma.user.findFirst({ where: { id: verantwortlicherId, mandantId } });
+      if (!user) throw new NotFoundException("Verantwortlicher nicht gefunden.");
     }
   }
 }
@@ -90,6 +101,7 @@ function toVorgang(vorgang: {
   createdAt: Date;
   objekt: { id: string; name: string } | null;
   kontakt: { id: string; vorname: string | null; nachname: string | null; firma: string | null } | null;
+  verantwortlicher: { id: string; name: string } | null;
   labels: { label: { id: string; name: string; farbe: string } }[];
 }): Vorgang {
   return {
@@ -102,6 +114,7 @@ function toVorgang(vorgang: {
     createdAt: vorgang.createdAt.toISOString(),
     objekt: vorgang.objekt,
     kontakt: vorgang.kontakt,
+    verantwortlicher: vorgang.verantwortlicher,
     labels: vorgang.labels.map((l) => l.label),
   };
 }

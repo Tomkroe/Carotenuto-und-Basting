@@ -25,4 +25,8 @@ export class CreateVorgangDto {
   @IsString()
   @IsOptional()
   kontaktId?: string;
+
+  @IsString()
+  @IsOptional()
+  verantwortlicherId?: string;
 }

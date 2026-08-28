@@ -17,6 +17,11 @@ export interface User {
   mandantId: string;
 }
 
+export interface UserListItem {
+  id: string;
+  name: string;
+}
+
 export interface RegisterRequest {
   mandantName: string;
   email: string;
@@ -162,6 +167,7 @@ export interface Vorgang {
   createdAt: string;
   objekt: ObjektRef | null;
   kontakt: KontaktRef | null;
+  verantwortlicher: UserListItem | null;
   labels: Label[];
 }
 
@@ -172,6 +178,7 @@ export interface CreateVorgangRequest {
   faelligkeit?: string;
   objektId?: string;
   kontaktId?: string;
+  verantwortlicherId?: string;
 }
 
 export type UpdateVorgangRequest = Partial<CreateVorgangRequest>;
