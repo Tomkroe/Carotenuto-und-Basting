@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: 255 255 255;
+  --color-surface: 248 248 250;
+  --color-border: 228 228 231;
+  --color-text: 24 24 27;
+  --color-text-muted: 113 113 122;
+  --color-primary: 255 45 154; /* Hot Pink #FF2D9A */
+  --color-primary-fg: 255 255 255;
+}
+
+.dark {
+  --color-bg: 15 15 18;
+  --color-surface: 24 24 28;
+  --color-border: 42 42 49;
+  --color-text: 244 244 245;
+  --color-text-muted: 161 161 170;
+  --color-primary: 255 71 168;
+  --color-primary-fg: 15 15 18;
+}
+
+body {
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+}
