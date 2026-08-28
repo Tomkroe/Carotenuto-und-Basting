@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/hooks";
@@ -49,9 +50,16 @@ export default function DashboardPage() {
         <p className="text-sm text-text-muted">{data.mandant.name}</p>
         <h1 className="mt-1 text-2xl font-semibold">Willkommen, {data.user.name}.</h1>
         <p className="mt-4 max-w-xl text-text-muted">
-          Dies ist das Grundgerüst deiner Hausverwaltung. Objekte, Vorgänge, Mietverträge und die
-          weiteren Module folgen in den nächsten Ausbaustufen.
+          Dies ist das Grundgerüst deiner Hausverwaltung. Vorgänge, Mietverträge und die weiteren
+          Module folgen in den nächsten Ausbaustufen.
         </p>
+
+        <Link
+          href="/objekte"
+          className="mt-6 inline-block rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
+        >
+          Zu den Objekten
+        </Link>
       </section>
     </main>
   );

@@ -38,3 +38,38 @@ export interface MeResponse {
   user: User;
   mandant: Mandant;
 }
+
+export enum ObjektTyp {
+  WOHN_GESCHAEFTSHAUS = "WOHN_GESCHAEFTSHAUS",
+  EINHEITEN = "EINHEITEN",
+  EINFAMILIENHAUS = "EINFAMILIENHAUS",
+  WEG = "WEG",
+}
+
+export interface Objekt {
+  id: string;
+  typ: ObjektTyp;
+  name: string;
+  strasse: string;
+  hausnummer: string;
+  plz: string;
+  ort: string;
+  land: string;
+  kaltmiete: number | null;
+  flaeche: number | null;
+  createdAt: string;
+}
+
+export interface CreateObjektRequest {
+  typ: ObjektTyp;
+  name: string;
+  strasse: string;
+  hausnummer: string;
+  plz: string;
+  ort: string;
+  land?: string;
+  kaltmiete?: number;
+  flaeche?: number;
+}
+
+export type UpdateObjektRequest = Partial<CreateObjektRequest>;
