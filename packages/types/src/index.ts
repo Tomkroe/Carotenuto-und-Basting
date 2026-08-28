@@ -200,13 +200,13 @@ export enum MietvertragStatus {
   BEENDET = "BEENDET",
 }
 
-export interface MietvertragEinheitRef {
+export interface EinheitRef {
   id: string;
   name: string;
   objekt: { id: string; name: string };
 }
 
-export interface MietvertragMieterRef {
+export interface KontaktRef {
   id: string;
   vorname: string | null;
   nachname: string | null;
@@ -221,8 +221,8 @@ export interface Mietvertrag {
   ende: string | null;
   status: MietvertragStatus;
   createdAt: string;
-  einheit: MietvertragEinheitRef;
-  mieter: MietvertragMieterRef;
+  einheit: EinheitRef;
+  mieter: KontaktRef;
 }
 
 export interface CreateMietvertragRequest {
@@ -245,3 +245,21 @@ export interface Dokument {
   createdAt: string;
   hochgeladenVon: { id: string; name: string };
 }
+
+export interface Eigentuemerschaft {
+  id: string;
+  hausgeldAnteil: number;
+  anteilProzent: number | null;
+  createdAt: string;
+  einheit: EinheitRef;
+  eigentuemer: KontaktRef;
+}
+
+export interface CreateEigentuemerschaftRequest {
+  einheitId: string;
+  eigentuemerId: string;
+  hausgeldAnteil: number;
+  anteilProzent?: number;
+}
+
+export type UpdateEigentuemerschaftRequest = Partial<CreateEigentuemerschaftRequest>;

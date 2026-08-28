@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, ClipboardList, FileSignature, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { Building2, ClipboardList, FileSignature, KeyRound, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/kontakte", label: "Kontakte", icon: Users },
   { href: "/vorgaenge", label: "Vorgänge", icon: ClipboardList },
   { href: "/mietvertraege", label: "Mietverträge", icon: FileSignature },
+  { href: "/eigentuemerschaften", label: "Eigentümer", icon: KeyRound },
 ];
 
 export function AppHeader() {

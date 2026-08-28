@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  CreateEigentuemerschaftRequest,
   CreateEinheitRequest,
   CreateKommentarRequest,
   CreateKontaktRequest,
@@ -10,6 +11,7 @@ import type {
   CreateToDoRequest,
   CreateVorgangRequest,
   Dokument,
+  Eigentuemerschaft,
   Einheit,
   EinheitListItem,
   Kommentar,
@@ -321,6 +323,34 @@ export function useDeleteDokument(mietvertragId: string) {
     mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mietvertraege", mietvertragId, "dokumente"] });
+    },
+  });
+}
+
+export function useEigentuemerschaften() {
+  return useQuery<Eigentuemerschaft[]>({
+    queryKey: ["eigentuemerschaften"],
+    queryFn: () => apiFetch<Eigentuemerschaft[]>("/eigentuemerschaften"),
+  });
+}
+
+export function useCreateEigentuemerschaft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateEigentuemerschaftRequest) =>
+      apiFetch<Eigentuemerschaft>("/eigentuemerschaften", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["eigentuemerschaften"] });
+    },
+  });
+}
+
+export function useDeleteEigentuemerschaft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/eigentuemerschaften/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["eigentuemerschaften"] });
     },
   });
 }

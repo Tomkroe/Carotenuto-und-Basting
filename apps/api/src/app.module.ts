@@ -12,6 +12,7 @@ import { KommentareModule } from "./kommentare/kommentare.module";
 import { StorageModule } from "./storage/storage.module";
 import { MietvertraegeModule } from "./mietvertraege/mietvertraege.module";
 import { DokumenteModule } from "./dokumente/dokumente.module";
+import { EigentuemerschaftenModule } from "./eigentuemerschaften/eigentuemerschaften.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DokumenteModule } from "./dokumente/dokumente.module";
     StorageModule,
     MietvertraegeModule,
     DokumenteModule,
+    EigentuemerschaftenModule,
   ],
 })
 export class AppModule {}
