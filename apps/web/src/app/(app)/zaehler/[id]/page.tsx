@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Zap, Flame, Droplet, Star, Pencil, Trash2, Gauge } from "lucide-react";
@@ -15,12 +15,21 @@ import {
   useDeleteZaehlerstand,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { StatCard } from "@/components/StatCard";
 
 const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className: string }> = {
   [ZaehlerTyp.STROM]: { label: "Strom", icon: Zap, className: "bg-amber-500/10 text-amber-500" },
   [ZaehlerTyp.GAS]: { label: "Gas", icon: Flame, className: "bg-orange-500/10 text-orange-500" },
   [ZaehlerTyp.WASSER]: { label: "Wasser", icon: Droplet, className: "bg-blue-500/10 text-blue-500" },
 };
+
+const EINHEIT: Record<ZaehlerTyp, string> = {
+  [ZaehlerTyp.STROM]: "kWh",
+  [ZaehlerTyp.GAS]: "m³",
+  [ZaehlerTyp.WASSER]: "m³",
+};
+
+const MS_PRO_TAG = 1000 * 60 * 60 * 24;
 
 export default function ZaehlerDetailPage() {
   const params = useParams<{ id: string }>();
@@ -99,6 +108,29 @@ export default function ZaehlerDetailPage() {
     }
   }
 
+  const verbrauchByStandId = useMemo(() => {
+    const map = new Map<string, { verbrauch: number; tage: number }>();
+    if (!zaehlerstaende) return map;
+    const aufsteigend = [...zaehlerstaende].sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime());
+    for (let i = 1; i < aufsteigend.length; i++) {
+      const prev = aufsteigend[i - 1];
+      const curr = aufsteigend[i];
+      const tage = Math.round((new Date(curr.datum).getTime() - new Date(prev.datum).getTime()) / MS_PRO_TAG);
+      map.set(curr.id, { verbrauch: curr.wert - prev.wert, tage });
+    }
+    return map;
+  }, [zaehlerstaende]);
+
+  const gesamt = useMemo(() => {
+    if (!zaehlerstaende || zaehlerstaende.length < 2) return null;
+    const aufsteigend = [...zaehlerstaende].sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime());
+    const erster = aufsteigend[0];
+    const letzter = aufsteigend[aufsteigend.length - 1];
+    const tage = Math.round((new Date(letzter.datum).getTime() - new Date(erster.datum).getTime()) / MS_PRO_TAG);
+    const verbrauch = letzter.wert - erster.wert;
+    return { verbrauch, tage, proTag: tage > 0 ? verbrauch / tage : 0 };
+  }, [zaehlerstaende]);
+
   if (isLoading || !zaehler) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-text-muted">Lädt…</div>
@@ -107,6 +139,7 @@ export default function ZaehlerDetailPage() {
 
   const meta = TYP_META[zaehler.typ];
   const Icon = meta.icon;
+  const einheit = EINHEIT[zaehler.typ];
 
   return (
           <section className="mx-auto max-w-3xl px-6 py-10">
@@ -257,6 +290,16 @@ export default function ZaehlerDetailPage() {
           Zählerstände
         </h2>
 
+        {gesamt && (
+          <div className="mb-4 grid grid-cols-2 gap-4">
+            <StatCard
+              value={`${gesamt.verbrauch.toLocaleString("de-DE")} ${einheit}`}
+              label={`Gesamtverbrauch (${gesamt.tage} Tage)`}
+            />
+            <StatCard value={`${gesamt.proTag.toLocaleString("de-DE", { maximumFractionDigits: 2 })} ${einheit}`} label="Ø pro Tag" />
+          </div>
+        )}
+
         <form onSubmit={handleAddZaehlerstand} className="mb-4 flex items-end gap-2">
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="datum">
@@ -301,19 +344,29 @@ export default function ZaehlerDetailPage() {
 
         {zaehlerstaende && zaehlerstaende.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
-            {zaehlerstaende.map((z) => (
-              <li key={z.id} className="flex items-center justify-between px-4 py-2.5">
-                <span className="text-sm">{new Date(z.datum).toLocaleDateString("de-DE")}</span>
-                <span className="text-sm font-medium">{z.wert.toLocaleString("de-DE")}</span>
-                <button
-                  onClick={() => deleteZaehlerstand.mutate(z.id)}
-                  className="text-text-muted transition hover:text-red-500"
-                  aria-label="Zählerstand löschen"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
+            {zaehlerstaende.map((z) => {
+              const verbrauch = verbrauchByStandId.get(z.id);
+              return (
+                <li key={z.id} className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-sm">{new Date(z.datum).toLocaleDateString("de-DE")}</span>
+                  <span className="text-sm font-medium">
+                    {z.wert.toLocaleString("de-DE")}
+                    {verbrauch && (
+                      <span className="ml-2 font-normal text-text-muted">
+                        (+{verbrauch.verbrauch.toLocaleString("de-DE")} {einheit} · {verbrauch.tage} Tage)
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => deleteZaehlerstand.mutate(z.id)}
+                    className="text-text-muted transition hover:text-red-500"
+                    aria-label="Zählerstand löschen"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
