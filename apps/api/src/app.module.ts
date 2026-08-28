@@ -6,6 +6,9 @@ import { UsersModule } from "./users/users.module";
 import { ObjekteModule } from "./objekte/objekte.module";
 import { EinheitenModule } from "./einheiten/einheiten.module";
 import { KontakteModule } from "./kontakte/kontakte.module";
+import { VorgaengeModule } from "./vorgaenge/vorgaenge.module";
+import { TodosModule } from "./todos/todos.module";
+import { KommentareModule } from "./kommentare/kommentare.module";
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { KontakteModule } from "./kontakte/kontakte.module";
     ObjekteModule,
     EinheitenModule,
     KontakteModule,
+    VorgaengeModule,
+    TodosModule,
+    KommentareModule,
   ],
 })
 export class AppModule {}

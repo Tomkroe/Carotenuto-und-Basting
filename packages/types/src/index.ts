@@ -118,3 +118,68 @@ export interface CreateKontaktRequest {
 }
 
 export type UpdateKontaktRequest = Partial<CreateKontaktRequest>;
+
+export enum VorgangStatus {
+  OFFEN = "OFFEN",
+  IN_BEARBEITUNG = "IN_BEARBEITUNG",
+  ABGESCHLOSSEN = "ABGESCHLOSSEN",
+}
+
+export interface VorgangObjektRef {
+  id: string;
+  name: string;
+}
+
+export interface VorgangKontaktRef {
+  id: string;
+  vorname: string | null;
+  nachname: string | null;
+  firma: string | null;
+}
+
+export interface Vorgang {
+  id: string;
+  nummer: number;
+  titel: string;
+  beschreibung: string | null;
+  status: VorgangStatus;
+  faelligkeit: string | null;
+  createdAt: string;
+  objekt: VorgangObjektRef | null;
+  kontakt: VorgangKontaktRef | null;
+}
+
+export interface CreateVorgangRequest {
+  titel: string;
+  beschreibung?: string;
+  status?: VorgangStatus;
+  faelligkeit?: string;
+  objektId?: string;
+  kontaktId?: string;
+}
+
+export type UpdateVorgangRequest = Partial<CreateVorgangRequest>;
+
+export interface ToDo {
+  id: string;
+  titel: string;
+  erledigt: boolean;
+  vorgangId: string;
+  createdAt: string;
+}
+
+export interface CreateToDoRequest {
+  titel: string;
+}
+
+export interface Kommentar {
+  id: string;
+  text: string;
+  vorgangId: string;
+  createdAt: string;
+  autor: { id: string; name: string };
+}
+
+export interface CreateKommentarRequest {
+  text: string;
+}
