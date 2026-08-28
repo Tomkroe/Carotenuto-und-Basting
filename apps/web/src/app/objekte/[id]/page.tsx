@@ -3,7 +3,8 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ObjektTyp } from "@maklerprogram/types";
+import { KeyRound, UserRound } from "lucide-react";
+import { MietvertragStatus, ObjektTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
   useObjekt,
@@ -11,6 +12,8 @@ import {
   useCreateEinheit,
   useDeleteEinheit,
   useDeleteObjekt,
+  useMietvertraege,
+  useEigentuemerschaften,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { AppHeader } from "@/components/AppHeader";
@@ -23,6 +26,10 @@ const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
   [ObjektTyp.WEG]: "WEG",
 };
 
+function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }) {
+  return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
+}
+
 export default function ObjektDetailPage() {
   const params = useParams<{ id: string }>();
   const objektId = params.id;
@@ -34,6 +41,8 @@ export default function ObjektDetailPage() {
   const createEinheit = useCreateEinheit(objektId);
   const deleteEinheit = useDeleteEinheit(objektId);
   const deleteObjekt = useDeleteObjekt();
+  const { data: mietvertraege } = useMietvertraege();
+  const { data: eigentuemerschaften } = useEigentuemerschaften();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEinheitForm, setShowEinheitForm] = useState(false);
@@ -188,20 +197,42 @@ export default function ObjektDetailPage() {
 
         {einheiten && einheiten.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
-            {einheiten.map((e) => (
-              <li key={e.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-medium">{e.name}</p>
-                  <p className="text-sm text-text-muted">{e.kategorie}</p>
-                </div>
-                <button
-                  onClick={() => deleteEinheit.mutate(e.id)}
-                  className="text-sm text-text-muted transition hover:text-red-500"
-                >
-                  Entfernen
-                </button>
-              </li>
-            ))}
+            {einheiten.map((e) => {
+              const mietvertrag = mietvertraege?.find(
+                (m) => m.einheit.id === e.id && m.status === MietvertragStatus.AKTIV,
+              );
+              const eigentuemer = eigentuemerschaften?.filter((w) => w.einheit.id === e.id) ?? [];
+
+              return (
+                <li key={e.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="font-medium">{e.name}</p>
+                    <p className="text-sm text-text-muted">{e.kategorie}</p>
+                    {(mietvertrag || eigentuemer.length > 0) && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-text-muted">
+                        {mietvertrag && (
+                          <span className="flex items-center gap-1">
+                            <UserRound size={12} /> {kontaktName(mietvertrag.mieter)}
+                          </span>
+                        )}
+                        {eigentuemer.map((w) => (
+                          <span key={w.id} className="flex items-center gap-1">
+                            <KeyRound size={12} /> {kontaktName(w.eigentuemer)}
+                            {w.anteilProzent != null && ` (${w.anteilProzent.toFixed(0)}%)`}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteEinheit.mutate(e.id)}
+                    className="text-sm text-text-muted transition hover:text-red-500"
+                  >
+                    Entfernen
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
 

@@ -28,6 +28,7 @@ import type {
   NebenkostenPosition,
   Objekt,
   ToDo,
+  UpdateEigentuemerschaftRequest,
   UpdateMietvertragRequest,
   UpdateNebenkostenabrechnungRequest,
   UpdateVorgangRequest,
@@ -366,6 +367,17 @@ export function useCreateEigentuemerschaft() {
   return useMutation({
     mutationFn: (data: CreateEigentuemerschaftRequest) =>
       apiFetch<Eigentuemerschaft>("/eigentuemerschaften", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["eigentuemerschaften"] });
+    },
+  });
+}
+
+export function useUpdateEigentuemerschaft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateEigentuemerschaftRequest }) =>
+      apiFetch<Eigentuemerschaft>(`/eigentuemerschaften/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eigentuemerschaften"] });
     },

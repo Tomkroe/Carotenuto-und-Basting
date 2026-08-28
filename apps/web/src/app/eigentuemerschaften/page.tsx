@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Percent, Plus, Trash2, X } from "lucide-react";
+import { KeyRound, Pencil, Percent, Plus, Trash2, X } from "lucide-react";
 import {
   useCurrentUser,
   useEigentuemerschaften,
   useCreateEigentuemerschaft,
+  useUpdateEigentuemerschaft,
   useDeleteEigentuemerschaft,
   useEinheitenFlat,
   useKontakte,
@@ -25,6 +26,7 @@ export default function EigentuemerschaftenPage() {
   const { data: einheiten } = useEinheitenFlat();
   const { data: kontakte } = useKontakte();
   const createEigentuemerschaft = useCreateEigentuemerschaft();
+  const updateEigentuemerschaft = useUpdateEigentuemerschaft();
   const deleteEigentuemerschaft = useDeleteEigentuemerschaft();
 
   const [showForm, setShowForm] = useState(false);
@@ -34,6 +36,26 @@ export default function EigentuemerschaftenPage() {
   const [anteilProzent, setAnteilProzent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editHausgeld, setEditHausgeld] = useState("");
+  const [editAnteil, setEditAnteil] = useState("");
+
+  function startEdit(id: string, hausgeld: number, anteil: number | null) {
+    setEditingId(id);
+    setEditHausgeld(String(hausgeld));
+    setEditAnteil(anteil != null ? String(anteil) : "");
+  }
+
+  async function handleSaveEdit(id: string) {
+    await updateEigentuemerschaft.mutateAsync({
+      id,
+      data: {
+        hausgeldAnteil: Number(editHausgeld),
+        anteilProzent: editAnteil ? Number(editAnteil) : undefined,
+      },
+    });
+    setEditingId(null);
+  }
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -207,20 +229,62 @@ export default function EigentuemerschaftenPage() {
                     <p className="font-medium">
                       {e.einheit.objekt.name} · {e.einheit.name}
                     </p>
-                    <div className="flex items-center gap-3 text-sm text-text-muted">
-                      <span>{kontaktName(e.eigentuemer)}</span>
-                      <span>{e.hausgeldAnteil.toFixed(2)} € Hausgeld</span>
-                      {e.anteilProzent != null && (
-                        <span className="flex items-center gap-0.5">
-                          <Percent size={12} />
-                          {e.anteilProzent.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
+                    {editingId === e.id ? (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm text-text-muted">{kontaktName(e.eigentuemer)}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={editHausgeld}
+                          onChange={(ev) => setEditHausgeld(ev.target.value)}
+                          className="w-24 rounded-lg border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary"
+                        />
+                        <span className="text-xs text-text-muted">€</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.01"
+                          value={editAnteil}
+                          onChange={(ev) => setEditAnteil(ev.target.value)}
+                          className="w-20 rounded-lg border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary"
+                          placeholder="%"
+                        />
+                        <span className="text-xs text-text-muted">%</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 text-sm text-text-muted">
+                        <span>{kontaktName(e.eigentuemer)}</span>
+                        <span>{e.hausgeldAnteil.toFixed(2)} € Hausgeld</span>
+                        {e.anteilProzent != null && (
+                          <span className="flex items-center gap-0.5">
+                            <Percent size={12} />
+                            {e.anteilProzent.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {pendingDelete === e.id ? (
+                {editingId === e.id ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <button
+                      onClick={() => handleSaveEdit(e.id)}
+                      disabled={updateEigentuemerschaft.isPending}
+                      className="rounded-full bg-primary px-3 py-1 text-primary-fg transition hover:opacity-90 disabled:opacity-50"
+                    >
+                      Speichern
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="rounded-full border border-border px-3 py-1 text-text-muted"
+                    >
+                      Abbrechen
+                    </button>
+                  </div>
+                ) : pendingDelete === e.id ? (
                   <div className="flex items-center gap-2 text-sm">
                     <button
                       onClick={() => {
@@ -239,13 +303,22 @@ export default function EigentuemerschaftenPage() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setPendingDelete(e.id)}
-                    className="text-text-muted transition hover:text-red-500"
-                    aria-label="Eigentümerschaft löschen"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => startEdit(e.id, e.hausgeldAnteil, e.anteilProzent)}
+                      className="text-text-muted transition hover:text-primary"
+                      aria-label="Eigentümerschaft bearbeiten"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => setPendingDelete(e.id)}
+                      className="text-text-muted transition hover:text-red-500"
+                      aria-label="Eigentümerschaft löschen"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
