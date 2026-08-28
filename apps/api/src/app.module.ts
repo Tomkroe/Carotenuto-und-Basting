@@ -18,6 +18,7 @@ import { ZaehlerstaendeModule } from "./zaehlerstaende/zaehlerstaende.module";
 import { NebenkostenabrechnungenModule } from "./nebenkostenabrechnungen/nebenkostenabrechnungen.module";
 import { NebenkostenpositionenModule } from "./nebenkostenpositionen/nebenkostenpositionen.module";
 import { LabelsModule } from "./labels/labels.module";
+import { AssistantModule } from "./assistant/assistant.module";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { LabelsModule } from "./labels/labels.module";
     NebenkostenabrechnungenModule,
     NebenkostenpositionenModule,
     LabelsModule,
+    AssistantModule,
   ],
 })
 export class AppModule {}

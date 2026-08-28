@@ -5,5 +5,6 @@ import { VorgaengeService } from "./vorgaenge.service";
 @Module({
   controllers: [VorgaengeController],
   providers: [VorgaengeService],
+  exports: [VorgaengeService],
 })
 export class VorgaengeModule {}

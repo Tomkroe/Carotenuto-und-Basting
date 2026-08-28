@@ -9,5 +9,6 @@ import { KommentareService } from "./kommentare.service";
 @Module({
   controllers: [VorgangKommentareController, NebenkostenabrechnungKommentareController, KontaktKommentareController],
   providers: [KommentareService],
+  exports: [KommentareService],
 })
 export class KommentareModule {}

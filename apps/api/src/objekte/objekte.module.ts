@@ -5,5 +5,6 @@ import { ObjekteService } from "./objekte.service";
 @Module({
   controllers: [ObjekteController],
   providers: [ObjekteService],
+  exports: [ObjekteService],
 })
 export class ObjekteModule {}

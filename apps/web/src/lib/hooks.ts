@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  AssistantChatMessage,
+  AssistantChatResponse,
   CreateEigentuemerschaftRequest,
   CreateEinheitRequest,
   CreateKommentarRequest,
@@ -646,6 +648,22 @@ export function useDetachLabel(vorgangId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId] });
+    },
+  });
+}
+
+export function useAssistantChat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messages: AssistantChatMessage[]) =>
+      apiFetch<AssistantChatResponse>("/assistant/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages }),
+      }),
+    onSuccess: (data) => {
+      if (data.actions.length > 0) {
+        queryClient.invalidateQueries();
+      }
     },
   });
 }

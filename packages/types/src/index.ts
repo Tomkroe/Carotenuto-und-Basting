@@ -356,3 +356,23 @@ export interface CreateNebenkostenPositionRequest {
   betrag: number;
   verteilerschluessel: VerteilerSchluessel;
 }
+
+// ── KI-Assistent ──────────────────────────────────────────────────
+
+export interface AssistantChatMessage {
+  role: "user" | "model";
+  text: string;
+}
+
+export interface AssistantAction {
+  label: string;
+}
+
+export interface AssistantChatRequest {
+  messages: AssistantChatMessage[];
+}
+
+export interface AssistantChatResponse {
+  reply: string;
+  actions: AssistantAction[];
+}
