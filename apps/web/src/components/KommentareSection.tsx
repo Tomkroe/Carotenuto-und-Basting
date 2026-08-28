@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
 import { useKommentare, useCreateKommentar, KommentarParent } from "@/lib/hooks";
 
 export function KommentareSection({ parent }: { parent: KommentarParent }) {
@@ -18,7 +18,10 @@ export function KommentareSection({ parent }: { parent: KommentarParent }) {
 
   return (
     <div>
-      <h2 className="mb-3 text-lg font-semibold">Kommentare</h2>
+      <h2 className="mb-3 flex items-center gap-1.5 text-lg font-semibold">
+        <MessageCircle size={18} />
+        Kommentare
+      </h2>
       <form onSubmit={handleAddKommentar} className="mb-3 flex gap-2">
         <input
           type="text"

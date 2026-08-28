@@ -53,3 +53,23 @@ export class NebenkostenabrechnungKommentareController {
     );
   }
 }
+
+@Controller("kontakte/:kontaktId/kommentare")
+@UseGuards(JwtAuthGuard)
+export class KontaktKommentareController {
+  constructor(private readonly kommentareService: KommentareService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload, @Param("kontaktId") kontaktId: string): Promise<Kommentar[]> {
+    return this.kommentareService.findAllForKontakt(user.mandantId, kontaktId);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: JwtPayload,
+    @Param("kontaktId") kontaktId: string,
+    @Body() dto: CreateKommentarDto,
+  ): Promise<Kommentar> {
+    return this.kommentareService.createForKontakt(user.mandantId, kontaktId, user.sub, dto);
+  }
+}

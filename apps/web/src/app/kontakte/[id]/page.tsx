@@ -8,6 +8,7 @@ import { KontaktTyp } from "@maklerprogram/types";
 import { useCurrentUser, useKontakt, useDeleteKontakt } from "@/lib/hooks";
 import { AppHeader } from "@/components/AppHeader";
 import { DokumenteSection } from "@/components/DokumenteSection";
+import { KommentareSection } from "@/components/KommentareSection";
 
 const KONTAKT_TYP_META: Record<
   KontaktTyp,
@@ -143,7 +144,10 @@ export default function KontaktDetailPage() {
           )}
         </div>
 
-        <DokumenteSection parent={{ path: "kontakte", id: kontaktId }} />
+        <div className="space-y-8">
+          <DokumenteSection parent={{ path: "kontakte", id: kontaktId }} />
+          <KommentareSection parent={{ path: "kontakte", id: kontaktId }} />
+        </div>
       </section>
     </main>
   );

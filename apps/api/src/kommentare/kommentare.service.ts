@@ -40,6 +40,21 @@ export class KommentareService {
     return this.create(autorId, dto, { nebenkostenabrechnungId });
   }
 
+  async findAllForKontakt(mandantId: string, kontaktId: string): Promise<Kommentar[]> {
+    await this.assertKontaktOwnership(mandantId, kontaktId);
+    return this.findAll({ kontaktId });
+  }
+
+  async createForKontakt(
+    mandantId: string,
+    kontaktId: string,
+    autorId: string,
+    dto: CreateKommentarDto,
+  ): Promise<Kommentar> {
+    await this.assertKontaktOwnership(mandantId, kontaktId);
+    return this.create(autorId, dto, { kontaktId });
+  }
+
   private async findAll(where: Prisma.KommentarWhereInput): Promise<Kommentar[]> {
     const kommentare = await this.prisma.kommentar.findMany({
       where,
@@ -52,7 +67,10 @@ export class KommentareService {
   private async create(
     autorId: string,
     dto: CreateKommentarDto,
-    fk: Pick<Prisma.KommentarUncheckedCreateInput, "vorgangId"> | Pick<Prisma.KommentarUncheckedCreateInput, "nebenkostenabrechnungId">,
+    fk:
+      | Pick<Prisma.KommentarUncheckedCreateInput, "vorgangId">
+      | Pick<Prisma.KommentarUncheckedCreateInput, "nebenkostenabrechnungId">
+      | Pick<Prisma.KommentarUncheckedCreateInput, "kontaktId">,
   ): Promise<Kommentar> {
     const kommentar = await this.prisma.kommentar.create({
       data: { text: dto.text, autorId, ...fk },
@@ -71,6 +89,11 @@ export class KommentareService {
       where: { id, objekt: { mandantId } },
     });
     if (!abrechnung) throw new NotFoundException("Nebenkostenabrechnung nicht gefunden.");
+  }
+
+  private async assertKontaktOwnership(mandantId: string, kontaktId: string): Promise<void> {
+    const kontakt = await this.prisma.kontakt.findFirst({ where: { id: kontaktId, mandantId } });
+    if (!kontakt) throw new NotFoundException("Kontakt nicht gefunden.");
   }
 }
 

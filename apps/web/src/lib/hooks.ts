@@ -238,7 +238,7 @@ export function useDeleteTodo(vorgangId: string) {
   });
 }
 
-export type KommentarParent = { path: "vorgaenge" | "nebenkostenabrechnungen"; id: string };
+export type KommentarParent = { path: "vorgaenge" | "nebenkostenabrechnungen" | "kontakte"; id: string };
 
 export function useKommentare(parent: KommentarParent) {
   return useQuery<Kommentar[]>({

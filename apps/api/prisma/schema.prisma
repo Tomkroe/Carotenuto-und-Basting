@@ -129,6 +129,7 @@ model Kontakt {
   eigentuemerschaften Eigentuemerschaft[]
   vorgaenge           Vorgang[]
   dokumente           Dokument[]
+  kommentare          Kommentar[]
 
   @@index([mandantId])
 }
@@ -269,6 +270,9 @@ model Kommentar {
   nebenkostenabrechnungId String?
   nebenkostenabrechnung   Nebenkostenabrechnung? @relation(fields: [nebenkostenabrechnungId], references: [id], onDelete: Cascade)
 
+  kontaktId String?
+  kontakt   Kontakt? @relation(fields: [kontaktId], references: [id])
+
   autorId String
   autor   User   @relation(fields: [autorId], references: [id])
 
@@ -276,6 +280,7 @@ model Kommentar {
 
   @@index([vorgangId])
   @@index([nebenkostenabrechnungId])
+  @@index([kontaktId])
 }
 
 // ── Zähler ────────────────────────────────────────────────────

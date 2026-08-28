@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, ChangeEvent } from "react";
-import { Upload, FileText, Download, Trash2 } from "lucide-react";
+import { Upload, FileText, Download, Trash2, Paperclip } from "lucide-react";
 import { useDokumente, useUploadDokument, useDeleteDokument, DokumentParent } from "@/lib/hooks";
 import { API_URL, ApiError } from "@/lib/api";
 
@@ -32,7 +32,10 @@ export function DokumenteSection({ parent }: { parent: DokumentParent }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Dokumente</h2>
+        <h2 className="flex items-center gap-1.5 text-lg font-semibold">
+          <Paperclip size={18} />
+          Dokumente
+        </h2>
         <label className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90">
           <Upload size={15} />
           {uploadDokument.isPending ? "Wird hochgeladen…" : "Hochladen"}
