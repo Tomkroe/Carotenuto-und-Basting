@@ -10,3 +10,5 @@ build/
 .idea/
 .turbo/
 coverage/
+next-env.d.ts
+*.tsbuildinfo
