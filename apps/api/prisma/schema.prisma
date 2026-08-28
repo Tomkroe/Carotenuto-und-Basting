@@ -1,0 +1,388 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Mandant / User ──────────────────────────────────────────────
+
+enum UserRole {
+  OWNER
+  VERWALTER
+}
+
+model Mandant {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users                  User[]
+  objekte                Objekt[]
+  kontakte               Kontakt[]
+  vorgaenge              Vorgang[]
+  labels                 Label[]
+  zaehler                Zaehler[]
+  dokumente              Dokument[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(VERWALTER)
+  createdAt    DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  verantwortlicheVorgaenge Vorgang[]    @relation("VorgangVerantwortlicher")
+  kommentare               Kommentar[]
+  dokumente                Dokument[]
+
+  @@index([mandantId])
+}
+
+// ── Objekte / Einheiten ─────────────────────────────────────────
+
+enum ObjektTyp {
+  WOHN_GESCHAEFTSHAUS
+  EINHEITEN
+  EINFAMILIENHAUS
+  WEG
+}
+
+model Objekt {
+  id        String    @id @default(cuid())
+  typ       ObjektTyp
+  name      String
+  strasse   String
+  hausnummer String
+  plz       String
+  ort       String
+  land      String   @default("DE")
+  kaltmiete Decimal? @db.Decimal(10, 2)
+  flaeche   Decimal? @db.Decimal(10, 2)
+  eigenschaften Json  @default("{}")
+  createdAt DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  einheiten                Einheit[]
+  vorgaenge                Vorgang[]
+  dokumente                Dokument[]
+  zaehler                  Zaehler[]
+  nebenkostenabrechnungen  Nebenkostenabrechnung[]
+
+  @@index([mandantId])
+}
+
+model Einheit {
+  id        String   @id @default(cuid())
+  name      String
+  kategorie String
+  flaeche   Decimal? @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  objektId String
+  objekt   Objekt @relation(fields: [objektId], references: [id], onDelete: Cascade)
+
+  mietvertraege        Mietvertrag[]
+  eigentuemerschaften  Eigentuemerschaft[]
+  zaehler              Zaehler[]
+  vorgaenge            Vorgang[]
+
+  @@index([objektId])
+}
+
+// ── Kontakte ─────────────────────────────────────────────────────
+
+enum KontaktTyp {
+  MIETER
+  EIGENTUEMER
+  HAUSVERWALTUNG
+  DIENSTLEISTER
+  SONSTIGE
+}
+
+model Kontakt {
+  id         String     @id @default(cuid())
+  typ        KontaktTyp
+  vorname    String?
+  nachname   String?
+  firma      String?
+  email      String?
+  telefon    String?
+  debitorNr  String?
+  kreditorNr String?
+  createdAt  DateTime   @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  mietvertraege       Mietvertrag[]
+  eigentuemerschaften Eigentuemerschaft[]
+  vorgaenge           Vorgang[]
+
+  @@index([mandantId])
+}
+
+// ── Mietverwaltung / WEG ─────────────────────────────────────────
+
+enum MietvertragStatus {
+  GEPLANT
+  AKTIV
+  BEENDET
+}
+
+model Mietvertrag {
+  id                      String            @id @default(cuid())
+  kaltmiete               Decimal           @db.Decimal(10, 2)
+  nebenkostenVorauszahlung Decimal          @default(0) @db.Decimal(10, 2)
+  beginn                  DateTime
+  ende                    DateTime?
+  status                  MietvertragStatus @default(GEPLANT)
+  createdAt               DateTime          @default(now())
+
+  einheitId String
+  einheit   Einheit @relation(fields: [einheitId], references: [id], onDelete: Cascade)
+
+  mieterId String
+  mieter   Kontakt @relation(fields: [mieterId], references: [id])
+
+  dokumente Dokument[]
+
+  @@index([einheitId])
+  @@index([mieterId])
+}
+
+/// WEG-Sondereigentum, spätere Phase — Datenmodell bereits vorbereitet
+model Eigentuemerschaft {
+  id             String   @id @default(cuid())
+  hausgeldAnteil Decimal  @db.Decimal(10, 2)
+  anteilProzent  Decimal? @db.Decimal(5, 2)
+  createdAt      DateTime @default(now())
+
+  einheitId String
+  einheit   Einheit @relation(fields: [einheitId], references: [id], onDelete: Cascade)
+
+  eigentuemerId String
+  eigentuemer   Kontakt @relation(fields: [eigentuemerId], references: [id])
+
+  @@index([einheitId])
+  @@index([eigentuemerId])
+}
+
+// ── Vorgänge ───────────────────────────────────────────────────
+
+enum VorgangStatus {
+  OFFEN
+  IN_BEARBEITUNG
+  ABGESCHLOSSEN
+}
+
+model Vorgang {
+  id          String        @id @default(cuid())
+  nummer      Int           @default(autoincrement())
+  titel       String
+  beschreibung String?
+  status      VorgangStatus @default(OFFEN)
+  startDatum  DateTime?
+  faelligkeit DateTime?
+  createdAt   DateTime      @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  objektId String?
+  objekt   Objekt? @relation(fields: [objektId], references: [id])
+
+  einheitId String?
+  einheit   Einheit? @relation(fields: [einheitId], references: [id])
+
+  verantwortlicherId String?
+  verantwortlicher   User?   @relation("VorgangVerantwortlicher", fields: [verantwortlicherId], references: [id])
+
+  kontaktId String?
+  kontakt   Kontakt? @relation(fields: [kontaktId], references: [id])
+
+  todos      ToDo[]
+  kommentare Kommentar[]
+  dokumente  Dokument[]
+  labels     VorgangLabel[]
+
+  @@index([mandantId])
+  @@index([objektId])
+}
+
+model Label {
+  id    String @id @default(cuid())
+  name  String
+  farbe String
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  vorgaenge VorgangLabel[]
+
+  @@index([mandantId])
+}
+
+model VorgangLabel {
+  vorgangId String
+  vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+
+  labelId String
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([vorgangId, labelId])
+}
+
+model ToDo {
+  id          String    @id @default(cuid())
+  titel       String
+  erledigt    Boolean   @default(false)
+  faelligkeit DateTime?
+  reihenfolge Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  vorgangId String
+  vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+
+  @@index([vorgangId])
+}
+
+model Kommentar {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+
+  vorgangId String
+  vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+
+  autorId String
+  autor   User   @relation(fields: [autorId], references: [id])
+
+  dokumente Dokument[]
+
+  @@index([vorgangId])
+}
+
+// ── Zähler ────────────────────────────────────────────────────
+
+enum ZaehlerTyp {
+  STROM
+  GAS
+  WASSER
+}
+
+model Zaehler {
+  id            String     @id @default(cuid())
+  typ           ZaehlerTyp
+  zaehlernummer String
+  hauptzaehler  Boolean    @default(true)
+  versorger     String?
+  vertragsNr    String?
+  createdAt     DateTime   @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  objektId String?
+  objekt   Objekt? @relation(fields: [objektId], references: [id])
+
+  einheitId String?
+  einheit   Einheit? @relation(fields: [einheitId], references: [id])
+
+  zaehlerstaende Zaehlerstand[]
+
+  @@index([mandantId])
+}
+
+model Zaehlerstand {
+  id        String   @id @default(cuid())
+  datum     DateTime
+  wert      Decimal  @db.Decimal(12, 3)
+  createdAt DateTime @default(now())
+
+  zaehlerId String
+  zaehler   Zaehler @relation(fields: [zaehlerId], references: [id], onDelete: Cascade)
+
+  @@index([zaehlerId])
+}
+
+// ── Dokumente ─────────────────────────────────────────────────
+
+model Dokument {
+  id         String   @id @default(cuid())
+  dateiname  String
+  speicherKey String  // Object-Storage Key/Pfad
+  mimeType   String
+  groesseBytes Int
+  createdAt  DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  hochgeladenVonId String
+  hochgeladenVon   User   @relation(fields: [hochgeladenVonId], references: [id])
+
+  objektId String?
+  objekt   Objekt? @relation(fields: [objektId], references: [id])
+
+  vorgangId String?
+  vorgang   Vorgang? @relation(fields: [vorgangId], references: [id])
+
+  mietvertragId String?
+  mietvertrag   Mietvertrag? @relation(fields: [mietvertragId], references: [id])
+
+  kommentarId String?
+  kommentar   Kommentar? @relation(fields: [kommentarId], references: [id])
+
+  @@index([mandantId])
+}
+
+// ── Nebenkostenabrechnung ────────────────────────────────────────
+
+enum NebenkostenStatus {
+  ENTWURF
+  VERSENDET
+}
+
+enum VerteilerSchluessel {
+  QM
+  PERSONEN
+  VERBRAUCH
+  EINHEITEN
+}
+
+model Nebenkostenabrechnung {
+  id           String            @id @default(cuid())
+  zeitraumVon  DateTime
+  zeitraumBis  DateTime
+  status       NebenkostenStatus @default(ENTWURF)
+  createdAt    DateTime          @default(now())
+
+  objektId String
+  objekt   Objekt @relation(fields: [objektId], references: [id], onDelete: Cascade)
+
+  positionen NebenkostenPosition[]
+
+  @@index([objektId])
+}
+
+model NebenkostenPosition {
+  id             String              @id @default(cuid())
+  bezeichnung    String
+  betrag         Decimal             @db.Decimal(10, 2)
+  verteilerschluessel VerteilerSchluessel
+
+  nebenkostenabrechnungId String
+  nebenkostenabrechnung   Nebenkostenabrechnung @relation(fields: [nebenkostenabrechnungId], references: [id], onDelete: Cascade)
+
+  @@index([nebenkostenabrechnungId])
+}
