@@ -73,3 +73,18 @@ export interface CreateObjektRequest {
 }
 
 export type UpdateObjektRequest = Partial<CreateObjektRequest>;
+
+export interface Einheit {
+  id: string;
+  name: string;
+  kategorie: string;
+  flaeche: number | null;
+  objektId: string;
+  createdAt: string;
+}
+
+export interface CreateEinheitRequest {
+  name: string;
+  kategorie: string;
+  flaeche?: number;
+}

@@ -185,16 +185,21 @@ export default function ObjektePage() {
         {objekte && objekte.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
             {objekte.map((o) => (
-              <li key={o.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-medium">{o.name}</p>
-                  <p className="text-sm text-text-muted">
-                    {o.strasse} {o.hausnummer}, {o.plz} {o.ort}
-                  </p>
-                </div>
-                <span className="rounded-full border border-border px-2.5 py-1 text-xs text-text-muted">
-                  {OBJEKT_TYP_LABEL[o.typ]}
-                </span>
+              <li key={o.id}>
+                <Link
+                  href={`/objekte/${o.id}`}
+                  className="flex items-center justify-between px-4 py-3 transition hover:bg-bg"
+                >
+                  <div>
+                    <p className="font-medium">{o.name}</p>
+                    <p className="text-sm text-text-muted">
+                      {o.strasse} {o.hausnummer}, {o.plz} {o.ort}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-border px-2.5 py-1 text-xs text-text-muted">
+                    {OBJEKT_TYP_LABEL[o.typ]}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
