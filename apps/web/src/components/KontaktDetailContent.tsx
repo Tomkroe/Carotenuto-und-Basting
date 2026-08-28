@@ -3,9 +3,9 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, KeyRound, Mail, Pencil, Phone, Sparkles, Trash2, UserRound, Wrench } from "lucide-react";
+import { Building2, Home, KeyRound, Mail, Pencil, Phone, Sparkles, Trash2, UserRound, Wrench } from "lucide-react";
 import { KontaktTyp } from "@maklerprogram/types";
-import { useCurrentUser, useKontakt, useUpdateKontakt, useDeleteKontakt } from "@/lib/hooks";
+import { useCurrentUser, useKontakt, useKontaktObjekte, useUpdateKontakt, useDeleteKontakt } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
@@ -26,11 +26,17 @@ const KONTAKT_TYP_META: Record<KontaktTyp, { label: string; icon: typeof UserRou
   [KontaktTyp.SONSTIGE]: { label: "Sonstige", icon: Sparkles, className: "bg-text-muted/10 text-text-muted" },
 };
 
+const ROLLE_META: Record<"MIETER" | "EIGENTUEMER", { label: string; className: string }> = {
+  MIETER: { label: "Mieter", className: "bg-blue-500/10 text-blue-500" },
+  EIGENTUEMER: { label: "Eigentümer", className: "bg-amber-500/10 text-amber-500" },
+};
+
 export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const router = useRouter();
 
   const { isError: authError } = useCurrentUser();
   const { data: kontakt, isLoading, isError: kontaktError } = useKontakt(kontaktId);
+  const { data: zuordnungen } = useKontaktObjekte(kontaktId);
   const updateKontakt = useUpdateKontakt(kontaktId);
   const deleteKontakt = useDeleteKontakt();
 
@@ -279,6 +285,32 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
       )}
 
       <div className="space-y-8">
+        <div>
+          <h2 className="mb-3 text-lg font-semibold">Zugeordnete Objekte</h2>
+          {zuordnungen && zuordnungen.length === 0 && (
+            <p className="text-sm text-text-muted">Keinem Objekt zugeordnet.</p>
+          )}
+          {zuordnungen && zuordnungen.length > 0 && (
+            <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+              {zuordnungen.map((z, i) => (
+                <li key={i} className="flex items-center justify-between px-4 py-2.5">
+                  <Link
+                    href={`/objekte/${z.einheit.objekt.id}`}
+                    className="flex items-center gap-2 hover:text-primary"
+                  >
+                    <Home size={15} className="text-text-muted" />
+                    <span>{z.einheit.objekt.name}</span>
+                    <span className="text-text-muted">· {z.einheit.name}</span>
+                  </Link>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${ROLLE_META[z.rolle].className}`}>
+                    {ROLLE_META[z.rolle].label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <DokumenteSection parent={{ path: "kontakte", id: kontaktId }} />
         <KommentareSection parent={{ path: "kontakte", id: kontaktId }} />
       </div>

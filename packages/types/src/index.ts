@@ -117,6 +117,12 @@ export interface Kontakt {
   createdAt: string;
 }
 
+export interface KontaktObjektZuordnung {
+  rolle: "MIETER" | "EIGENTUEMER";
+  einheit: EinheitRef;
+  mietvertragStatus: MietvertragStatus | null;
+}
+
 export interface CreateKontaktRequest {
   typ: KontaktTyp;
   vorname?: string;

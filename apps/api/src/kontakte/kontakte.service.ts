@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { Kontakt } from "@maklerprogram/types";
+import { Kontakt, KontaktObjektZuordnung } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateKontaktDto } from "./dto/create-kontakt.dto";
 import { UpdateKontaktDto } from "./dto/update-kontakt.dto";
@@ -38,6 +38,32 @@ export class KontakteService {
   async remove(mandantId: string, id: string): Promise<void> {
     await this.findOne(mandantId, id);
     await this.prisma.kontakt.delete({ where: { id } });
+  }
+
+  async findObjekte(mandantId: string, id: string): Promise<KontaktObjektZuordnung[]> {
+    await this.findOne(mandantId, id);
+
+    const einheitInclude = { einheit: { include: { objekt: { select: { id: true, name: true } } } } } as const;
+
+    const [mietvertraege, eigentuemerschaften] = await Promise.all([
+      this.prisma.mietvertrag.findMany({ where: { mieterId: id }, include: einheitInclude }),
+      this.prisma.eigentuemerschaft.findMany({ where: { eigentuemerId: id }, include: einheitInclude }),
+    ]);
+
+    const zuordnungen: KontaktObjektZuordnung[] = [
+      ...mietvertraege.map((m) => ({
+        rolle: "MIETER" as const,
+        einheit: { id: m.einheit.id, name: m.einheit.name, objekt: m.einheit.objekt },
+        mietvertragStatus: m.status as KontaktObjektZuordnung["mietvertragStatus"],
+      })),
+      ...eigentuemerschaften.map((e) => ({
+        rolle: "EIGENTUEMER" as const,
+        einheit: { id: e.einheit.id, name: e.einheit.name, objekt: e.einheit.objekt },
+        mietvertragStatus: null,
+      })),
+    ];
+
+    return zuordnungen;
   }
 }
 

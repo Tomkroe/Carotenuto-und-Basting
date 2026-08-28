@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { Kontakt } from "@maklerprogram/types";
+import { Kontakt, KontaktObjektZuordnung } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -20,6 +20,11 @@ export class KontakteController {
   @Get(":id")
   findOne(@CurrentUser() user: JwtPayload, @Param("id") id: string): Promise<Kontakt> {
     return this.kontakteService.findOne(user.mandantId, id);
+  }
+
+  @Get(":id/objekte")
+  findObjekte(@CurrentUser() user: JwtPayload, @Param("id") id: string): Promise<KontaktObjektZuordnung[]> {
+    return this.kontakteService.findObjekte(user.mandantId, id);
   }
 
   @Post()

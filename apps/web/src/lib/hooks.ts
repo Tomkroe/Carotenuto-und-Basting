@@ -24,6 +24,7 @@ import type {
   EinheitListItem,
   Kommentar,
   Kontakt,
+  KontaktObjektZuordnung,
   Label,
   MeResponse,
   Mietvertrag,
@@ -163,6 +164,14 @@ export function useKontakt(id: string) {
   return useQuery<Kontakt>({
     queryKey: ["kontakte", id],
     queryFn: () => apiFetch<Kontakt>(`/kontakte/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useKontaktObjekte(id: string) {
+  return useQuery<KontaktObjektZuordnung[]>({
+    queryKey: ["kontakte", id, "objekte"],
+    queryFn: () => apiFetch<KontaktObjektZuordnung[]>(`/kontakte/${id}/objekte`),
     enabled: !!id,
   });
 }
