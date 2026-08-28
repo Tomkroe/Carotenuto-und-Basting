@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, Trash2, Send, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
+import { CircleDot, Clock, CheckCircle2, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -14,8 +14,6 @@ import {
   useCreateTodo,
   useToggleTodo,
   useDeleteTodo,
-  useKommentare,
-  useCreateKommentar,
   useLabels,
   useCreateLabel,
   useAttachLabel,
@@ -23,6 +21,7 @@ import {
 } from "@/lib/hooks";
 import { AppHeader } from "@/components/AppHeader";
 import { DokumenteSection } from "@/components/DokumenteSection";
+import { KommentareSection } from "@/components/KommentareSection";
 
 const LABEL_COLORS = [
   "#3b82f6",
@@ -68,9 +67,6 @@ export default function VorgangDetailPage() {
   const toggleTodo = useToggleTodo(vorgangId);
   const deleteTodo = useDeleteTodo(vorgangId);
 
-  const { data: kommentare } = useKommentare(vorgangId);
-  const createKommentar = useCreateKommentar(vorgangId);
-
   const { data: alleLabels } = useLabels();
   const createLabel = useCreateLabel();
   const attachLabel = useAttachLabel(vorgangId);
@@ -78,7 +74,6 @@ export default function VorgangDetailPage() {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
-  const [newKommentar, setNewKommentar] = useState("");
   const [showLabelPicker, setShowLabelPicker] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
@@ -101,13 +96,6 @@ export default function VorgangDetailPage() {
     if (!newTodo.trim()) return;
     createTodo.mutate({ titel: newTodo });
     setNewTodo("");
-  }
-
-  function handleAddKommentar(e: FormEvent) {
-    e.preventDefault();
-    if (!newKommentar.trim()) return;
-    createKommentar.mutate({ text: newKommentar });
-    setNewKommentar("");
   }
 
   async function handleCreateAndAttachLabel(e: FormEvent) {
@@ -327,39 +315,7 @@ export default function VorgangDetailPage() {
           )}
         </div>
 
-        <div>
-          <h2 className="mb-3 text-lg font-semibold">Kommentare</h2>
-          <form onSubmit={handleAddKommentar} className="mb-3 flex gap-2">
-            <input
-              type="text"
-              value={newKommentar}
-              onChange={(e) => setNewKommentar(e.target.value)}
-              placeholder="Kommentar schreiben…"
-              className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary"
-            />
-            <button
-              type="submit"
-              className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
-            >
-              <Send size={15} />
-            </button>
-          </form>
-
-          {kommentare && kommentare.length === 0 && <p className="text-sm text-text-muted">Noch keine Kommentare.</p>}
-
-          {kommentare && kommentare.length > 0 && (
-            <ul className="space-y-2">
-              {kommentare.map((k) => (
-                <li key={k.id} className="rounded-lg border border-border bg-surface px-4 py-2.5">
-                  <p className="text-sm">{k.text}</p>
-                  <p className="mt-1 text-xs text-text-muted">
-                    {k.autor.name} · {new Date(k.createdAt).toLocaleString("de-DE")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <KommentareSection parent={{ path: "vorgaenge", id: vorgangId }} />
 
         <div className="mt-8">
           <DokumenteSection parent={{ path: "vorgaenge", id: vorgangId }} />

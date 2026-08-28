@@ -187,7 +187,6 @@ export interface CreateToDoRequest {
 export interface Kommentar {
   id: string;
   text: string;
-  vorgangId: string;
   createdAt: string;
   autor: { id: string; name: string };
 }

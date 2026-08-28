@@ -262,8 +262,11 @@ model Kommentar {
   text      String
   createdAt DateTime @default(now())
 
-  vorgangId String
-  vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+  vorgangId String?
+  vorgang   Vorgang? @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+
+  nebenkostenabrechnungId String?
+  nebenkostenabrechnung   Nebenkostenabrechnung? @relation(fields: [nebenkostenabrechnungId], references: [id], onDelete: Cascade)
 
   autorId String
   autor   User   @relation(fields: [autorId], references: [id])
@@ -271,6 +274,7 @@ model Kommentar {
   dokumente Dokument[]
 
   @@index([vorgangId])
+  @@index([nebenkostenabrechnungId])
 }
 
 // ── Zähler ────────────────────────────────────────────────────
@@ -372,6 +376,7 @@ model Nebenkostenabrechnung {
   objekt   Objekt @relation(fields: [objektId], references: [id], onDelete: Cascade)
 
   positionen NebenkostenPosition[]
+  kommentare Kommentar[]
 
   @@index([objektId])
 }

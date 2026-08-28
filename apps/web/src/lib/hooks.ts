@@ -230,24 +230,26 @@ export function useDeleteTodo(vorgangId: string) {
   });
 }
 
-export function useKommentare(vorgangId: string) {
+export type KommentarParent = { path: "vorgaenge" | "nebenkostenabrechnungen"; id: string };
+
+export function useKommentare(parent: KommentarParent) {
   return useQuery<Kommentar[]>({
-    queryKey: ["vorgaenge", vorgangId, "kommentare"],
-    queryFn: () => apiFetch<Kommentar[]>(`/vorgaenge/${vorgangId}/kommentare`),
-    enabled: !!vorgangId,
+    queryKey: [parent.path, parent.id, "kommentare"],
+    queryFn: () => apiFetch<Kommentar[]>(`/${parent.path}/${parent.id}/kommentare`),
+    enabled: !!parent.id,
   });
 }
 
-export function useCreateKommentar(vorgangId: string) {
+export function useCreateKommentar(parent: KommentarParent) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateKommentarRequest) =>
-      apiFetch<Kommentar>(`/vorgaenge/${vorgangId}/kommentare`, {
+      apiFetch<Kommentar>(`/${parent.path}/${parent.id}/kommentare`, {
         method: "POST",
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "kommentare"] });
+      queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "kommentare"] });
     },
   });
 }
