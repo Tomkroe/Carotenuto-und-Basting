@@ -299,3 +299,47 @@ export interface CreateZaehlerstandRequest {
   datum: string;
   wert: number;
 }
+
+export enum NebenkostenStatus {
+  ENTWURF = "ENTWURF",
+  VERSENDET = "VERSENDET",
+}
+
+export enum VerteilerSchluessel {
+  QM = "QM",
+  PERSONEN = "PERSONEN",
+  VERBRAUCH = "VERBRAUCH",
+  EINHEITEN = "EINHEITEN",
+}
+
+export interface Nebenkostenabrechnung {
+  id: string;
+  zeitraumVon: string;
+  zeitraumBis: string;
+  status: NebenkostenStatus;
+  createdAt: string;
+  objekt: ObjektRef;
+}
+
+export interface CreateNebenkostenabrechnungRequest {
+  objektId: string;
+  zeitraumVon: string;
+  zeitraumBis: string;
+  status?: NebenkostenStatus;
+}
+
+export type UpdateNebenkostenabrechnungRequest = Partial<Omit<CreateNebenkostenabrechnungRequest, "objektId">>;
+
+export interface NebenkostenPosition {
+  id: string;
+  bezeichnung: string;
+  betrag: number;
+  verteilerschluessel: VerteilerSchluessel;
+  nebenkostenabrechnungId: string;
+}
+
+export interface CreateNebenkostenPositionRequest {
+  bezeichnung: string;
+  betrag: number;
+  verteilerschluessel: VerteilerSchluessel;
+}

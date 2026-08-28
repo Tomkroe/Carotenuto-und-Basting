@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, ClipboardList, FileSignature, Gauge, KeyRound, LayoutDashboard, LogOut, Users } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  FileSignature,
+  Gauge,
+  KeyRound,
+  LayoutDashboard,
+  LogOut,
+  Receipt,
+  Users,
+} from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -15,6 +25,7 @@ const NAV_ITEMS = [
   { href: "/mietvertraege", label: "Mietverträge", icon: FileSignature },
   { href: "/eigentuemerschaften", label: "Eigentümer", icon: KeyRound },
   { href: "/zaehler", label: "Zähler", icon: Gauge },
+  { href: "/nebenkostenabrechnungen", label: "Nebenkosten", icon: Receipt },
 ];
 
 export function AppHeader() {
@@ -30,11 +41,11 @@ export function AppHeader() {
 
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-3">
-      <div className="flex items-center gap-6">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
         <Link href="/dashboard" className="text-lg font-semibold text-primary">
           maklerprogram
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav className="flex flex-wrap items-center gap-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (

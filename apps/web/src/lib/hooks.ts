@@ -7,6 +7,8 @@ import type {
   CreateKommentarRequest,
   CreateKontaktRequest,
   CreateMietvertragRequest,
+  CreateNebenkostenabrechnungRequest,
+  CreateNebenkostenPositionRequest,
   CreateObjektRequest,
   CreateToDoRequest,
   CreateVorgangRequest,
@@ -20,9 +22,12 @@ import type {
   Kontakt,
   MeResponse,
   Mietvertrag,
+  Nebenkostenabrechnung,
+  NebenkostenPosition,
   Objekt,
   ToDo,
   UpdateMietvertragRequest,
+  UpdateNebenkostenabrechnungRequest,
   UpdateVorgangRequest,
   UpdateZaehlerRequest,
   Vorgang,
@@ -436,6 +441,92 @@ export function useDeleteZaehlerstand(zaehlerId: string) {
     mutationFn: (id: string) => apiFetch<void>(`/zaehlerstaende/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["zaehler", zaehlerId, "zaehlerstaende"] });
+    },
+  });
+}
+
+export function useNebenkostenabrechnungen() {
+  return useQuery<Nebenkostenabrechnung[]>({
+    queryKey: ["nebenkostenabrechnungen"],
+    queryFn: () => apiFetch<Nebenkostenabrechnung[]>("/nebenkostenabrechnungen"),
+  });
+}
+
+export function useNebenkostenabrechnung(id: string) {
+  return useQuery<Nebenkostenabrechnung>({
+    queryKey: ["nebenkostenabrechnungen", id],
+    queryFn: () => apiFetch<Nebenkostenabrechnung>(`/nebenkostenabrechnungen/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateNebenkostenabrechnung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateNebenkostenabrechnungRequest) =>
+      apiFetch<Nebenkostenabrechnung>("/nebenkostenabrechnungen", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen"] });
+    },
+  });
+}
+
+export function useUpdateNebenkostenabrechnung(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateNebenkostenabrechnungRequest) =>
+      apiFetch<Nebenkostenabrechnung>(`/nebenkostenabrechnungen/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen"] });
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen", id] });
+    },
+  });
+}
+
+export function useDeleteNebenkostenabrechnung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/nebenkostenabrechnungen/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen"] });
+    },
+  });
+}
+
+export function useNebenkostenPositionen(abrechnungId: string) {
+  return useQuery<NebenkostenPosition[]>({
+    queryKey: ["nebenkostenabrechnungen", abrechnungId, "positionen"],
+    queryFn: () => apiFetch<NebenkostenPosition[]>(`/nebenkostenabrechnungen/${abrechnungId}/positionen`),
+    enabled: !!abrechnungId,
+  });
+}
+
+export function useCreateNebenkostenPosition(abrechnungId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateNebenkostenPositionRequest) =>
+      apiFetch<NebenkostenPosition>(`/nebenkostenabrechnungen/${abrechnungId}/positionen`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen", abrechnungId, "positionen"] });
+    },
+  });
+}
+
+export function useDeleteNebenkostenPosition(abrechnungId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/positionen/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen", abrechnungId, "positionen"] });
     },
   });
 }

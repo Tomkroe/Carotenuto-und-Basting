@@ -15,6 +15,8 @@ import { DokumenteModule } from "./dokumente/dokumente.module";
 import { EigentuemerschaftenModule } from "./eigentuemerschaften/eigentuemerschaften.module";
 import { ZaehlerModule } from "./zaehler/zaehler.module";
 import { ZaehlerstaendeModule } from "./zaehlerstaende/zaehlerstaende.module";
+import { NebenkostenabrechnungenModule } from "./nebenkostenabrechnungen/nebenkostenabrechnungen.module";
+import { NebenkostenpositionenModule } from "./nebenkostenpositionen/nebenkostenpositionen.module";
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { ZaehlerstaendeModule } from "./zaehlerstaende/zaehlerstaende.module";
     EigentuemerschaftenModule,
     ZaehlerModule,
     ZaehlerstaendeModule,
+    NebenkostenabrechnungenModule,
+    NebenkostenpositionenModule,
   ],
 })
 export class AppModule {}
