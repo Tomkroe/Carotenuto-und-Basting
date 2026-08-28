@@ -25,6 +25,8 @@ services:
       - postgres
     env_file:
       - apps/api/.env
+    environment:
+      DATABASE_URL: "postgresql://makler:makler@postgres:5432/maklerprogram?schema=public"
     ports:
       - "3001:3001"
 
