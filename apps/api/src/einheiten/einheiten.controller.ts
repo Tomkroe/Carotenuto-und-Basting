@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { Einheit, EinheitListItem } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
 import { EinheitenService } from "./einheiten.service";
 import { CreateEinheitDto } from "./dto/create-einheit.dto";
+import { UpdateEinheitDto } from "./dto/update-einheit.dto";
 
 @Controller("objekte/:objektId/einheiten")
 @UseGuards(JwtAuthGuard)
@@ -34,6 +35,15 @@ export class EinheitenController {
   @Get()
   findAll(@CurrentUser() user: JwtPayload): Promise<EinheitListItem[]> {
     return this.einheitenService.findAllForMandant(user.mandantId);
+  }
+
+  @Patch(":id")
+  update(
+    @CurrentUser() user: JwtPayload,
+    @Param("id") id: string,
+    @Body() dto: UpdateEinheitDto,
+  ): Promise<Einheit> {
+    return this.einheitenService.update(user.mandantId, id, dto);
   }
 
   @Delete(":id")

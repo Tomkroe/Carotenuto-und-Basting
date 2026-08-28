@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Einheit, EinheitListItem } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateEinheitDto } from "./dto/create-einheit.dto";
+import { UpdateEinheitDto } from "./dto/update-einheit.dto";
 
 @Injectable()
 export class EinheitenService {
@@ -30,6 +31,15 @@ export class EinheitenService {
     const einheit = await this.prisma.einheit.create({
       data: { ...dto, objektId },
     });
+    return toEinheit(einheit);
+  }
+
+  async update(mandantId: string, einheitId: string, dto: UpdateEinheitDto): Promise<Einheit> {
+    const existing = await this.prisma.einheit.findFirst({
+      where: { id: einheitId, objekt: { mandantId } },
+    });
+    if (!existing) throw new NotFoundException("Einheit nicht gefunden.");
+    const einheit = await this.prisma.einheit.update({ where: { id: einheitId }, data: dto });
     return toEinheit(einheit);
   }
 

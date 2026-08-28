@@ -3,13 +3,15 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { KeyRound, UserRound } from "lucide-react";
+import { KeyRound, Pencil, UserRound } from "lucide-react";
 import { MietvertragStatus, ObjektTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
   useObjekt,
+  useUpdateObjekt,
   useEinheiten,
   useCreateEinheit,
+  useUpdateEinheit,
   useDeleteEinheit,
   useDeleteObjekt,
   useMietvertraege,
@@ -37,8 +39,10 @@ export default function ObjektDetailPage() {
 
   const { isError: authError } = useCurrentUser();
   const { data: objekt, isLoading, isError: objektError } = useObjekt(objektId);
+  const updateObjekt = useUpdateObjekt(objektId);
   const { data: einheiten, isLoading: einheitenLoading } = useEinheiten(objektId);
   const createEinheit = useCreateEinheit(objektId);
+  const updateEinheit = useUpdateEinheit(objektId);
   const deleteEinheit = useDeleteEinheit(objektId);
   const deleteObjekt = useDeleteObjekt();
   const { data: mietvertraege } = useMietvertraege();
@@ -49,6 +53,21 @@ export default function ObjektDetailPage() {
   const [einheitName, setEinheitName] = useState("");
   const [einheitKategorie, setEinheitKategorie] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const [editingObjekt, setEditingObjekt] = useState(false);
+  const [editTyp, setEditTyp] = useState<ObjektTyp>(ObjektTyp.EINFAMILIENHAUS);
+  const [editName, setEditName] = useState("");
+  const [editStrasse, setEditStrasse] = useState("");
+  const [editHausnummer, setEditHausnummer] = useState("");
+  const [editPlz, setEditPlz] = useState("");
+  const [editOrt, setEditOrt] = useState("");
+  const [editKaltmiete, setEditKaltmiete] = useState("");
+  const [editFlaeche, setEditFlaeche] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const [editingEinheitId, setEditingEinheitId] = useState<string | null>(null);
+  const [editEinheitName, setEditEinheitName] = useState("");
+  const [editEinheitKategorie, setEditEinheitKategorie] = useState("");
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -76,6 +95,51 @@ export default function ObjektDetailPage() {
     }
   }
 
+  function startEditObjekt() {
+    if (!objekt) return;
+    setEditTyp(objekt.typ);
+    setEditName(objekt.name);
+    setEditStrasse(objekt.strasse);
+    setEditHausnummer(objekt.hausnummer);
+    setEditPlz(objekt.plz);
+    setEditOrt(objekt.ort);
+    setEditKaltmiete(objekt.kaltmiete != null ? String(objekt.kaltmiete) : "");
+    setEditFlaeche(objekt.flaeche != null ? String(objekt.flaeche) : "");
+    setEditError(null);
+    setEditingObjekt(true);
+  }
+
+  async function handleSaveObjekt(e: FormEvent) {
+    e.preventDefault();
+    setEditError(null);
+    try {
+      await updateObjekt.mutateAsync({
+        typ: editTyp,
+        name: editName,
+        strasse: editStrasse,
+        hausnummer: editHausnummer,
+        plz: editPlz,
+        ort: editOrt,
+        kaltmiete: editKaltmiete ? Number(editKaltmiete) : undefined,
+        flaeche: editFlaeche ? Number(editFlaeche) : undefined,
+      });
+      setEditingObjekt(false);
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Objekt konnte nicht gespeichert werden.");
+    }
+  }
+
+  function startEditEinheit(id: string, name: string, kategorie: string) {
+    setEditingEinheitId(id);
+    setEditEinheitName(name);
+    setEditEinheitKategorie(kategorie);
+  }
+
+  async function handleSaveEinheit(id: string) {
+    await updateEinheit.mutateAsync({ id, data: { name: editEinheitName, kategorie: editEinheitKategorie } });
+    setEditingEinheitId(null);
+  }
+
   if (isLoading || !objekt) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bg text-text-muted">
@@ -98,40 +162,204 @@ export default function ObjektDetailPage() {
         </nav>
 
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <p className="text-sm text-text-muted">{OBJEKT_TYP_LABEL[objekt.typ]}</p>
-            <h1 className="mt-1 text-2xl font-semibold">{objekt.name}</h1>
-            <p className="mt-1 text-text-muted">
-              {objekt.strasse} {objekt.hausnummer}, {objekt.plz} {objekt.ort}
-            </p>
-          </div>
-
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="rounded-full border border-border px-3 py-1.5 text-sm text-text-muted transition hover:border-red-500 hover:text-red-500"
-            >
-              Löschen
-            </button>
+          {!editingObjekt ? (
+            <div>
+              <p className="text-sm text-text-muted">{OBJEKT_TYP_LABEL[objekt.typ]}</p>
+              <h1 className="mt-1 text-2xl font-semibold">{objekt.name}</h1>
+              <p className="mt-1 text-text-muted">
+                {objekt.strasse} {objekt.hausnummer}, {objekt.plz} {objekt.ort}
+              </p>
+              {(objekt.kaltmiete != null || objekt.flaeche != null) && (
+                <p className="mt-1 text-sm text-text-muted">
+                  {objekt.kaltmiete != null && `${objekt.kaltmiete.toFixed(2)} € Kaltmiete`}
+                  {objekt.kaltmiete != null && objekt.flaeche != null && " · "}
+                  {objekt.flaeche != null && `${objekt.flaeche.toFixed(1)} m²`}
+                </p>
+              )}
+            </div>
           ) : (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-text-muted">Wirklich löschen?</span>
-              <button
-                onClick={handleDeleteObjekt}
-                disabled={deleteObjekt.isPending}
-                className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90 disabled:opacity-50"
+            <div className="w-full max-w-lg" />
+          )}
+
+          {!editingObjekt && (
+            <div className="flex items-center gap-3">
+              {!confirmDelete && (
+                <button
+                  onClick={startEditObjekt}
+                  className="text-text-muted transition hover:text-primary"
+                  aria-label="Objekt bearbeiten"
+                >
+                  <Pencil size={18} />
+                </button>
+              )}
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="rounded-full border border-border px-3 py-1.5 text-sm text-text-muted transition hover:border-red-500 hover:text-red-500"
+                >
+                  Löschen
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-text-muted">Wirklich löschen?</span>
+                  <button
+                    onClick={handleDeleteObjekt}
+                    disabled={deleteObjekt.isPending}
+                    className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    Ja
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {editingObjekt && (
+          <form onSubmit={handleSaveObjekt} className="mb-6 space-y-4 rounded-lg border border-border bg-surface p-4">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editTyp">
+                Typ
+              </label>
+              <select
+                id="editTyp"
+                value={editTyp}
+                onChange={(e) => setEditTyp(e.target.value as ObjektTyp)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
               >
-                Ja
+                {Object.values(ObjektTyp).map((t) => (
+                  <option key={t} value={t}>
+                    {OBJEKT_TYP_LABEL[t]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editName">
+                Name
+              </label>
+              <input
+                id="editName"
+                type="text"
+                required
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div className="grid grid-cols-[1fr_auto] gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editStrasse">
+                  Straße
+                </label>
+                <input
+                  id="editStrasse"
+                  type="text"
+                  required
+                  value={editStrasse}
+                  onChange={(e) => setEditStrasse(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editHausnummer">
+                  Nr.
+                </label>
+                <input
+                  id="editHausnummer"
+                  type="text"
+                  required
+                  value={editHausnummer}
+                  onChange={(e) => setEditHausnummer(e.target.value)}
+                  className="w-20 rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editPlz">
+                  PLZ
+                </label>
+                <input
+                  id="editPlz"
+                  type="text"
+                  required
+                  value={editPlz}
+                  onChange={(e) => setEditPlz(e.target.value)}
+                  className="w-24 rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editOrt">
+                  Ort
+                </label>
+                <input
+                  id="editOrt"
+                  type="text"
+                  required
+                  value={editOrt}
+                  onChange={(e) => setEditOrt(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editKaltmiete">
+                  Kaltmiete (€)
+                </label>
+                <input
+                  id="editKaltmiete"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={editKaltmiete}
+                  onChange={(e) => setEditKaltmiete(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editFlaeche">
+                  Fläche (m²)
+                </label>
+                <input
+                  id="editFlaeche"
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  value={editFlaeche}
+                  onChange={(e) => setEditFlaeche(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            {editError && <p className="text-sm text-red-500">{editError}</p>}
+
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={updateObjekt.isPending}
+                className="flex-1 rounded-lg bg-primary py-2 font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
+              >
+                {updateObjekt.isPending ? "Wird gespeichert…" : "Speichern"}
               </button>
               <button
-                onClick={() => setConfirmDelete(false)}
-                className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                type="button"
+                onClick={() => setEditingObjekt(false)}
+                className="rounded-lg border border-border px-4 py-2 text-text-muted"
               >
                 Abbrechen
               </button>
             </div>
-          )}
-        </div>
+          </form>
+        )}
 
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Einheiten</h2>
@@ -203,6 +431,38 @@ export default function ObjektDetailPage() {
               );
               const eigentuemer = eigentuemerschaften?.filter((w) => w.einheit.id === e.id) ?? [];
 
+              if (editingEinheitId === e.id) {
+                return (
+                  <li key={e.id} className="flex items-center gap-2 px-4 py-3">
+                    <input
+                      type="text"
+                      value={editEinheitName}
+                      onChange={(ev) => setEditEinheitName(ev.target.value)}
+                      className="flex-1 rounded-lg border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      value={editEinheitKategorie}
+                      onChange={(ev) => setEditEinheitKategorie(ev.target.value)}
+                      className="w-32 rounded-lg border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={() => handleSaveEinheit(e.id)}
+                      disabled={updateEinheit.isPending}
+                      className="rounded-full bg-primary px-3 py-1 text-sm text-primary-fg transition hover:opacity-90 disabled:opacity-50"
+                    >
+                      Speichern
+                    </button>
+                    <button
+                      onClick={() => setEditingEinheitId(null)}
+                      className="rounded-full border border-border px-3 py-1 text-sm text-text-muted"
+                    >
+                      Abbrechen
+                    </button>
+                  </li>
+                );
+              }
+
               return (
                 <li key={e.id} className="flex items-center justify-between px-4 py-3">
                   <div>
@@ -224,12 +484,21 @@ export default function ObjektDetailPage() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => deleteEinheit.mutate(e.id)}
-                    className="text-sm text-text-muted transition hover:text-red-500"
-                  >
-                    Entfernen
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => startEditEinheit(e.id, e.name, e.kategorie)}
+                      className="text-text-muted transition hover:text-primary"
+                      aria-label="Einheit bearbeiten"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => deleteEinheit.mutate(e.id)}
+                      className="text-sm text-text-muted transition hover:text-red-500"
+                    >
+                      Entfernen
+                    </button>
+                  </div>
                 </li>
               );
             })}

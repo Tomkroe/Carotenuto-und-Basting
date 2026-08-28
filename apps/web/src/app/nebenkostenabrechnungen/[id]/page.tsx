@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FileEdit, Send, Trash2, Receipt } from "lucide-react";
+import { FileEdit, Send, Trash2, Receipt, Pencil } from "lucide-react";
 import { NebenkostenStatus, VerteilerSchluessel } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -63,6 +63,11 @@ export default function NebenkostenabrechnungDetailPage() {
   const [verteilerschluessel, setVerteilerschluessel] = useState<VerteilerSchluessel>(VerteilerSchluessel.QM);
   const [error, setError] = useState<string | null>(null);
 
+  const [editing, setEditing] = useState(false);
+  const [editVon, setEditVon] = useState("");
+  const [editBis, setEditBis] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
   useEffect(() => {
     if (authError) router.replace("/login");
   }, [authError, router]);
@@ -76,6 +81,25 @@ export default function NebenkostenabrechnungDetailPage() {
   async function handleDelete() {
     await deleteAbrechnung.mutateAsync(abrechnungId);
     router.replace("/nebenkostenabrechnungen");
+  }
+
+  function startEdit() {
+    if (!abrechnung) return;
+    setEditVon(abrechnung.zeitraumVon.slice(0, 10));
+    setEditBis(abrechnung.zeitraumBis.slice(0, 10));
+    setEditError(null);
+    setEditing(true);
+  }
+
+  async function handleSaveEdit(e: FormEvent) {
+    e.preventDefault();
+    setEditError(null);
+    try {
+      await updateAbrechnung.mutateAsync({ zeitraumVon: editVon, zeitraumBis: editBis });
+      setEditing(false);
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Abrechnung konnte nicht gespeichert werden.");
+    }
   }
 
   async function handleAddPosition(e: FormEvent) {
@@ -112,39 +136,106 @@ export default function NebenkostenabrechnungDetailPage() {
         </nav>
 
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{abrechnung.objekt.name}</h1>
-            <p className="mt-1 text-text-muted">
-              {formatDate(abrechnung.zeitraumVon)} – {formatDate(abrechnung.zeitraumBis)}
-            </p>
-          </div>
+          {!editing && (
+            <div>
+              <h1 className="text-2xl font-semibold">{abrechnung.objekt.name}</h1>
+              <p className="mt-1 text-text-muted">
+                {formatDate(abrechnung.zeitraumVon)} – {formatDate(abrechnung.zeitraumBis)}
+              </p>
+            </div>
+          )}
 
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="text-text-muted transition hover:text-red-500"
-              aria-label="Abrechnung löschen"
-            >
-              <Trash2 size={18} />
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-text-muted">Wirklich löschen?</span>
+          {!editing && (
+            <div className="flex items-center gap-3">
+              {!confirmDelete && (
+                <button
+                  onClick={startEdit}
+                  className="text-text-muted transition hover:text-primary"
+                  aria-label="Abrechnung bearbeiten"
+                >
+                  <Pencil size={18} />
+                </button>
+              )}
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-text-muted transition hover:text-red-500"
+                  aria-label="Abrechnung löschen"
+                >
+                  <Trash2 size={18} />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-text-muted">Wirklich löschen?</span>
+                  <button
+                    onClick={handleDelete}
+                    className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90"
+                  >
+                    Ja
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {editing && (
+          <form onSubmit={handleSaveEdit} className="mb-6 space-y-4 rounded-lg border border-border bg-surface p-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editVon">
+                  Zeitraum von
+                </label>
+                <input
+                  id="editVon"
+                  type="date"
+                  required
+                  value={editVon}
+                  onChange={(e) => setEditVon(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editBis">
+                  Zeitraum bis
+                </label>
+                <input
+                  id="editBis"
+                  type="date"
+                  required
+                  value={editBis}
+                  onChange={(e) => setEditBis(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            {editError && <p className="text-sm text-red-500">{editError}</p>}
+
+            <div className="flex gap-2">
               <button
-                onClick={handleDelete}
-                className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90"
+                type="submit"
+                disabled={updateAbrechnung.isPending}
+                className="flex-1 rounded-lg bg-primary py-2 font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
               >
-                Ja
+                {updateAbrechnung.isPending ? "Wird gespeichert…" : "Speichern"}
               </button>
               <button
-                onClick={() => setConfirmDelete(false)}
-                className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                type="button"
+                onClick={() => setEditing(false)}
+                className="rounded-lg border border-border px-4 py-2 text-text-muted"
               >
                 Abbrechen
               </button>
             </div>
-          )}
-        </div>
+          </form>
+        )}
 
         <div className="mb-8 flex gap-2">
           {Object.values(NebenkostenStatus).map((s) => {

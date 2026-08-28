@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
+import { CircleDot, Clock, CheckCircle2, Pencil, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -19,6 +19,7 @@ import {
   useAttachLabel,
   useDetachLabel,
 } from "@/lib/hooks";
+import { ApiError } from "@/lib/api";
 import { AppHeader } from "@/components/AppHeader";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
@@ -78,6 +79,12 @@ export default function VorgangDetailPage() {
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
 
+  const [editing, setEditing] = useState(false);
+  const [editTitel, setEditTitel] = useState("");
+  const [editBeschreibung, setEditBeschreibung] = useState("");
+  const [editFaelligkeit, setEditFaelligkeit] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
   useEffect(() => {
     if (authError) router.replace("/login");
   }, [authError, router]);
@@ -96,6 +103,30 @@ export default function VorgangDetailPage() {
     if (!newTodo.trim()) return;
     createTodo.mutate({ titel: newTodo });
     setNewTodo("");
+  }
+
+  function startEdit() {
+    if (!vorgang) return;
+    setEditTitel(vorgang.titel);
+    setEditBeschreibung(vorgang.beschreibung ?? "");
+    setEditFaelligkeit(vorgang.faelligkeit ? vorgang.faelligkeit.slice(0, 10) : "");
+    setEditError(null);
+    setEditing(true);
+  }
+
+  async function handleSaveEdit(e: FormEvent) {
+    e.preventDefault();
+    setEditError(null);
+    try {
+      await updateVorgang.mutateAsync({
+        titel: editTitel,
+        beschreibung: editBeschreibung || undefined,
+        faelligkeit: editFaelligkeit || undefined,
+      });
+      setEditing(false);
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Vorgang konnte nicht gespeichert werden.");
+    }
   }
 
   async function handleCreateAndAttachLabel(e: FormEvent) {
@@ -129,44 +160,120 @@ export default function VorgangDetailPage() {
         </nav>
 
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{vorgang.titel}</h1>
-            {vorgang.beschreibung && <p className="mt-2 max-w-xl text-text-muted">{vorgang.beschreibung}</p>}
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-muted">
-              {vorgang.objekt && <span>{vorgang.objekt.name}</span>}
-              {vorgang.kontakt && <span>· {kontaktName(vorgang.kontakt)}</span>}
-              {vorgang.faelligkeit && (
-                <span>· fällig {new Date(vorgang.faelligkeit).toLocaleDateString("de-DE")}</span>
+          {!editing && (
+            <div>
+              <h1 className="text-2xl font-semibold">{vorgang.titel}</h1>
+              {vorgang.beschreibung && <p className="mt-2 max-w-xl text-text-muted">{vorgang.beschreibung}</p>}
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-muted">
+                {vorgang.objekt && <span>{vorgang.objekt.name}</span>}
+                {vorgang.kontakt && <span>· {kontaktName(vorgang.kontakt)}</span>}
+                {vorgang.faelligkeit && (
+                  <span>· fällig {new Date(vorgang.faelligkeit).toLocaleDateString("de-DE")}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!editing && (
+            <div className="flex items-center gap-3">
+              {!confirmDelete && (
+                <button
+                  onClick={startEdit}
+                  className="text-text-muted transition hover:text-primary"
+                  aria-label="Vorgang bearbeiten"
+                >
+                  <Pencil size={18} />
+                </button>
+              )}
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-text-muted transition hover:text-red-500"
+                  aria-label="Vorgang löschen"
+                >
+                  <Trash2 size={18} />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-text-muted">Wirklich löschen?</span>
+                  <button
+                    onClick={handleDelete}
+                    className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90"
+                  >
+                    Ja
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
               )}
             </div>
-          </div>
+          )}
+        </div>
 
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="text-text-muted transition hover:text-red-500"
-              aria-label="Vorgang löschen"
-            >
-              <Trash2 size={18} />
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-text-muted">Wirklich löschen?</span>
+        {editing && (
+          <form onSubmit={handleSaveEdit} className="mb-6 space-y-4 rounded-lg border border-border bg-surface p-4">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editTitel">
+                Titel
+              </label>
+              <input
+                id="editTitel"
+                type="text"
+                required
+                value={editTitel}
+                onChange={(e) => setEditTitel(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editBeschreibung">
+                Beschreibung
+              </label>
+              <textarea
+                id="editBeschreibung"
+                rows={3}
+                value={editBeschreibung}
+                onChange={(e) => setEditBeschreibung(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editFaelligkeit">
+                Fälligkeit
+              </label>
+              <input
+                id="editFaelligkeit"
+                type="date"
+                value={editFaelligkeit}
+                onChange={(e) => setEditFaelligkeit(e.target.value)}
+                className="rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+
+            {editError && <p className="text-sm text-red-500">{editError}</p>}
+
+            <div className="flex gap-2">
               <button
-                onClick={handleDelete}
-                className="rounded-full bg-red-500 px-3 py-1.5 text-white transition hover:opacity-90"
+                type="submit"
+                disabled={updateVorgang.isPending}
+                className="flex-1 rounded-lg bg-primary py-2 font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
               >
-                Ja
+                {updateVorgang.isPending ? "Wird gespeichert…" : "Speichern"}
               </button>
               <button
-                onClick={() => setConfirmDelete(false)}
-                className="rounded-full border border-border px-3 py-1.5 text-text-muted"
+                type="button"
+                onClick={() => setEditing(false)}
+                className="rounded-lg border border-border px-4 py-2 text-text-muted"
               >
                 Abbrechen
               </button>
             </div>
-          )}
-        </div>
+          </form>
+        )}
 
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-1.5">

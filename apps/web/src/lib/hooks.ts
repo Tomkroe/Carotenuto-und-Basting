@@ -29,8 +29,11 @@ import type {
   Objekt,
   ToDo,
   UpdateEigentuemerschaftRequest,
+  UpdateEinheitRequest,
+  UpdateKontaktRequest,
   UpdateMietvertragRequest,
   UpdateNebenkostenabrechnungRequest,
+  UpdateObjektRequest,
   UpdateVorgangRequest,
   UpdateZaehlerRequest,
   Vorgang,
@@ -73,6 +76,18 @@ export function useCreateObjekt() {
   });
 }
 
+export function useUpdateObjekt(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateObjektRequest) =>
+      apiFetch<Objekt>(`/objekte/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["objekte"] });
+      queryClient.invalidateQueries({ queryKey: ["objekte", id] });
+    },
+  });
+}
+
 export function useDeleteObjekt() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -105,6 +120,17 @@ export function useCreateEinheit(objektId: string) {
   });
 }
 
+export function useUpdateEinheit(objektId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateEinheitRequest }) =>
+      apiFetch<Einheit>(`/einheiten/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["objekte", objektId, "einheiten"] });
+    },
+  });
+}
+
 export function useDeleteEinheit(objektId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -127,6 +153,18 @@ export function useKontakt(id: string) {
     queryKey: ["kontakte", id],
     queryFn: () => apiFetch<Kontakt>(`/kontakte/${id}`),
     enabled: !!id,
+  });
+}
+
+export function useUpdateKontakt(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateKontaktRequest) =>
+      apiFetch<Kontakt>(`/kontakte/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kontakte"] });
+      queryClient.invalidateQueries({ queryKey: ["kontakte", id] });
+    },
   });
 }
 

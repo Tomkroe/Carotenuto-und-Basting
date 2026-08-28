@@ -89,6 +89,8 @@ export interface CreateEinheitRequest {
   flaeche?: number;
 }
 
+export type UpdateEinheitRequest = Partial<CreateEinheitRequest>;
+
 export enum KontaktTyp {
   MIETER = "MIETER",
   EIGENTUEMER = "EIGENTUEMER",
