@@ -52,6 +52,7 @@ function toObjekt(objekt: {
   land: string;
   kaltmiete: unknown;
   flaeche: unknown;
+  eigenschaften: unknown;
   createdAt: Date;
 }): Objekt {
   return {
@@ -65,6 +66,7 @@ function toObjekt(objekt: {
     land: objekt.land,
     kaltmiete: objekt.kaltmiete != null ? Number(objekt.kaltmiete) : null,
     flaeche: objekt.flaeche != null ? Number(objekt.flaeche) : null,
+    eigenschaften: Array.isArray(objekt.eigenschaften) ? (objekt.eigenschaften as string[]) : [],
     createdAt: objekt.createdAt.toISOString(),
   };
 }

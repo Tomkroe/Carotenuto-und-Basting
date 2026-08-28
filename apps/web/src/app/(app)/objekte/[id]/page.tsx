@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { KeyRound, Pencil, UserRound } from "lucide-react";
+import { KeyRound, Pencil, Plus, Sparkles, UserRound, X } from "lucide-react";
 import { MietvertragStatus, ObjektTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -67,6 +67,9 @@ export default function ObjektDetailPage() {
   const [editingEinheitId, setEditingEinheitId] = useState<string | null>(null);
   const [editEinheitName, setEditEinheitName] = useState("");
   const [editEinheitKategorie, setEditEinheitKategorie] = useState("");
+
+  const [activeTab, setActiveTab] = useState<"uebersicht" | "eigenschaften">("uebersicht");
+  const [newEigenschaft, setNewEigenschaft] = useState("");
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -137,6 +140,19 @@ export default function ObjektDetailPage() {
   async function handleSaveEinheit(id: string) {
     await updateEinheit.mutateAsync({ id, data: { name: editEinheitName, kategorie: editEinheitKategorie } });
     setEditingEinheitId(null);
+  }
+
+  function handleAddEigenschaft(e: FormEvent) {
+    e.preventDefault();
+    const tag = newEigenschaft.trim();
+    if (!objekt || !tag || objekt.eigenschaften.includes(tag)) return;
+    updateObjekt.mutate({ eigenschaften: [...objekt.eigenschaften, tag] });
+    setNewEigenschaft("");
+  }
+
+  function handleRemoveEigenschaft(tag: string) {
+    if (!objekt) return;
+    updateObjekt.mutate({ eigenschaften: objekt.eigenschaften.filter((t) => t !== tag) });
   }
 
   if (isLoading || !objekt) {
@@ -355,6 +371,81 @@ export default function ObjektDetailPage() {
           </form>
         )}
 
+        <div className="mb-6 flex gap-1 border-b border-border">
+          <button
+            onClick={() => setActiveTab("uebersicht")}
+            className={`px-3 py-2 text-sm font-medium transition ${
+              activeTab === "uebersicht"
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-muted hover:text-text"
+            }`}
+          >
+            Übersicht
+          </button>
+          <button
+            onClick={() => setActiveTab("eigenschaften")}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition ${
+              activeTab === "eigenschaften"
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-muted hover:text-text"
+            }`}
+          >
+            <Sparkles size={14} />
+            Eigenschaften
+            {objekt.eigenschaften.length > 0 && (
+              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+                {objekt.eigenschaften.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeTab === "eigenschaften" && (
+          <div className="mb-8">
+            <form onSubmit={handleAddEigenschaft} className="mb-4 flex gap-2">
+              <input
+                type="text"
+                value={newEigenschaft}
+                onChange={(e) => setNewEigenschaft(e.target.value)}
+                placeholder="z.B. Keller, Balkon, Stellplatz…"
+                className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <button
+                type="submit"
+                disabled={updateObjekt.isPending}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
+              >
+                <Plus size={15} />
+                Hinzufügen
+              </button>
+            </form>
+
+            {objekt.eigenschaften.length === 0 ? (
+              <p className="text-sm text-text-muted">Noch keine Eigenschaften erfasst.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {objekt.eigenschaften.map((tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveEigenschaft(tag)}
+                      aria-label={`${tag} entfernen`}
+                      className="text-text-muted transition hover:text-red-500"
+                    >
+                      <X size={13} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "uebersicht" && (
+        <>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Einheiten</h2>
           <button
@@ -502,6 +593,8 @@ export default function ObjektDetailPage() {
         <div className="mt-8">
           <DokumenteSection parent={{ path: "objekte", id: objektId }} />
         </div>
+        </>
+        )}
       </section>
   );
 }

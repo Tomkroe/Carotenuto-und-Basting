@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 import { ObjektTyp } from "@maklerprogram/types";
 
 export class UpdateObjektDto {
@@ -42,4 +42,9 @@ export class UpdateObjektDto {
   @IsNumber()
   @IsOptional()
   flaeche?: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  eigenschaften?: string[];
 }

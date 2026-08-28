@@ -57,6 +57,7 @@ export interface Objekt {
   land: string;
   kaltmiete: number | null;
   flaeche: number | null;
+  eigenschaften: string[];
   createdAt: string;
 }
 
@@ -70,6 +71,7 @@ export interface CreateObjektRequest {
   land?: string;
   kaltmiete?: number;
   flaeche?: number;
+  eigenschaften?: string[];
 }
 
 export type UpdateObjektRequest = Partial<CreateObjektRequest>;
