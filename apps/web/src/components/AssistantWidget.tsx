@@ -134,8 +134,8 @@ export function AssistantWidget() {
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 && (
               <p className="text-sm text-text-muted">
-                Frag mich z.B. „Leg einen Vorgang für die defekte Heizung in Wohnung 1 an." oder häng ein Dokument an
-                eine Nachricht.
+                Frag mich z.B. „Leg einen Vorgang für die defekte Heizung in Wohnung 1 an.&rdquo; oder häng ein
+                Dokument an eine Nachricht.
               </p>
             )}
             {messages.map((m, i) => (
