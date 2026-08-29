@@ -114,6 +114,8 @@ export interface Kontakt {
   firma: string | null;
   email: string | null;
   telefon: string | null;
+  debitorNr: string | null;
+  kreditorNr: string | null;
   createdAt: string;
 }
 
@@ -130,6 +132,8 @@ export interface CreateKontaktRequest {
   firma?: string;
   email?: string;
   telefon?: string;
+  debitorNr?: string;
+  kreditorNr?: string;
 }
 
 export type UpdateKontaktRequest = Partial<CreateKontaktRequest>;

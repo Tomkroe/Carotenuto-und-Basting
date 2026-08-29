@@ -64,6 +64,8 @@ export default function KontaktePage() {
   const [firma, setFirma] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
+  const [debitorNr, setDebitorNr] = useState("");
+  const [kreditorNr, setKreditorNr] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -90,12 +92,16 @@ export default function KontaktePage() {
         firma: firma || undefined,
         email: email || undefined,
         telefon: telefon || undefined,
+        debitorNr: debitorNr || undefined,
+        kreditorNr: kreditorNr || undefined,
       });
       setVorname("");
       setNachname("");
       setFirma("");
       setEmail("");
       setTelefon("");
+      setDebitorNr("");
+      setKreditorNr("");
       setShowForm(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Kontakt konnte nicht angelegt werden.");
@@ -209,6 +215,32 @@ export default function KontaktePage() {
               />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="debitorNr">
+                Debitor-Nr. (optional)
+              </label>
+              <input
+                id="debitorNr"
+                type="text"
+                value={debitorNr}
+                onChange={(e) => setDebitorNr(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="kreditorNr">
+                Kreditor-Nr. (optional)
+              </label>
+              <input
+                id="kreditorNr"
+                type="text"
+                value={kreditorNr}
+                onChange={(e) => setKreditorNr(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -256,7 +288,16 @@ export default function KontaktePage() {
                     <span className={`flex h-8 w-8 items-center justify-center rounded-full ${meta.className}`}>
                       <Icon size={15} />
                     </span>
-                    <p className="font-medium">{displayName}</p>
+                    <div>
+                      <p className="font-medium">{displayName}</p>
+                      {(k.kreditorNr || k.debitorNr) && (
+                        <p className="text-xs text-text-muted">
+                          {k.kreditorNr && `Kreditor-ID: ${k.kreditorNr}`}
+                          {k.kreditorNr && k.debitorNr && " | "}
+                          {k.debitorNr && `Debitor-ID: ${k.debitorNr}`}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-text-muted">{meta.label}</td>

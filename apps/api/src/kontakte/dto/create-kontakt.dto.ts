@@ -24,4 +24,12 @@ export class CreateKontaktDto {
   @IsString()
   @IsOptional()
   telefon?: string;
+
+  @IsString()
+  @IsOptional()
+  debitorNr?: string;
+
+  @IsString()
+  @IsOptional()
+  kreditorNr?: string;
 }

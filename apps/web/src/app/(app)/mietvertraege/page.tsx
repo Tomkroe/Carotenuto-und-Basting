@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, CheckCircle2, Archive, Plus, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Archive, CircleDashed, Plus, X } from "lucide-react";
 import { MietvertragStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -59,15 +59,29 @@ export default function MietvertraegePage() {
     if (authError) router.replace("/login");
   }, [authError, router]);
 
-  const aktive = (mietvertraege ?? []).filter((m) => m.status === MietvertragStatus.AKTIV);
+  const today = new Date().toISOString().slice(0, 10);
 
-  const gefilterteMietvertraege = useMemo(() => {
+  const einheitenMitStatus = useMemo(() => {
+    return (einheiten ?? []).map((e) => {
+      const aktuellerVertrag = (mietvertraege ?? []).find(
+        (m) => m.einheit.id === e.id && m.beginn.slice(0, 10) <= today && (!m.ende || m.ende.slice(0, 10) >= today),
+      );
+      return { einheit: e, mietvertrag: aktuellerVertrag ?? null };
+    });
+  }, [einheiten, mietvertraege, today]);
+
+  const vermietet = einheitenMitStatus.filter((r) => r.mietvertrag);
+  const leerstehend = einheitenMitStatus.filter((r) => !r.mietvertrag);
+
+  const gefilterteEinheiten = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return mietvertraege ?? [];
-    return (mietvertraege ?? []).filter((m) =>
-      [m.einheit.objekt.name, m.einheit.name, kontaktName(m.mieter)].some((f) => f.toLowerCase().includes(query)),
+    if (!query) return einheitenMitStatus;
+    return einheitenMitStatus.filter((r) =>
+      [r.einheit.objekt.name, r.einheit.name, r.mietvertrag ? kontaktName(r.mietvertrag.mieter) : null]
+        .filter(Boolean)
+        .some((f) => f!.toLowerCase().includes(query)),
     );
-  }, [mietvertraege, search]);
+  }, [einheitenMitStatus, search]);
 
   const einheitenByObjekt = useMemo(() => {
     const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
@@ -120,9 +134,10 @@ export default function MietvertraegePage() {
         </button>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-2">
-        <StatCard value={mietvertraege?.length ?? 0} label="Mietverträge" />
-        <StatCard value={aktive.length} label="Aktiv" tone="success" />
+      <div className="mb-6 grid grid-cols-3 gap-4">
+        <StatCard value={einheitenMitStatus.length} label="Alle Einheiten" />
+        <StatCard value={vermietet.length} label="Vermietet" tone="success" />
+        <StatCard value={leerstehend.length} label="Leerstehend" tone={leerstehend.length > 0 ? "warning" : "default"} />
       </div>
 
       {showForm && (
@@ -238,33 +253,39 @@ export default function MietvertraegePage() {
 
       {isLoading && <p className="text-text-muted">Lädt…</p>}
 
-      {mietvertraege && mietvertraege.length === 0 && !showForm && (
-        <p className="text-text-muted">Noch keine Mietverträge angelegt.</p>
+      {einheiten && einheiten.length === 0 && !showForm && (
+        <p className="text-text-muted">Noch keine Einheiten angelegt.</p>
       )}
 
-      {gefilterteMietvertraege.length > 0 && (
+      {gefilterteEinheiten.length > 0 && (
         <DataTable
           columns={[
-            { key: "objekt", header: "Objekt/Einheit" },
+            { key: "objekt", header: "Objekt" },
+            { key: "einheit", header: "Einheit" },
             { key: "mieter", header: "Mieter" },
             { key: "miete", header: "Kaltmiete" },
-            { key: "status", header: "Status" },
+            { key: "status", header: "Mietstatus" },
           ]}
         >
-          {gefilterteMietvertraege.map((m) => {
-            const meta = STATUS_META[m.status];
+          {gefilterteEinheiten.map(({ einheit, mietvertrag }) => {
+            const meta = mietvertrag
+              ? STATUS_META[MietvertragStatus.AKTIV]
+              : { label: "Leerstand", icon: CircleDashed, className: "bg-amber-500/10 text-amber-500" };
             const Icon = meta.icon;
             return (
               <tr
-                key={m.id}
-                onClick={() => router.push(`/mietvertraege/${m.id}`)}
-                className="cursor-pointer transition hover:bg-bg"
+                key={einheit.id}
+                onClick={() => mietvertrag && router.push(`/mietvertraege/${mietvertrag.id}`)}
+                className={mietvertrag ? "cursor-pointer transition hover:bg-bg" : "transition hover:bg-bg"}
               >
-                <td className="px-4 py-3 font-medium">
-                  {m.einheit.objekt.name} · {m.einheit.name}
+                <td className="px-4 py-3 text-text-muted">{einheit.objekt.name}</td>
+                <td className="px-4 py-3 font-medium">{einheit.name}</td>
+                <td className="px-4 py-3 text-text-muted">
+                  {mietvertrag ? kontaktName(mietvertrag.mieter) : "–"}
                 </td>
-                <td className="px-4 py-3 text-text-muted">{kontaktName(m.mieter)}</td>
-                <td className="px-4 py-3 text-text-muted">{m.kaltmiete.toFixed(2)} €</td>
+                <td className="px-4 py-3 text-text-muted">
+                  {mietvertrag ? `${mietvertrag.kaltmiete.toFixed(2)} €` : "–"}
+                </td>
                 <td className="px-4 py-3">
                   <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
                     <Icon size={13} />

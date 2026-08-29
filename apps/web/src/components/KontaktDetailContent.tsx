@@ -48,6 +48,8 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const [editFirma, setEditFirma] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editTelefon, setEditTelefon] = useState("");
+  const [editDebitorNr, setEditDebitorNr] = useState("");
+  const [editKreditorNr, setEditKreditorNr] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +73,8 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
     setEditFirma(kontakt.firma ?? "");
     setEditEmail(kontakt.email ?? "");
     setEditTelefon(kontakt.telefon ?? "");
+    setEditDebitorNr(kontakt.debitorNr ?? "");
+    setEditKreditorNr(kontakt.kreditorNr ?? "");
     setEditError(null);
     setEditing(true);
   }
@@ -86,6 +90,8 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
         firma: editFirma || undefined,
         email: editEmail || undefined,
         telefon: editTelefon || undefined,
+        debitorNr: editDebitorNr || undefined,
+        kreditorNr: editKreditorNr || undefined,
       });
       setEditing(false);
     } catch (err) {
@@ -119,6 +125,13 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
             </span>
             <div>
               <h1 className="text-2xl font-semibold">{displayName}</h1>
+              {(kontakt.kreditorNr || kontakt.debitorNr) && (
+                <p className="text-xs text-text-muted">
+                  {kontakt.kreditorNr && `Kreditor-ID: ${kontakt.kreditorNr}`}
+                  {kontakt.kreditorNr && kontakt.debitorNr && " | "}
+                  {kontakt.debitorNr && `Debitor-ID: ${kontakt.debitorNr}`}
+                </p>
+              )}
               <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-text-muted">
                 <span>{meta.label}</span>
                 {kontakt.firma && [kontakt.vorname, kontakt.nachname].filter(Boolean).length > 0 && (
@@ -258,6 +271,32 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                 type="tel"
                 value={editTelefon}
                 onChange={(e) => setEditTelefon(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editDebitorNr">
+                Debitor-Nr. (optional)
+              </label>
+              <input
+                id="editDebitorNr"
+                type="text"
+                value={editDebitorNr}
+                onChange={(e) => setEditDebitorNr(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editKreditorNr">
+                Kreditor-Nr. (optional)
+              </label>
+              <input
+                id="editKreditorNr"
+                type="text"
+                value={editKreditorNr}
+                onChange={(e) => setEditKreditorNr(e.target.value)}
                 className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
               />
             </div>

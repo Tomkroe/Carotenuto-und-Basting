@@ -25,4 +25,12 @@ export class UpdateKontaktDto {
   @IsString()
   @IsOptional()
   telefon?: string;
+
+  @IsString()
+  @IsOptional()
+  debitorNr?: string;
+
+  @IsString()
+  @IsOptional()
+  kreditorNr?: string;
 }

@@ -75,6 +75,8 @@ function toKontakt(kontakt: {
   firma: string | null;
   email: string | null;
   telefon: string | null;
+  debitorNr: string | null;
+  kreditorNr: string | null;
   createdAt: Date;
 }): Kontakt {
   return {
@@ -85,6 +87,8 @@ function toKontakt(kontakt: {
     firma: kontakt.firma,
     email: kontakt.email,
     telefon: kontakt.telefon,
+    debitorNr: kontakt.debitorNr,
+    kreditorNr: kontakt.kreditorNr,
     createdAt: kontakt.createdAt.toISOString(),
   };
 }
