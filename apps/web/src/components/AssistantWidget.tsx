@@ -1,10 +1,44 @@
 "use client";
 
 import { useRef, useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { Check, CheckCircle2, Copy, Loader2, Mail, Paperclip, Send, Sparkles, X } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Copy,
+  FileText,
+  Loader2,
+  Mail,
+  Mic,
+  MessageCircle,
+  MessageSquare,
+  Paperclip,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Tag,
+  Workflow,
+  X,
+} from "lucide-react";
 import type { AssistantChatMessage, AssistantEmailDraft } from "@maklerprogram/types";
 import { useAssistantChat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+
+const WORKFLOWS = [
+  { icon: Tag, label: "Vorgang anlegen", prompt: "Leg einen Vorgang an: " },
+  { icon: RefreshCw, label: "Status ändern", prompt: "Setze den Status von Vorgang #" },
+  { icon: MessageCircle, label: "Kommentar hinzufügen", prompt: "Füge Vorgang # den Kommentar hinzu: " },
+  { icon: FileText, label: "Mietvertrag anlegen", prompt: "Leg einen Mietvertrag an für " },
+  { icon: Paperclip, label: "Dokument anhängen", prompt: "Häng die angehängte Datei an " },
+  { icon: Mail, label: "E-Mail entwerfen", prompt: "Entwirf eine E-Mail an " },
+];
+
+function speak(text: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "de-DE";
+  window.speechSynthesis.speak(utterance);
+}
 
 type DisplayMessage = AssistantChatMessage & {
   actions?: string[];
@@ -59,29 +93,36 @@ function EmailDraftCard({ draft }: { draft: AssistantEmailDraft }) {
 
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<"chat" | "workflows">("chat");
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const chat = useAssistantChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, chat.isPending]);
 
+  useEffect(() => {
+    const SpeechRecognitionCtor = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    setSpeechSupported(!!SpeechRecognitionCtor);
+  }, []);
+
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     setAttachedFile(e.target.files?.[0] ?? null);
   }
 
-  async function handleSend(e: FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if ((!text && !attachedFile) || chat.isPending) return;
+  async function sendMessage(text: string, file: File | null) {
+    if ((!text && !file) || chat.isPending) return;
     setError(null);
     setInput("");
-    const file = attachedFile;
     setAttachedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
 
@@ -108,9 +149,58 @@ export function AssistantWidget() {
           emailDraft: result.emailDraft ?? undefined,
         },
       ]);
+      speak(result.reply);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Der Assistent ist gerade nicht erreichbar.");
     }
+  }
+
+  function handleSend(e: FormEvent) {
+    e.preventDefault();
+    void sendMessage(input.trim(), attachedFile);
+  }
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const SpeechRecognitionCtor = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) return;
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = "de-DE";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    let finalTranscript = "";
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(transcript);
+      if (event.results[event.results.length - 1].isFinal) {
+        finalTranscript = transcript;
+      }
+    };
+    recognition.onend = () => {
+      setListening(false);
+      if (finalTranscript.trim()) {
+        void sendMessage(finalTranscript.trim(), attachedFile);
+      }
+    };
+    recognition.onerror = () => setListening(false);
+
+    recognitionRef.current = recognition;
+    setListening(true);
+    recognition.start();
+  }
+
+  function applyWorkflow(prompt: string) {
+    setInput(prompt);
+    setTab("chat");
+    setTimeout(() => textInputRef.current?.focus(), 0);
   }
 
   return (
@@ -120,7 +210,7 @@ export function AssistantWidget() {
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="flex items-center gap-1.5 font-semibold">
               <Sparkles size={16} className="text-primary" />
-              KI-Assistent
+              Jarvis
             </span>
             <button
               onClick={() => setOpen(false)}
@@ -131,6 +221,44 @@ export function AssistantWidget() {
             </button>
           </div>
 
+          <div className="flex border-b border-border">
+            <button
+              onClick={() => setTab("chat")}
+              className={`flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium transition ${
+                tab === "chat" ? "border-b-2 border-primary text-primary" : "text-text-muted hover:text-text"
+              }`}
+            >
+              <MessageSquare size={14} />
+              Chat
+            </button>
+            <button
+              onClick={() => setTab("workflows")}
+              className={`flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium transition ${
+                tab === "workflows" ? "border-b-2 border-primary text-primary" : "text-text-muted hover:text-text"
+              }`}
+            >
+              <Workflow size={14} />
+              Workflows
+            </button>
+          </div>
+
+          {tab === "workflows" && (
+            <div className="flex-1 space-y-1.5 overflow-y-auto px-3 py-3">
+              {WORKFLOWS.map((w) => (
+                <button
+                  key={w.label}
+                  onClick={() => applyWorkflow(w.prompt)}
+                  className="flex w-full items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-left text-sm transition hover:border-primary hover:text-primary"
+                >
+                  <w.icon size={16} />
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {tab === "chat" && (
+          <>
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 && (
               <p className="text-sm text-text-muted">
@@ -214,12 +342,28 @@ export function AssistantWidget() {
                 <Paperclip size={16} />
               </button>
               <input
+                ref={textInputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Nachricht…"
+                placeholder={listening ? "Ich höre…" : "Nachricht…"}
                 className="flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
               />
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  disabled={chat.isPending}
+                  className={`flex items-center justify-center rounded-lg border px-3 py-2 transition disabled:opacity-50 ${
+                    listening
+                      ? "animate-pulse border-red-500 bg-red-500/10 text-red-500"
+                      : "border-border text-text-muted hover:border-primary hover:text-primary"
+                  }`}
+                  aria-label={listening ? "Aufnahme beenden" : "Spracheingabe starten"}
+                >
+                  <Mic size={16} />
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={chat.isPending || (!input.trim() && !attachedFile)}
@@ -230,13 +374,15 @@ export function AssistantWidget() {
               </button>
             </div>
           </form>
+          </>
+          )}
         </div>
       )}
 
       <button
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-fg shadow-lg transition hover:opacity-90"
-        aria-label="KI-Assistent öffnen"
+        aria-label="Jarvis öffnen"
       >
         {open ? <X size={22} /> : <Sparkles size={22} />}
       </button>
