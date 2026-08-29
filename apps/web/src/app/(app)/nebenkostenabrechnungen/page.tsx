@@ -2,9 +2,15 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FileEdit, Send, Plus, X } from "lucide-react";
+import { CalendarRange, FileEdit, Send, Plus, X } from "lucide-react";
 import { NebenkostenStatus } from "@maklerprogram/types";
-import { useCurrentUser, useNebenkostenabrechnungen, useCreateNebenkostenabrechnung, useObjekte } from "@/lib/hooks";
+import {
+  useCurrentUser,
+  useNebenkostenabrechnungen,
+  useCreateNebenkostenabrechnung,
+  useObjekte,
+  useAllNebenkostenPositionen,
+} from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
@@ -29,6 +35,13 @@ export default function NebenkostenabrechnungenPage() {
   const { data: abrechnungen, isLoading } = useNebenkostenabrechnungen();
   const { data: objekte } = useObjekte();
   const createAbrechnung = useCreateNebenkostenabrechnung();
+  const positionenResults = useAllNebenkostenPositionen(abrechnungen);
+
+  const gesamtbetragProAbrechnung = new Map<string, number>();
+  (abrechnungen ?? []).forEach((a, i) => {
+    const total = (positionenResults[i]?.data ?? []).reduce((sum, p) => sum + p.betrag, 0);
+    gesamtbetragProAbrechnung.set(a.id, total);
+  });
 
   const [showForm, setShowForm] = useState(false);
   const [objektId, setObjektId] = useState("");
@@ -81,8 +94,17 @@ export default function NebenkostenabrechnungenPage() {
         </button>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 grid grid-cols-3 gap-4">
         <StatCard value={abrechnungen?.length ?? 0} label="Abrechnungen" />
+        <StatCard
+          value={(abrechnungen ?? []).filter((a) => a.status === NebenkostenStatus.ENTWURF).length}
+          label="Entwurf"
+        />
+        <StatCard
+          value={(abrechnungen ?? []).filter((a) => a.status === NebenkostenStatus.VERSENDET).length}
+          label="Versendet"
+          tone="success"
+        />
       </div>
 
       {showForm && (
@@ -164,6 +186,7 @@ export default function NebenkostenabrechnungenPage() {
           columns={[
             { key: "objekt", header: "Objekt" },
             { key: "zeitraum", header: "Zeitraum" },
+            { key: "betrag", header: "Gesamtbetrag" },
             { key: "status", header: "Status" },
           ]}
         >
@@ -178,7 +201,17 @@ export default function NebenkostenabrechnungenPage() {
               >
                 <td className="px-4 py-3 font-medium">{a.objekt.name}</td>
                 <td className="px-4 py-3 text-text-muted">
-                  {formatDate(a.zeitraumVon)} – {formatDate(a.zeitraumBis)}
+                  <span className="flex items-center gap-1.5">
+                    <CalendarRange size={13} />
+                    {formatDate(a.zeitraumVon)} – {formatDate(a.zeitraumBis)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {(gesamtbetragProAbrechnung.get(a.id) ?? 0).toLocaleString("de-DE", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  €
                 </td>
                 <td className="px-4 py-3">
                   <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>

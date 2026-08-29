@@ -14,6 +14,7 @@ import {
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
+import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
 
 function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }) {
@@ -40,6 +41,7 @@ export default function EigentuemerschaftenPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHausgeld, setEditHausgeld] = useState("");
   const [editAnteil, setEditAnteil] = useState("");
+  const [search, setSearch] = useState("");
 
   function startEdit(id: string, hausgeld: number, anteil: number | null) {
     setEditingId(id);
@@ -61,6 +63,14 @@ export default function EigentuemerschaftenPage() {
   useEffect(() => {
     if (authError) router.replace("/login");
   }, [authError, router]);
+
+  const gefilterteEigentuemerschaften = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return eigentuemerschaften ?? [];
+    return (eigentuemerschaften ?? []).filter((e) =>
+      [e.einheit.objekt.name, e.einheit.name, kontaktName(e.eigentuemer)].some((f) => f.toLowerCase().includes(query)),
+    );
+  }, [eigentuemerschaften, search]);
 
   const einheitenByObjekt = useMemo(() => {
     const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
@@ -210,13 +220,17 @@ export default function EigentuemerschaftenPage() {
           </form>
         )}
 
+        <div className="mb-4">
+          <SearchInput value={search} onChange={setSearch} placeholder="Eigentümerschaften durchsuchen…" />
+        </div>
+
         {isLoading && <p className="text-text-muted">Lädt…</p>}
 
         {eigentuemerschaften && eigentuemerschaften.length === 0 && !showForm && (
           <p className="text-text-muted">Noch keine Eigentümerschaften angelegt.</p>
         )}
 
-        {eigentuemerschaften && eigentuemerschaften.length > 0 && (
+        {gefilterteEigentuemerschaften.length > 0 && (
         <DataTable
           columns={[
             { key: "objekt", header: "Objekt/Einheit" },
@@ -225,7 +239,7 @@ export default function EigentuemerschaftenPage() {
             { key: "actions", header: "" },
           ]}
         >
-          {eigentuemerschaften.map((e) => (
+          {gefilterteEigentuemerschaften.map((e) => (
             <tr key={e.id}>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">

@@ -2,18 +2,25 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Zap, Flame, Droplet, Plus, X, Star } from "lucide-react";
+import { Zap, Flame, Droplet, Plus, X, Star, Gauge, TrendingUp } from "lucide-react";
 import { ZaehlerTyp } from "@maklerprogram/types";
-import { useCurrentUser, useZaehlerListe, useCreateZaehler, useObjekte, useEinheitenFlat } from "@/lib/hooks";
+import {
+  useCurrentUser,
+  useZaehlerListe,
+  useCreateZaehler,
+  useObjekte,
+  useEinheitenFlat,
+  useAllZaehlerstaende,
+} from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
 
-const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className: string }> = {
-  [ZaehlerTyp.STROM]: { label: "Strom", icon: Zap, className: "bg-amber-500/10 text-amber-500" },
-  [ZaehlerTyp.GAS]: { label: "Gas", icon: Flame, className: "bg-orange-500/10 text-orange-500" },
-  [ZaehlerTyp.WASSER]: { label: "Wasser", icon: Droplet, className: "bg-blue-500/10 text-blue-500" },
+const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className: string; einheit: string }> = {
+  [ZaehlerTyp.STROM]: { label: "Strom", icon: Zap, className: "bg-amber-500/10 text-amber-500", einheit: "kWh" },
+  [ZaehlerTyp.GAS]: { label: "Gas", icon: Flame, className: "bg-orange-500/10 text-orange-500", einheit: "m³" },
+  [ZaehlerTyp.WASSER]: { label: "Wasser", icon: Droplet, className: "bg-blue-500/10 text-blue-500", einheit: "m³" },
 };
 
 export default function ZaehlerPage() {
@@ -23,6 +30,22 @@ export default function ZaehlerPage() {
   const { data: objekte } = useObjekte();
   const { data: einheiten } = useEinheitenFlat();
   const createZaehler = useCreateZaehler();
+  const zaehlerstaendeResults = useAllZaehlerstaende(zaehlerListe);
+
+  const standByZaehler = new Map<string, { letzter: number; datum: string; verbrauch: number | null } | null>();
+  (zaehlerListe ?? []).forEach((z, i) => {
+    const staende = zaehlerstaendeResults[i]?.data ?? [];
+    if (staende.length === 0) {
+      standByZaehler.set(z.id, null);
+      return;
+    }
+    const [letzter, vorheriger] = staende;
+    standByZaehler.set(z.id, {
+      letzter: letzter.wert,
+      datum: letzter.datum,
+      verbrauch: vorheriger ? letzter.wert - vorheriger.wert : null,
+    });
+  });
 
   const [showForm, setShowForm] = useState(false);
   const [typ, setTyp] = useState<ZaehlerTyp>(ZaehlerTyp.STROM);
@@ -214,12 +237,15 @@ export default function ZaehlerPage() {
           columns={[
             { key: "nummer", header: "Zählernummer" },
             { key: "objekt", header: "Objekt/Einheit" },
+            { key: "stand", header: "Letzter Zählerstand" },
+            { key: "verbrauch", header: "Letzter Verbrauch" },
             { key: "versorger", header: "Versorger" },
           ]}
         >
           {gefilterteZaehler.map((z) => {
             const meta = TYP_META[z.typ];
             const Icon = meta.icon;
+            const stand = standByZaehler.get(z.id);
             return (
               <tr
                 key={z.id}
@@ -243,6 +269,26 @@ export default function ZaehlerPage() {
                 <td className="px-4 py-3 text-text-muted">
                   {z.einheit && `${z.einheit.objekt.name} · ${z.einheit.name}`}
                   {!z.einheit && z.objekt && z.objekt.name}
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {stand ? (
+                    <span className="flex items-center gap-1.5">
+                      <Gauge size={13} />
+                      {stand.letzter.toLocaleString("de-DE")} {meta.einheit}
+                    </span>
+                  ) : (
+                    "–"
+                  )}
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {stand?.verbrauch != null ? (
+                    <span className="flex items-center gap-1.5">
+                      <TrendingUp size={13} />
+                      {stand.verbrauch.toLocaleString("de-DE")} {meta.einheit}
+                    </span>
+                  ) : (
+                    "–"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-text-muted">{z.versorger ?? "–"}</td>
               </tr>

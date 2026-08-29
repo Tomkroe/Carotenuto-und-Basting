@@ -511,6 +511,15 @@ export function useDeleteZaehler() {
   });
 }
 
+export function useAllZaehlerstaende(zaehlerListe: Zaehler[] | undefined) {
+  return useQueries({
+    queries: (zaehlerListe ?? []).map((z) => ({
+      queryKey: ["zaehler", z.id, "zaehlerstaende"],
+      queryFn: () => apiFetch<Zaehlerstand[]>(`/zaehler/${z.id}/zaehlerstaende`),
+    })),
+  });
+}
+
 export function useZaehlerstaende(zaehlerId: string) {
   return useQuery<Zaehlerstand[]>({
     queryKey: ["zaehler", zaehlerId, "zaehlerstaende"],
