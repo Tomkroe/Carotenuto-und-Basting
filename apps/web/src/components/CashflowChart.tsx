@@ -64,8 +64,8 @@ export function CashflowChart({ data }: { data: CashflowMonth[] }) {
           />
           <Tooltip content={<CashflowTooltip />} cursor={{ fill: "rgb(var(--color-border) / 0.3)" }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="einnahmen" name="Einnahmen" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="ausgaben" name="Ausgaben" fill="var(--color-chart-2)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="einnahmen" name="Einnahmen" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="ausgaben" name="Ausgaben" fill="var(--color-chart-2)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
           <Line
             type="monotone"
             dataKey="ueberschuss"
@@ -73,6 +73,7 @@ export function CashflowChart({ data }: { data: CashflowMonth[] }) {
             stroke="var(--color-chart-3)"
             strokeWidth={2}
             dot={{ r: 3 }}
+            isAnimationActive={false}
           />
         </ComposedChart>
       </ResponsiveContainer>
