@@ -1,8 +1,10 @@
 import { Module } from "@nestjs/common";
 import { VorgaengeController } from "./vorgaenge.controller";
 import { VorgaengeService } from "./vorgaenge.service";
+import { VerlaufModule } from "./verlauf.module";
 
 @Module({
+  imports: [VerlaufModule],
   controllers: [VorgaengeController],
   providers: [VorgaengeService],
   exports: [VorgaengeService],

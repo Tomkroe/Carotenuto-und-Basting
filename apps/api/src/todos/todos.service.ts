@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ToDo } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
+import { VerlaufService } from "../vorgaenge/verlauf.service";
 import { CreateToDoDto } from "./dto/create-todo.dto";
 import { UpdateToDoDto } from "./dto/update-todo.dto";
 
 @Injectable()
 export class TodosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly verlaufService: VerlaufService,
+  ) {}
 
   async findAllForVorgang(mandantId: string, vorgangId: string): Promise<ToDo[]> {
     await this.assertVorgangOwnership(mandantId, vorgangId);
@@ -23,12 +27,18 @@ export class TodosService {
     return toToDo(todo);
   }
 
-  async update(mandantId: string, id: string, dto: UpdateToDoDto): Promise<ToDo> {
+  async update(mandantId: string, userId: string, id: string, dto: UpdateToDoDto): Promise<ToDo> {
     const existing = await this.prisma.toDo.findFirst({
       where: { id, vorgang: { mandantId } },
     });
     if (!existing) throw new NotFoundException("ToDo nicht gefunden.");
     const todo = await this.prisma.toDo.update({ where: { id }, data: dto });
+
+    if (dto.erledigt !== undefined && dto.erledigt !== existing.erledigt) {
+      const text = dto.erledigt ? `ToDo „${todo.titel}“ erledigt` : `ToDo „${todo.titel}“ wieder geöffnet`;
+      await this.verlaufService.log(existing.vorgangId, userId, text);
+    }
+
     return toToDo(todo);
   }
 

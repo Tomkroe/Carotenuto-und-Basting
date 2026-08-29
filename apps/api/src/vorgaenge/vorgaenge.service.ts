@@ -3,6 +3,7 @@ import { Vorgang, VorgangStatus } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateVorgangDto } from "./dto/create-vorgang.dto";
 import { UpdateVorgangDto } from "./dto/update-vorgang.dto";
+import { VerlaufService } from "./verlauf.service";
 
 const INCLUDE = {
   objekt: { select: { id: true, name: true } },
@@ -11,9 +12,18 @@ const INCLUDE = {
   labels: { include: { label: { select: { id: true, name: true, farbe: true } } } },
 } as const;
 
+const STATUS_LABEL: Record<VorgangStatus, string> = {
+  [VorgangStatus.OFFEN]: "Offen",
+  [VorgangStatus.IN_BEARBEITUNG]: "In Bearbeitung",
+  [VorgangStatus.ABGESCHLOSSEN]: "Abgeschlossen",
+};
+
 @Injectable()
 export class VorgaengeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly verlaufService: VerlaufService,
+  ) {}
 
   async findAll(mandantId: string): Promise<Vorgang[]> {
     const vorgaenge = await this.prisma.vorgang.findMany({
@@ -33,7 +43,7 @@ export class VorgaengeService {
     return toVorgang(vorgang);
   }
 
-  async create(mandantId: string, dto: CreateVorgangDto): Promise<Vorgang> {
+  async create(mandantId: string, userId: string, dto: CreateVorgangDto): Promise<Vorgang> {
     await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.create({
       data: {
@@ -48,11 +58,12 @@ export class VorgaengeService {
       },
       include: INCLUDE,
     });
+    await this.verlaufService.log(vorgang.id, userId, "Vorgang erstellt");
     return toVorgang(vorgang);
   }
 
-  async update(mandantId: string, id: string, dto: UpdateVorgangDto): Promise<Vorgang> {
-    await this.findOne(mandantId, id);
+  async update(mandantId: string, id: string, userId: string, dto: UpdateVorgangDto): Promise<Vorgang> {
+    const before = await this.findOne(mandantId, id);
     await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.update({
       where: { id },
@@ -62,12 +73,23 @@ export class VorgaengeService {
       },
       include: INCLUDE,
     });
-    return toVorgang(vorgang);
+    const after = toVorgang(vorgang);
+
+    for (const text of buildVerlaufEintraege(before, after, dto)) {
+      await this.verlaufService.log(id, userId, text);
+    }
+
+    return after;
   }
 
   async remove(mandantId: string, id: string): Promise<void> {
     await this.findOne(mandantId, id);
     await this.prisma.vorgang.delete({ where: { id } });
+  }
+
+  async findVerlauf(mandantId: string, id: string) {
+    await this.findOne(mandantId, id);
+    return this.verlaufService.findAllForVorgang(mandantId, id);
   }
 
   private async assertRefsBelongToMandant(
@@ -89,6 +111,26 @@ export class VorgaengeService {
       if (!user) throw new NotFoundException("Verantwortlicher nicht gefunden.");
     }
   }
+}
+
+function buildVerlaufEintraege(before: Vorgang, after: Vorgang, dto: UpdateVorgangDto): string[] {
+  const eintraege: string[] = [];
+
+  if (dto.status !== undefined && before.status !== after.status) {
+    eintraege.push(`Status geändert zu „${STATUS_LABEL[after.status]}“`);
+  }
+
+  if (dto.verantwortlicherId !== undefined && (before.verantwortlicher?.id ?? null) !== (after.verantwortlicher?.id ?? null)) {
+    eintraege.push(after.verantwortlicher ? `Verantwortlich: ${after.verantwortlicher.name}` : "Verantwortlicher entfernt");
+  }
+
+  if (dto.faelligkeit !== undefined && before.faelligkeit !== after.faelligkeit) {
+    eintraege.push(
+      after.faelligkeit ? `Fälligkeit gesetzt auf ${new Date(after.faelligkeit).toLocaleDateString("de-DE")}` : "Fälligkeit entfernt",
+    );
+  }
+
+  return eintraege;
 }
 
 function toVorgang(vorgang: {

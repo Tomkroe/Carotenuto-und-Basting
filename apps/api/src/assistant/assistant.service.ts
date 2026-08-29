@@ -287,7 +287,7 @@ export class AssistantService {
             kontaktId?: string;
             faelligkeit?: string;
           };
-          const vorgang = await this.vorgaengeService.create(mandantId, args);
+          const vorgang = await this.vorgaengeService.create(mandantId, autorId, args);
           return {
             result: { id: vorgang.id, nummer: vorgang.nummer, titel: vorgang.titel },
             action: { label: `Vorgang #${vorgang.nummer} „${vorgang.titel}" angelegt` },
@@ -295,7 +295,7 @@ export class AssistantService {
         }
         case "update_vorgang_status": {
           const args = (call.args ?? {}) as { vorgangId: string; status: VorgangStatus };
-          const vorgang = await this.vorgaengeService.update(mandantId, args.vorgangId, { status: args.status });
+          const vorgang = await this.vorgaengeService.update(mandantId, args.vorgangId, autorId, { status: args.status });
           return {
             result: { id: vorgang.id, nummer: vorgang.nummer, status: vorgang.status },
             action: { label: `Vorgang #${vorgang.nummer} auf „${vorgang.status}" gesetzt` },

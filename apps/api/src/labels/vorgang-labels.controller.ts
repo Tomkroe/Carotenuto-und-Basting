@@ -16,7 +16,7 @@ export class VorgangLabelsController {
     @Param("vorgangId") vorgangId: string,
     @Param("labelId") labelId: string,
   ): Promise<void> {
-    return this.vorgangLabelsService.attach(user.mandantId, vorgangId, labelId);
+    return this.vorgangLabelsService.attach(user.mandantId, user.sub, vorgangId, labelId);
   }
 
   @Delete(":labelId")
@@ -26,6 +26,6 @@ export class VorgangLabelsController {
     @Param("vorgangId") vorgangId: string,
     @Param("labelId") labelId: string,
   ): Promise<void> {
-    return this.vorgangLabelsService.detach(user.mandantId, vorgangId, labelId);
+    return this.vorgangLabelsService.detach(user.mandantId, user.sub, vorgangId, labelId);
   }
 }

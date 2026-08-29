@@ -189,6 +189,13 @@ export interface CreateVorgangRequest {
 
 export type UpdateVorgangRequest = Partial<CreateVorgangRequest>;
 
+export interface VorgangVerlaufEintrag {
+  id: string;
+  text: string;
+  createdAt: string;
+  autor: { id: string; name: string };
+}
+
 export interface ToDo {
   id: string;
   titel: string;

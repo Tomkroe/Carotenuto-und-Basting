@@ -34,7 +34,7 @@ export class TodosController {
 
   @Patch(":id")
   update(@CurrentUser() user: JwtPayload, @Param("id") id: string, @Body() dto: UpdateToDoDto): Promise<ToDo> {
-    return this.todosService.update(user.mandantId, id, dto);
+    return this.todosService.update(user.mandantId, user.sub, id, dto);
   }
 
   @Delete(":id")

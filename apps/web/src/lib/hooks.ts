@@ -42,6 +42,7 @@ import type {
   UpdateZaehlerRequest,
   UserListItem,
   Vorgang,
+  VorgangVerlaufEintrag,
   Zaehler,
   Zaehlerstand,
 } from "@maklerprogram/types";
@@ -243,7 +244,16 @@ export function useUpdateVorgang(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", id] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", id, "verlauf"] });
     },
+  });
+}
+
+export function useVorgangVerlauf(vorgangId: string) {
+  return useQuery<VorgangVerlaufEintrag[]>({
+    queryKey: ["vorgaenge", vorgangId, "verlauf"],
+    queryFn: () => apiFetch<VorgangVerlaufEintrag[]>(`/vorgaenge/${vorgangId}/verlauf`),
+    enabled: !!vorgangId,
   });
 }
 
@@ -283,6 +293,7 @@ export function useToggleTodo(vorgangId: string) {
       apiFetch<ToDo>(`/todos/${id}`, { method: "PATCH", body: JSON.stringify({ erledigt }) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
     },
   });
 }
@@ -654,6 +665,7 @@ export function useAttachLabel(vorgangId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
     },
   });
 }
@@ -666,6 +678,7 @@ export function useDetachLabel(vorgangId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
     },
   });
 }

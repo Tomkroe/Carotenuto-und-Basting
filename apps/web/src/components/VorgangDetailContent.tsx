@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, Pencil, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
+import { CircleDot, Clock, CheckCircle2, History, Pencil, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -19,6 +19,7 @@ import {
   useAttachLabel,
   useDetachLabel,
   useUsers,
+  useVorgangVerlauf,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
@@ -62,6 +63,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const attachLabel = useAttachLabel(vorgangId);
   const detachLabel = useDetachLabel(vorgangId);
   const { data: users } = useUsers();
+  const { data: verlauf } = useVorgangVerlauf(vorgangId);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
@@ -412,6 +414,28 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                 >
                   <Trash2 size={14} />
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mb-8">
+        <h2 className="mb-3 flex items-center gap-1.5 text-lg font-semibold">
+          <History size={18} />
+          Verlauf
+        </h2>
+
+        {verlauf && verlauf.length === 0 && <p className="text-sm text-text-muted">Noch keine Einträge.</p>}
+
+        {verlauf && verlauf.length > 0 && (
+          <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+            {verlauf.map((v) => (
+              <li key={v.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <span>{v.text}</span>
+                <span className="text-text-muted">
+                  {v.autor.name} · {new Date(v.createdAt).toLocaleString("de-DE")}
+                </span>
               </li>
             ))}
           </ul>

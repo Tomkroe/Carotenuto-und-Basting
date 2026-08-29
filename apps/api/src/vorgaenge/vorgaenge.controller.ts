@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { Vorgang } from "@maklerprogram/types";
+import { Vorgang, VorgangVerlaufEintrag } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -22,9 +22,14 @@ export class VorgaengeController {
     return this.vorgaengeService.findOne(user.mandantId, id);
   }
 
+  @Get(":id/verlauf")
+  findVerlauf(@CurrentUser() user: JwtPayload, @Param("id") id: string): Promise<VorgangVerlaufEintrag[]> {
+    return this.vorgaengeService.findVerlauf(user.mandantId, id);
+  }
+
   @Post()
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateVorgangDto): Promise<Vorgang> {
-    return this.vorgaengeService.create(user.mandantId, dto);
+    return this.vorgaengeService.create(user.mandantId, user.sub, dto);
   }
 
   @Patch(":id")
@@ -33,7 +38,7 @@ export class VorgaengeController {
     @Param("id") id: string,
     @Body() dto: UpdateVorgangDto,
   ): Promise<Vorgang> {
-    return this.vorgaengeService.update(user.mandantId, id, dto);
+    return this.vorgaengeService.update(user.mandantId, id, user.sub, dto);
   }
 
   @Delete(":id")

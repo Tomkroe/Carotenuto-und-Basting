@@ -43,6 +43,7 @@ model User {
   verantwortlicheVorgaenge Vorgang[]    @relation("VorgangVerantwortlicher")
   kommentare               Kommentar[]
   dokumente                Dokument[]
+  verlaufEintraege         VorgangVerlauf[]
 
   @@index([mandantId])
 }
@@ -217,9 +218,24 @@ model Vorgang {
   kommentare Kommentar[]
   dokumente  Dokument[]
   labels     VorgangLabel[]
+  verlauf    VorgangVerlauf[]
 
   @@index([mandantId])
   @@index([objektId])
+}
+
+model VorgangVerlauf {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+
+  vorgangId String
+  vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
+
+  autorId String
+  autor   User   @relation(fields: [autorId], references: [id])
+
+  @@index([vorgangId])
 }
 
 model Label {
