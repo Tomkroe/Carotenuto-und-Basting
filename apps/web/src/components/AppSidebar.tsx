@@ -57,8 +57,8 @@ export function AppSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface">
-      <div className="flex items-center justify-between gap-3 px-5 py-4">
-        <Link href="/dashboard" className="truncate text-lg font-semibold text-primary">
+      <div className="flex items-center justify-between px-5 py-4">
+        <Link href="/dashboard" className="text-lg font-semibold text-primary">
           maklerprogram
         </Link>
         <ThemeToggle />
