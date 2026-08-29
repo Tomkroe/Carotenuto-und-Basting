@@ -3,8 +3,53 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MietvertragStatus, VorgangStatus } from "@maklerprogram/types";
-import { useCurrentUser, useVorgaenge, useMietvertraege, useObjekte, useEinheitenFlat } from "@/lib/hooks";
+import {
+  useCurrentUser,
+  useVorgaenge,
+  useMietvertraege,
+  useObjekte,
+  useEinheitenFlat,
+  useNebenkostenabrechnungen,
+  useAllNebenkostenPositionen,
+} from "@/lib/hooks";
 import { StatCard } from "@/components/StatCard";
+import { ProgressRing } from "@/components/ProgressRing";
+import { CashflowChart, type CashflowMonth } from "@/components/CashflowChart";
+
+const MONTH_LABEL = new Intl.DateTimeFormat("de-DE", { month: "short" });
+
+function buildCashflow(
+  mietvertraege: { kaltmiete: number; beginn: string; ende: string | null }[],
+  abrechnungen: { zeitraumVon: string }[],
+  positionenByAbrechnung: Map<string, number>,
+  abrechnungIds: string[],
+): CashflowMonth[] {
+  const now = new Date();
+  const months: { start: Date; end: Date; label: string }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    months.push({ start, end, label: MONTH_LABEL.format(start) });
+  }
+
+  return months.map(({ start, end, label }) => {
+    const einnahmen = mietvertraege
+      .filter((m) => {
+        const beginn = new Date(m.beginn);
+        const ende = m.ende ? new Date(m.ende) : null;
+        return beginn <= end && (!ende || ende >= start);
+      })
+      .reduce((sum, m) => sum + m.kaltmiete, 0);
+
+    const ausgaben = abrechnungen.reduce((sum, a, i) => {
+      const von = new Date(a.zeitraumVon);
+      if (von.getFullYear() !== start.getFullYear() || von.getMonth() !== start.getMonth()) return sum;
+      return sum + (positionenByAbrechnung.get(abrechnungIds[i]) ?? 0);
+    }, 0);
+
+    return { month: label, einnahmen, ausgaben, ueberschuss: einnahmen - ausgaben };
+  });
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -13,10 +58,25 @@ export default function DashboardPage() {
   const { data: mietvertraege } = useMietvertraege();
   const { data: objekte } = useObjekte();
   const { data: einheiten } = useEinheitenFlat();
+  const { data: abrechnungen } = useNebenkostenabrechnungen();
+  const positionenResults = useAllNebenkostenPositionen(abrechnungen);
 
   useEffect(() => {
     if (isError) router.replace("/login");
   }, [isError, router]);
+
+  const positionenByAbrechnung = new Map<string, number>();
+  (abrechnungen ?? []).forEach((a, i) => {
+    const total = (positionenResults[i]?.data ?? []).reduce((sum, p) => sum + p.betrag, 0);
+    positionenByAbrechnung.set(a.id, total);
+  });
+
+  const cashflow = buildCashflow(
+    mietvertraege ?? [],
+    abrechnungen ?? [],
+    positionenByAbrechnung,
+    (abrechnungen ?? []).map((a) => a.id),
+  );
 
   if (isLoading || !data) {
     return <div className="flex min-h-[50vh] items-center justify-center text-text-muted">Lädt…</div>;
@@ -25,27 +85,69 @@ export default function DashboardPage() {
   const today = new Date().toISOString().slice(0, 10);
   const offeneVorgaenge = (vorgaenge ?? []).filter((v) => v.status !== VorgangStatus.ABGESCHLOSSEN);
   const ueberfaelligeVorgaenge = offeneVorgaenge.filter((v) => v.faelligkeit && v.faelligkeit.slice(0, 10) < today);
+  const nichtZugewiesen = offeneVorgaenge.filter((v) => !v.verantwortlicher);
+  const meineVorgaenge = offeneVorgaenge.filter((v) => v.verantwortlicher?.id === data.user.id);
+  const meineUeberfaellig = meineVorgaenge.filter((v) => v.faelligkeit && v.faelligkeit.slice(0, 10) < today);
+  const meineHeuteFaellig = meineVorgaenge.filter((v) => v.faelligkeit && v.faelligkeit.slice(0, 10) === today);
+
   const aktiveMietvertraege = (mietvertraege ?? []).filter((m) => m.status === MietvertragStatus.AKTIV);
   const mieteinnahmen = aktiveMietvertraege.reduce((sum, m) => sum + m.kaltmiete, 0);
+  const vermieteteEinheitIds = new Set(aktiveMietvertraege.map((m) => m.einheit.id));
+  const einheitenGesamt = einheiten?.length ?? 0;
+  const einheitenVermietetPercent = einheitenGesamt > 0 ? (vermieteteEinheitIds.size / einheitenGesamt) * 100 : 0;
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-10">
       <p className="text-sm text-text-muted">{data.mandant.name}</p>
       <h1 className="mt-1 text-2xl font-semibold">Willkommen, {data.user.name}.</h1>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard value={offeneVorgaenge.length} label="Offene Vorgänge" />
-        <StatCard
-          value={ueberfaelligeVorgaenge.length}
-          label="Überfällige Vorgänge"
-          tone={ueberfaelligeVorgaenge.length > 0 ? "danger" : "default"}
-        />
-        <StatCard value={aktiveMietvertraege.length} label="Aktive Mietverträge" tone="success" />
+      <h2 className="mb-3 mt-6 text-sm font-semibold text-text-muted">Deine Objekte im Überblick</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           value={`${mieteinnahmen.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
-          label="Mieteinnahmen (Kaltmiete)"
+          label="Mieteinnahmen (aktive Verträge)"
         />
-        <StatCard value={`${objekte?.length ?? 0} / ${einheiten?.length ?? 0}`} label="Objekte / Einheiten" />
+        <StatCard value={aktiveMietvertraege.length} label="Aktive Mietverträge" tone="success" />
+        <ProgressRing
+          percent={einheitenVermietetPercent}
+          value={`${vermieteteEinheitIds.size}/${einheitenGesamt}`}
+          label="Einheiten vermietet"
+          caption={`${objekte?.length ?? 0} Objekte`}
+        />
+      </div>
+
+      <h2 className="mb-3 mt-6 text-sm font-semibold text-text-muted">Alle Vorgänge</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard value={offeneVorgaenge.length} label="Offen" />
+        <StatCard
+          value={ueberfaelligeVorgaenge.length}
+          label="Überfällig"
+          tone={ueberfaelligeVorgaenge.length > 0 ? "danger" : "default"}
+        />
+        <StatCard
+          value={nichtZugewiesen.length}
+          label="Nicht zugewiesen"
+          tone={nichtZugewiesen.length > 0 ? "warning" : "default"}
+        />
+      </div>
+
+      <h2 className="mb-3 mt-6 text-sm font-semibold text-text-muted">Meine Vorgänge</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard value={meineVorgaenge.length} label="Offen" />
+        <StatCard
+          value={meineUeberfaellig.length}
+          label="Überfällig"
+          tone={meineUeberfaellig.length > 0 ? "danger" : "default"}
+        />
+        <StatCard
+          value={meineHeuteFaellig.length}
+          label="Heute fällig"
+          tone={meineHeuteFaellig.length > 0 ? "warning" : "default"}
+        />
+      </div>
+
+      <div className="mt-6">
+        <CashflowChart data={cashflow} />
       </div>
     </section>
   );

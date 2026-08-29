@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AssistantAttachment,
   AssistantChatMessage,
@@ -594,6 +594,15 @@ export function useDeleteNebenkostenabrechnung() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen"] });
     },
+  });
+}
+
+export function useAllNebenkostenPositionen(abrechnungen: Nebenkostenabrechnung[] | undefined) {
+  return useQueries({
+    queries: (abrechnungen ?? []).map((a) => ({
+      queryKey: ["nebenkostenabrechnungen", a.id, "positionen"],
+      queryFn: () => apiFetch<NebenkostenPosition[]>(`/nebenkostenabrechnungen/${a.id}/positionen`),
+    })),
   });
 }
 
