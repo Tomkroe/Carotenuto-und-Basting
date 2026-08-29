@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Plus, X } from "lucide-react";
+import { Building2, Plus, Ruler, X } from "lucide-react";
 import { ObjektTyp } from "@maklerprogram/types";
 import { useCurrentUser, useObjekte, useCreateObjekt, useEinheitenFlat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -44,6 +44,14 @@ export default function ObjektePage() {
       counts.set(e.objektId, (counts.get(e.objektId) ?? 0) + 1);
     }
     return counts;
+  }, [einheiten]);
+
+  const flaecheProObjekt = useMemo(() => {
+    const sums = new Map<string, number>();
+    for (const e of einheiten ?? []) {
+      if (e.flaeche != null) sums.set(e.objektId, (sums.get(e.objektId) ?? 0) + e.flaeche);
+    }
+    return sums;
   }, [einheiten]);
 
   const gefilterteObjekte = useMemo(() => {
@@ -212,6 +220,7 @@ export default function ObjektePage() {
             { key: "objekt", header: "Objekt" },
             { key: "typ", header: "Typ" },
             { key: "einheiten", header: "Einheiten" },
+            { key: "flaeche", header: "Gesamtfläche" },
           ]}
         >
           {gefilterteObjekte.map((o) => (
@@ -235,6 +244,16 @@ export default function ObjektePage() {
               </td>
               <td className="px-4 py-3 text-text-muted">{OBJEKT_TYP_LABEL[o.typ]}</td>
               <td className="px-4 py-3 text-text-muted">{einheitenProObjekt.get(o.id) ?? 0}</td>
+              <td className="px-4 py-3 text-text-muted">
+                {flaecheProObjekt.has(o.id) ? (
+                  <span className="flex items-center gap-1.5">
+                    <Ruler size={13} />
+                    {flaecheProObjekt.get(o.id)!.toLocaleString("de-DE")} m²
+                  </span>
+                ) : (
+                  "–"
+                )}
+              </td>
             </tr>
           ))}
         </DataTable>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, Plus, X } from "lucide-react";
+import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -239,7 +239,9 @@ export default function VorgaengePage() {
             { key: "titel", header: "Titel" },
             { key: "objekt", header: "Objekt/Kontakt" },
             { key: "verantwortlicher", header: "Verantwortlich" },
+            { key: "erstellt", header: "Erstellt" },
             { key: "faelligkeit", header: "Fälligkeit" },
+            { key: "labels", header: "Labels" },
             { key: "status", header: "Status" },
           ]}
         >
@@ -253,10 +255,32 @@ export default function VorgaengePage() {
                 className="cursor-pointer transition hover:bg-bg"
               >
                 <td className="px-4 py-3 text-text-muted">#{v.nummer}</td>
+                <td className="px-4 py-3 font-medium">{v.titel}</td>
+                <td className="px-4 py-3 text-text-muted">
+                  {v.objekt?.name}
+                  {v.objekt && v.kontakt && " · "}
+                  {v.kontakt && kontaktName(v.kontakt)}
+                </td>
+                <td className="px-4 py-3 text-text-muted">{v.verantwortlicher?.name ?? "–"}</td>
+                <td className="px-4 py-3 text-text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays size={13} />
+                    {new Date(v.createdAt).toLocaleDateString("de-DE")}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {v.faelligkeit ? (
+                    <span className="flex items-center gap-1.5">
+                      <Flag size={13} />
+                      {new Date(v.faelligkeit).toLocaleDateString("de-DE")}
+                    </span>
+                  ) : (
+                    "–"
+                  )}
+                </td>
                 <td className="px-4 py-3">
-                  <p className="font-medium">{v.titel}</p>
                   {v.labels.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {v.labels.map((l) => (
                         <span
                           key={l.id}
@@ -268,15 +292,6 @@ export default function VorgaengePage() {
                       ))}
                     </div>
                   )}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {v.objekt?.name}
-                  {v.objekt && v.kontakt && " · "}
-                  {v.kontakt && kontaktName(v.kontakt)}
-                </td>
-                <td className="px-4 py-3 text-text-muted">{v.verantwortlicher?.name ?? "–"}</td>
-                <td className="px-4 py-3 text-text-muted">
-                  {v.faelligkeit ? new Date(v.faelligkeit).toLocaleDateString("de-DE") : "–"}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
