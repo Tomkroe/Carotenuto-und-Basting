@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Dokument } from "@maklerprogram/types";
+import { Dokument, DokumentMitZuordnung } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -161,6 +161,11 @@ export class KontaktDokumenteController {
 @UseGuards(JwtAuthGuard)
 export class DokumenteController {
   constructor(private readonly dokumenteService: DokumenteService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload): Promise<DokumentMitZuordnung[]> {
+    return this.dokumenteService.findAllForMandant(user.mandantId);
+  }
 
   @Get(":id/download")
   @Redirect()

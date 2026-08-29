@@ -7,6 +7,7 @@ import {
   Building2,
   ClipboardList,
   FileSignature,
+  FileText,
   Gauge,
   KeyRound,
   LayoutDashboard,
@@ -39,6 +40,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/zaehler", label: "Zähler", icon: Gauge },
       { href: "/nebenkostenabrechnungen", label: "Nebenkosten", icon: Receipt },
+      { href: "/dokumente", label: "Dokumente", icon: FileText },
     ],
   },
 ];

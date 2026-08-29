@@ -19,6 +19,7 @@ import type {
   CreateZaehlerRequest,
   CreateZaehlerstandRequest,
   Dokument,
+  DokumentMitZuordnung,
   Eigentuemerschaft,
   Einheit,
   EinheitListItem,
@@ -420,6 +421,23 @@ export function useDeleteDokument(parent: DokumentParent) {
     mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
+    },
+  });
+}
+
+export function useAlleDokumente() {
+  return useQuery<DokumentMitZuordnung[]>({
+    queryKey: ["dokumente"],
+    queryFn: () => apiFetch<DokumentMitZuordnung[]>("/dokumente"),
+  });
+}
+
+export function useDeleteDokumentGlobal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dokumente"] });
     },
   });
 }

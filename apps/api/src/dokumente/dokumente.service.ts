@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { Dokument } from "@maklerprogram/types";
+import { Dokument, DokumentMitZuordnung } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
 
@@ -89,6 +89,22 @@ export class DokumenteService {
   ): Promise<Dokument> {
     await this.assertKontaktOwnership(mandantId, kontaktId);
     return this.upload(mandantId, hochgeladenVonId, file, `kontakte/${kontaktId}`, { kontaktId });
+  }
+
+  async findAllForMandant(mandantId: string): Promise<DokumentMitZuordnung[]> {
+    const dokumente = await this.prisma.dokument.findMany({
+      where: { mandantId },
+      include: {
+        ...INCLUDE,
+        objekt: { select: { name: true } },
+        vorgang: { select: { nummer: true, titel: true } },
+        mietvertrag: { include: { einheit: { include: { objekt: { select: { name: true } } } } } },
+        nebenkostenabrechnung: { include: { objekt: { select: { name: true } } } },
+        kontakt: { select: { vorname: true, nachname: true, firma: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return dokumente.map(toDokumentMitZuordnung);
   }
 
   async getDownloadUrl(mandantId: string, id: string): Promise<string> {
@@ -190,4 +206,38 @@ function toDokument(dokument: {
     createdAt: dokument.createdAt.toISOString(),
     hochgeladenVon: dokument.hochgeladenVon,
   };
+}
+
+function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }): string {
+  return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
+}
+
+function toDokumentMitZuordnung(dokument: Parameters<typeof toDokument>[0] & {
+  objekt: { name: string } | null;
+  vorgang: { nummer: number; titel: string } | null;
+  mietvertrag: { einheit: { name: string; objekt: { name: string } } } | null;
+  nebenkostenabrechnung: { objekt: { name: string } } | null;
+  kontakt: { vorname: string | null; nachname: string | null; firma: string | null } | null;
+}): DokumentMitZuordnung {
+  let zugeordnetZu: string | null = null;
+  let zugeordnetTyp: DokumentMitZuordnung["zugeordnetTyp"] = null;
+
+  if (dokument.objekt) {
+    zugeordnetZu = dokument.objekt.name;
+    zugeordnetTyp = "objekt";
+  } else if (dokument.vorgang) {
+    zugeordnetZu = `Vorgang #${dokument.vorgang.nummer} · ${dokument.vorgang.titel}`;
+    zugeordnetTyp = "vorgang";
+  } else if (dokument.mietvertrag) {
+    zugeordnetZu = `${dokument.mietvertrag.einheit.objekt.name} · ${dokument.mietvertrag.einheit.name}`;
+    zugeordnetTyp = "mietvertrag";
+  } else if (dokument.nebenkostenabrechnung) {
+    zugeordnetZu = `Nebenkosten · ${dokument.nebenkostenabrechnung.objekt.name}`;
+    zugeordnetTyp = "nebenkostenabrechnung";
+  } else if (dokument.kontakt) {
+    zugeordnetZu = kontaktName(dokument.kontakt);
+    zugeordnetTyp = "kontakt";
+  }
+
+  return { ...toDokument(dokument), zugeordnetZu, zugeordnetTyp };
 }

@@ -278,6 +278,11 @@ export interface Dokument {
   hochgeladenVon: { id: string; name: string };
 }
 
+export interface DokumentMitZuordnung extends Dokument {
+  zugeordnetZu: string | null;
+  zugeordnetTyp: "objekt" | "vorgang" | "mietvertrag" | "nebenkostenabrechnung" | "kontakt" | null;
+}
+
 export interface Eigentuemerschaft {
   id: string;
   hausgeldAnteil: number;
