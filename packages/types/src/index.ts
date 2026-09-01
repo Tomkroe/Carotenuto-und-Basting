@@ -62,7 +62,9 @@ export interface Objekt {
   land: string;
   kaltmiete: number | null;
   flaeche: number | null;
+  hausgeld: number | null;
   eigenschaften: string[];
+  ansprechpartner: KontaktRef | null;
   createdAt: string;
 }
 
@@ -76,7 +78,9 @@ export interface CreateObjektRequest {
   land?: string;
   kaltmiete?: number;
   flaeche?: number;
+  hausgeld?: number;
   eigenschaften?: string[];
+  ansprechpartnerId?: string;
 }
 
 export type UpdateObjektRequest = Partial<CreateObjektRequest>;
@@ -86,7 +90,11 @@ export interface Einheit {
   name: string;
   kategorie: string;
   flaeche: number | null;
+  kaltmiete: number | null;
+  zimmer: number | null;
+  ausstattung: string[];
   objektId: string;
+  objekt?: ObjektRef;
   createdAt: string;
 }
 
@@ -94,6 +102,9 @@ export interface CreateEinheitRequest {
   name: string;
   kategorie: string;
   flaeche?: number;
+  kaltmiete?: number;
+  zimmer?: number;
+  ausstattung?: string[];
 }
 
 export type UpdateEinheitRequest = Partial<CreateEinheitRequest>;
@@ -116,6 +127,11 @@ export interface Kontakt {
   telefon: string | null;
   debitorNr: string | null;
   kreditorNr: string | null;
+  geburtsdatum: string | null;
+  adresseStrasse: string | null;
+  adresseHausnummer: string | null;
+  adressePlz: string | null;
+  adresseOrt: string | null;
   createdAt: string;
 }
 
@@ -134,6 +150,11 @@ export interface CreateKontaktRequest {
   telefon?: string;
   debitorNr?: string;
   kreditorNr?: string;
+  geburtsdatum?: string;
+  adresseStrasse?: string;
+  adresseHausnummer?: string;
+  adressePlz?: string;
+  adresseOrt?: string;
 }
 
 export type UpdateKontaktRequest = Partial<CreateKontaktRequest>;
@@ -249,6 +270,9 @@ export interface Mietvertrag {
   id: string;
   kaltmiete: number;
   nebenkostenVorauszahlung: number;
+  kaution: number | null;
+  iban: string | null;
+  sepaLastschrift: boolean;
   beginn: string;
   ende: string | null;
   status: MietvertragStatus;
@@ -262,6 +286,9 @@ export interface CreateMietvertragRequest {
   mieterId: string;
   kaltmiete: number;
   nebenkostenVorauszahlung?: number;
+  kaution?: number;
+  iban?: string;
+  sepaLastschrift?: boolean;
   beginn: string;
   ende?: string;
   status?: MietvertragStatus;

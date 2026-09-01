@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { IsArray, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 
 export class CreateEinheitDto {
   @IsString()
@@ -12,4 +12,17 @@ export class CreateEinheitDto {
   @IsNumber()
   @IsOptional()
   flaeche?: number;
+
+  @IsNumber()
+  @IsOptional()
+  kaltmiete?: number;
+
+  @IsNumber()
+  @IsOptional()
+  zimmer?: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  ausstattung?: string[];
 }

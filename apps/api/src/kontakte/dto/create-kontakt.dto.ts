@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsEmail, IsEnum, IsOptional, IsString } from "class-validator";
 import { KontaktTyp } from "@maklerprogram/types";
 
 export class CreateKontaktDto {
@@ -32,4 +32,24 @@ export class CreateKontaktDto {
   @IsString()
   @IsOptional()
   kreditorNr?: string;
+
+  @IsDateString()
+  @IsOptional()
+  geburtsdatum?: string;
+
+  @IsString()
+  @IsOptional()
+  adresseStrasse?: string;
+
+  @IsString()
+  @IsOptional()
+  adresseHausnummer?: string;
+
+  @IsString()
+  @IsOptional()
+  adressePlz?: string;
+
+  @IsString()
+  @IsOptional()
+  adresseOrt?: string;
 }

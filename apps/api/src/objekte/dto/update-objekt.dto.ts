@@ -43,8 +43,16 @@ export class UpdateObjektDto {
   @IsOptional()
   flaeche?: number;
 
+  @IsNumber()
+  @IsOptional()
+  hausgeld?: number;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
   eigenschaften?: string[];
+
+  @IsString()
+  @IsOptional()
+  ansprechpartnerId?: string;
 }

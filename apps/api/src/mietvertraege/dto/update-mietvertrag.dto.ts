@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
+import { IsBoolean, IsDateString, IsEnum, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
 import { MietvertragStatus } from "@maklerprogram/types";
 
 export class UpdateMietvertragDto {
@@ -21,6 +21,19 @@ export class UpdateMietvertragDto {
   @Min(0)
   @IsOptional()
   nebenkostenVorauszahlung?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  kaution?: number;
+
+  @IsString()
+  @IsOptional()
+  iban?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  sepaLastschrift?: boolean;
 
   @IsDateString()
   @IsOptional()

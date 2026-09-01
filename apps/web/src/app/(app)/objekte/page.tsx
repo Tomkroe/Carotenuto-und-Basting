@@ -33,6 +33,7 @@ export default function ObjektePage() {
   const [ort, setOrt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [kategorieFilter, setKategorieFilter] = useState<ObjektTyp | "ALLE">("ALLE");
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -56,11 +57,10 @@ export default function ObjektePage() {
 
   const gefilterteObjekte = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return objekte ?? [];
-    return (objekte ?? []).filter((o) =>
-      [o.name, o.strasse, o.ort].some((f) => f.toLowerCase().includes(query)),
-    );
-  }, [objekte, search]);
+    return (objekte ?? [])
+      .filter((o) => kategorieFilter === "ALLE" || o.typ === kategorieFilter)
+      .filter((o) => !query || [o.name, o.strasse, o.ort].some((f) => f.toLowerCase().includes(query)));
+  }, [objekte, search, kategorieFilter]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -204,8 +204,22 @@ export default function ObjektePage() {
         </form>
       )}
 
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Objekte durchsuchen…" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <SearchInput value={search} onChange={setSearch} placeholder="Objekte durchsuchen…" />
+        </div>
+        <select
+          value={kategorieFilter}
+          onChange={(e) => setKategorieFilter(e.target.value as ObjektTyp | "ALLE")}
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="ALLE">Alle Kategorien</option>
+          {Object.values(ObjektTyp).map((t) => (
+            <option key={t} value={t}>
+              {OBJEKT_TYP_LABEL[t]}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isLoading && <p className="text-text-muted">Lädt…</p>}

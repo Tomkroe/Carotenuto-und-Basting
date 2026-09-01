@@ -50,6 +50,11 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const [editTelefon, setEditTelefon] = useState("");
   const [editDebitorNr, setEditDebitorNr] = useState("");
   const [editKreditorNr, setEditKreditorNr] = useState("");
+  const [editGeburtsdatum, setEditGeburtsdatum] = useState("");
+  const [editAdresseStrasse, setEditAdresseStrasse] = useState("");
+  const [editAdresseHausnummer, setEditAdresseHausnummer] = useState("");
+  const [editAdressePlz, setEditAdressePlz] = useState("");
+  const [editAdresseOrt, setEditAdresseOrt] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,6 +80,11 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
     setEditTelefon(kontakt.telefon ?? "");
     setEditDebitorNr(kontakt.debitorNr ?? "");
     setEditKreditorNr(kontakt.kreditorNr ?? "");
+    setEditGeburtsdatum(kontakt.geburtsdatum ? kontakt.geburtsdatum.slice(0, 10) : "");
+    setEditAdresseStrasse(kontakt.adresseStrasse ?? "");
+    setEditAdresseHausnummer(kontakt.adresseHausnummer ?? "");
+    setEditAdressePlz(kontakt.adressePlz ?? "");
+    setEditAdresseOrt(kontakt.adresseOrt ?? "");
     setEditError(null);
     setEditing(true);
   }
@@ -92,6 +102,11 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
         telefon: editTelefon || undefined,
         debitorNr: editDebitorNr || undefined,
         kreditorNr: editKreditorNr || undefined,
+        geburtsdatum: editGeburtsdatum || undefined,
+        adresseStrasse: editAdresseStrasse || undefined,
+        adresseHausnummer: editAdresseHausnummer || undefined,
+        adressePlz: editAdressePlz || undefined,
+        adresseOrt: editAdresseOrt || undefined,
       });
       setEditing(false);
     } catch (err) {
@@ -148,6 +163,14 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                   </span>
                 )}
               </div>
+              {(kontakt.geburtsdatum || kontakt.adresseStrasse) && (
+                <p className="mt-1 text-xs text-text-muted">
+                  {kontakt.geburtsdatum && `geb. ${new Date(kontakt.geburtsdatum).toLocaleDateString("de-DE")}`}
+                  {kontakt.geburtsdatum && kontakt.adresseStrasse && " · "}
+                  {kontakt.adresseStrasse &&
+                    `${kontakt.adresseStrasse} ${kontakt.adresseHausnummer ?? ""}, ${kontakt.adressePlz ?? ""} ${kontakt.adresseOrt ?? ""}`}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -297,6 +320,70 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                 type="text"
                 value={editKreditorNr}
                 onChange={(e) => setEditKreditorNr(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-text-muted" htmlFor="editGeburtsdatum">
+              Geburtsdatum (optional)
+            </label>
+            <input
+              id="editGeburtsdatum"
+              type="date"
+              value={editGeburtsdatum}
+              onChange={(e) => setEditGeburtsdatum(e.target.value)}
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+            />
+          </div>
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editAdresseStrasse">
+                Straße (optional)
+              </label>
+              <input
+                id="editAdresseStrasse"
+                type="text"
+                value={editAdresseStrasse}
+                onChange={(e) => setEditAdresseStrasse(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editAdresseHausnummer">
+                Nr.
+              </label>
+              <input
+                id="editAdresseHausnummer"
+                type="text"
+                value={editAdresseHausnummer}
+                onChange={(e) => setEditAdresseHausnummer(e.target.value)}
+                className="w-20 rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-[auto_1fr] gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editAdressePlz">
+                PLZ
+              </label>
+              <input
+                id="editAdressePlz"
+                type="text"
+                value={editAdressePlz}
+                onChange={(e) => setEditAdressePlz(e.target.value)}
+                className="w-24 rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editAdresseOrt">
+                Ort
+              </label>
+              <input
+                id="editAdresseOrt"
+                type="text"
+                value={editAdresseOrt}
+                onChange={(e) => setEditAdresseOrt(e.target.value)}
                 className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
               />
             </div>

@@ -11,13 +11,17 @@ export class ObjekteService {
   async findAll(mandantId: string): Promise<Objekt[]> {
     const objekte = await this.prisma.objekt.findMany({
       where: { mandantId },
+      include: { ansprechpartner: true },
       orderBy: { createdAt: "desc" },
     });
     return objekte.map(toObjekt);
   }
 
   async findOne(mandantId: string, id: string): Promise<Objekt> {
-    const objekt = await this.prisma.objekt.findFirst({ where: { id, mandantId } });
+    const objekt = await this.prisma.objekt.findFirst({
+      where: { id, mandantId },
+      include: { ansprechpartner: true },
+    });
     if (!objekt) throw new NotFoundException("Objekt nicht gefunden.");
     return toObjekt(objekt);
   }
@@ -25,13 +29,18 @@ export class ObjekteService {
   async create(mandantId: string, dto: CreateObjektDto): Promise<Objekt> {
     const objekt = await this.prisma.objekt.create({
       data: { ...dto, mandantId },
+      include: { ansprechpartner: true },
     });
     return toObjekt(objekt);
   }
 
   async update(mandantId: string, id: string, dto: UpdateObjektDto): Promise<Objekt> {
     await this.findOne(mandantId, id);
-    const objekt = await this.prisma.objekt.update({ where: { id }, data: dto });
+    const objekt = await this.prisma.objekt.update({
+      where: { id },
+      data: dto,
+      include: { ansprechpartner: true },
+    });
     return toObjekt(objekt);
   }
 
@@ -52,7 +61,9 @@ function toObjekt(objekt: {
   land: string;
   kaltmiete: unknown;
   flaeche: unknown;
+  hausgeld: unknown;
   eigenschaften: unknown;
+  ansprechpartner: { id: string; vorname: string | null; nachname: string | null; firma: string | null } | null;
   createdAt: Date;
 }): Objekt {
   return {
@@ -66,7 +77,9 @@ function toObjekt(objekt: {
     land: objekt.land,
     kaltmiete: objekt.kaltmiete != null ? Number(objekt.kaltmiete) : null,
     flaeche: objekt.flaeche != null ? Number(objekt.flaeche) : null,
+    hausgeld: objekt.hausgeld != null ? Number(objekt.hausgeld) : null,
     eigenschaften: Array.isArray(objekt.eigenschaften) ? (objekt.eigenschaften as string[]) : [],
+    ansprechpartner: objekt.ansprechpartner,
     createdAt: objekt.createdAt.toISOString(),
   };
 }

@@ -37,6 +37,11 @@ export class EinheitenController {
     return this.einheitenService.findAllForMandant(user.mandantId);
   }
 
+  @Get(":id")
+  findOne(@CurrentUser() user: JwtPayload, @Param("id") id: string): Promise<Einheit> {
+    return this.einheitenService.findOne(user.mandantId, id);
+  }
+
   @Patch(":id")
   update(
     @CurrentUser() user: JwtPayload,

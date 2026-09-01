@@ -120,6 +120,14 @@ export function useEinheiten(objektId: string) {
   });
 }
 
+export function useEinheit(id: string) {
+  return useQuery<Einheit>({
+    queryKey: ["einheiten", id],
+    queryFn: () => apiFetch<Einheit>(`/einheiten/${id}`),
+    enabled: !!id,
+  });
+}
+
 export function useCreateEinheit(objektId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -139,8 +147,9 @@ export function useUpdateEinheit(objektId: string) {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateEinheitRequest }) =>
       apiFetch<Einheit>(`/einheiten/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["objekte", objektId, "einheiten"] });
+      queryClient.invalidateQueries({ queryKey: ["einheiten", id] });
     },
   });
 }

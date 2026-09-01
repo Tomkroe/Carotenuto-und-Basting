@@ -39,6 +39,9 @@ export class MietvertraegeService {
         mieterId: dto.mieterId,
         kaltmiete: dto.kaltmiete,
         nebenkostenVorauszahlung: dto.nebenkostenVorauszahlung ?? 0,
+        kaution: dto.kaution,
+        iban: dto.iban,
+        sepaLastschrift: dto.sepaLastschrift ?? false,
         beginn: new Date(dto.beginn),
         ende: dto.ende ? new Date(dto.ende) : undefined,
         status: dto.status ?? MietvertragStatus.GEPLANT,
@@ -86,6 +89,9 @@ function toMietvertrag(mietvertrag: {
   id: string;
   kaltmiete: unknown;
   nebenkostenVorauszahlung: unknown;
+  kaution: unknown;
+  iban: string | null;
+  sepaLastschrift: boolean;
   beginn: Date;
   ende: Date | null;
   status: string;
@@ -97,6 +103,9 @@ function toMietvertrag(mietvertrag: {
     id: mietvertrag.id,
     kaltmiete: Number(mietvertrag.kaltmiete),
     nebenkostenVorauszahlung: Number(mietvertrag.nebenkostenVorauszahlung),
+    kaution: mietvertrag.kaution != null ? Number(mietvertrag.kaution) : null,
+    iban: mietvertrag.iban,
+    sepaLastschrift: mietvertrag.sepaLastschrift,
     beginn: mietvertrag.beginn.toISOString(),
     ende: mietvertrag.ende ? mietvertrag.ende.toISOString() : null,
     status: mietvertrag.status as Mietvertrag["status"],

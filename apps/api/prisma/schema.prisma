@@ -68,11 +68,15 @@ model Objekt {
   land      String   @default("DE")
   kaltmiete Decimal? @db.Decimal(10, 2)
   flaeche   Decimal? @db.Decimal(10, 2)
+  hausgeld  Decimal? @db.Decimal(10, 2)
   eigenschaften Json  @default("{}")
   createdAt DateTime @default(now())
 
   mandantId String
   mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  ansprechpartnerId String?
+  ansprechpartner   Kontakt? @relation("ObjektAnsprechpartner", fields: [ansprechpartnerId], references: [id], onDelete: SetNull)
 
   einheiten                Einheit[]
   vorgaenge                Vorgang[]
@@ -88,6 +92,9 @@ model Einheit {
   name      String
   kategorie String
   flaeche   Decimal? @db.Decimal(10, 2)
+  kaltmiete Decimal? @db.Decimal(10, 2)
+  zimmer    Decimal? @db.Decimal(3, 1)
+  ausstattung Json   @default("[]")
   createdAt DateTime @default(now())
 
   objektId String
@@ -121,6 +128,11 @@ model Kontakt {
   telefon    String?
   debitorNr  String?
   kreditorNr String?
+  geburtsdatum      DateTime?
+  adresseStrasse    String?
+  adresseHausnummer String?
+  adressePlz        String?
+  adresseOrt        String?
   createdAt  DateTime   @default(now())
 
   mandantId String
@@ -131,6 +143,7 @@ model Kontakt {
   vorgaenge           Vorgang[]
   dokumente           Dokument[]
   kommentare          Kommentar[]
+  objekteAlsAnsprechpartner Objekt[] @relation("ObjektAnsprechpartner")
 
   @@index([mandantId])
 }
@@ -147,6 +160,9 @@ model Mietvertrag {
   id                      String            @id @default(cuid())
   kaltmiete               Decimal           @db.Decimal(10, 2)
   nebenkostenVorauszahlung Decimal          @default(0) @db.Decimal(10, 2)
+  kaution                 Decimal?          @db.Decimal(10, 2)
+  iban                    String?
+  sepaLastschrift         Boolean           @default(false)
   beginn                  DateTime
   ende                    DateTime?
   status                  MietvertragStatus @default(GEPLANT)

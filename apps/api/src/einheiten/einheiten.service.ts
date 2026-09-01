@@ -26,6 +26,15 @@ export class EinheitenService {
     return einheiten.map(toEinheit);
   }
 
+  async findOne(mandantId: string, einheitId: string): Promise<Einheit> {
+    const einheit = await this.prisma.einheit.findFirst({
+      where: { id: einheitId, objekt: { mandantId } },
+      include: { objekt: { select: { id: true, name: true } } },
+    });
+    if (!einheit) throw new NotFoundException("Einheit nicht gefunden.");
+    return { ...toEinheit(einheit), objekt: einheit.objekt };
+  }
+
   async create(mandantId: string, objektId: string, dto: CreateEinheitDto): Promise<Einheit> {
     await this.assertObjektOwnership(mandantId, objektId);
     const einheit = await this.prisma.einheit.create({
@@ -62,6 +71,9 @@ function toEinheit(einheit: {
   name: string;
   kategorie: string;
   flaeche: unknown;
+  kaltmiete: unknown;
+  zimmer: unknown;
+  ausstattung: unknown;
   objektId: string;
   createdAt: Date;
 }): Einheit {
@@ -70,6 +82,9 @@ function toEinheit(einheit: {
     name: einheit.name,
     kategorie: einheit.kategorie,
     flaeche: einheit.flaeche != null ? Number(einheit.flaeche) : null,
+    kaltmiete: einheit.kaltmiete != null ? Number(einheit.kaltmiete) : null,
+    zimmer: einheit.zimmer != null ? Number(einheit.zimmer) : null,
+    ausstattung: Array.isArray(einheit.ausstattung) ? (einheit.ausstattung as string[]) : [],
     objektId: einheit.objektId,
     createdAt: einheit.createdAt.toISOString(),
   };

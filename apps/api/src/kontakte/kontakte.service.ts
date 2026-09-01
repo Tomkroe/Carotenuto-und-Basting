@@ -77,6 +77,11 @@ function toKontakt(kontakt: {
   telefon: string | null;
   debitorNr: string | null;
   kreditorNr: string | null;
+  geburtsdatum: Date | null;
+  adresseStrasse: string | null;
+  adresseHausnummer: string | null;
+  adressePlz: string | null;
+  adresseOrt: string | null;
   createdAt: Date;
 }): Kontakt {
   return {
@@ -89,6 +94,11 @@ function toKontakt(kontakt: {
     telefon: kontakt.telefon,
     debitorNr: kontakt.debitorNr,
     kreditorNr: kontakt.kreditorNr,
+    geburtsdatum: kontakt.geburtsdatum != null ? kontakt.geburtsdatum.toISOString() : null,
+    adresseStrasse: kontakt.adresseStrasse,
+    adresseHausnummer: kontakt.adresseHausnummer,
+    adressePlz: kontakt.adressePlz,
+    adresseOrt: kontakt.adresseOrt,
     createdAt: kontakt.createdAt.toISOString(),
   };
 }
