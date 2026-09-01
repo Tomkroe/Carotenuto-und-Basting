@@ -15,6 +15,9 @@ import {
   useMietvertraege,
   useCreateMietvertrag,
   useDeleteMietvertrag,
+  useEigentuemerschaften,
+  useCreateEigentuemerschaft,
+  useDeleteEigentuemerschaft,
   useKontakte,
   useCreateKontakt,
 } from "@/lib/hooks";
@@ -52,6 +55,9 @@ export default function EinheitDetailPage() {
   const { data: mietvertraege } = useMietvertraege();
   const createMietvertrag = useCreateMietvertrag();
   const deleteMietvertrag = useDeleteMietvertrag();
+  const { data: eigentuemerschaften } = useEigentuemerschaften();
+  const createEigentuemerschaft = useCreateEigentuemerschaft();
+  const deleteEigentuemerschaft = useDeleteEigentuemerschaft();
   const { data: kontakte } = useKontakte();
   const createKontakt = useCreateKontakt();
 
@@ -82,6 +88,17 @@ export default function EinheitDetailPage() {
   const [miSepa, setMiSepa] = useState(false);
   const [mietError, setMietError] = useState<string | null>(null);
 
+  const [showEigModal, setShowEigModal] = useState(false);
+  const [eigModus, setEigModus] = useState<"bestehend" | "neu">("bestehend");
+  const [eigentuemerId, setEigentuemerId] = useState("");
+  const [neuEigVorname, setNeuEigVorname] = useState("");
+  const [neuEigNachname, setNeuEigNachname] = useState("");
+  const [neuEigTelefon, setNeuEigTelefon] = useState("");
+  const [neuEigEmail, setNeuEigEmail] = useState("");
+  const [eigHausgeldAnteil, setEigHausgeldAnteil] = useState("");
+  const [eigAnteilProzent, setEigAnteilProzent] = useState("");
+  const [eigError, setEigError] = useState<string | null>(null);
+
   useEffect(() => {
     if (authError) router.replace("/login");
   }, [authError, router]);
@@ -99,6 +116,16 @@ export default function EinheitDetailPage() {
   const mietverhaeltnisse = useMemo(
     () => (mietvertraege ?? []).filter((m) => m.einheit.id === einheitId),
     [mietvertraege, einheitId],
+  );
+
+  const eigentuemerKontakte = useMemo(
+    () => (kontakte ?? []).filter((k) => k.typ === KontaktTyp.EIGENTUEMER),
+    [kontakte],
+  );
+
+  const eigentuemerschaftenFuerEinheit = useMemo(
+    () => (eigentuemerschaften ?? []).filter((w) => w.einheit.id === einheitId),
+    [eigentuemerschaften, einheitId],
   );
 
   function startEditEckdaten() {
@@ -193,6 +220,54 @@ export default function EinheitDetailPage() {
       resetMietForm();
     } catch (err) {
       setMietError(err instanceof ApiError ? err.message : "Mietverhältnis konnte nicht angelegt werden.");
+    }
+  }
+
+  function resetEigForm() {
+    setEigModus("bestehend");
+    setEigentuemerId("");
+    setNeuEigVorname("");
+    setNeuEigNachname("");
+    setNeuEigTelefon("");
+    setNeuEigEmail("");
+    setEigHausgeldAnteil("");
+    setEigAnteilProzent("");
+    setEigError(null);
+  }
+
+  async function handleCreateEigentuemerschaft(e: FormEvent) {
+    e.preventDefault();
+    setEigError(null);
+    try {
+      let finalEigentuemerId = eigentuemerId;
+      if (eigModus === "neu") {
+        if (!neuEigVorname && !neuEigNachname) {
+          setEigError("Bitte Vor- oder Nachname des neuen Kontakts angeben.");
+          return;
+        }
+        const neuerKontakt = await createKontakt.mutateAsync({
+          typ: KontaktTyp.EIGENTUEMER,
+          vorname: neuEigVorname || undefined,
+          nachname: neuEigNachname || undefined,
+          telefon: neuEigTelefon || undefined,
+          email: neuEigEmail || undefined,
+        });
+        finalEigentuemerId = neuerKontakt.id;
+      }
+      if (!finalEigentuemerId) {
+        setEigError("Bitte einen Eigentümer auswählen.");
+        return;
+      }
+      await createEigentuemerschaft.mutateAsync({
+        einheitId,
+        eigentuemerId: finalEigentuemerId,
+        hausgeldAnteil: Number(eigHausgeldAnteil),
+        anteilProzent: eigAnteilProzent ? Number(eigAnteilProzent) : undefined,
+      });
+      setShowEigModal(false);
+      resetEigForm();
+    } catch (err) {
+      setEigError(err instanceof ApiError ? err.message : "Eigentümer konnte nicht hinzugefügt werden.");
     }
   }
 
@@ -449,6 +524,61 @@ export default function EinheitDetailPage() {
               </table>
             </div>
           )}
+
+          <div className="mb-4 mt-8 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Eigentümer</h2>
+            <button
+              onClick={() => {
+                resetEigForm();
+                setShowEigModal(true);
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+            >
+              <Plus size={16} />
+              Eigentümer hinzufügen
+            </button>
+          </div>
+
+          {eigentuemerschaftenFuerEinheit.length === 0 ? (
+            <p className="text-text-muted">Kein Eigentümer hinterlegt.</p>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-border bg-surface">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs text-text-muted">
+                    <th className="px-4 py-2.5 font-medium">Eigentümer</th>
+                    <th className="px-4 py-2.5 font-medium">Hausgeld-Anteil</th>
+                    <th className="px-4 py-2.5 font-medium">Miteigentumsanteil</th>
+                    <th className="px-4 py-2.5 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {eigentuemerschaftenFuerEinheit.map((w) => (
+                    <tr key={w.id}>
+                      <td className="px-4 py-3">
+                        <Link href={`/kontakte/${w.eigentuemer.id}`} className="font-medium hover:text-primary">
+                          {kontaktName(w.eigentuemer)}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-text-muted">{w.hausgeldAnteil.toLocaleString("de-DE")} €</td>
+                      <td className="px-4 py-3 text-text-muted">
+                        {w.anteilProzent != null ? `${w.anteilProzent.toLocaleString("de-DE")} %` : "–"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => deleteEigentuemerschaft.mutate(w.id)}
+                          className="text-text-muted transition hover:text-red-500"
+                          aria-label="Eigentümer entfernen"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
@@ -644,6 +774,129 @@ export default function EinheitDetailPage() {
               className="w-full rounded-lg bg-primary py-2 font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
             >
               {createMietvertrag.isPending || createKontakt.isPending ? "Wird angelegt…" : "Mietverhältnis anlegen"}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showEigModal && (
+        <Modal title="Eigentümer hinzufügen" onClose={() => setShowEigModal(false)}>
+          <form onSubmit={handleCreateEigentuemerschaft} className="space-y-4">
+            <div className="flex gap-1 rounded-lg border border-border p-1 text-sm">
+              <button
+                type="button"
+                onClick={() => setEigModus("bestehend")}
+                className={`flex-1 rounded-md py-1.5 transition ${
+                  eigModus === "bestehend" ? "bg-primary text-primary-fg" : "text-text-muted"
+                }`}
+              >
+                Bestehender Kontakt
+              </button>
+              <button
+                type="button"
+                onClick={() => setEigModus("neu")}
+                className={`flex-1 rounded-md py-1.5 transition ${
+                  eigModus === "neu" ? "bg-primary text-primary-fg" : "text-text-muted"
+                }`}
+              >
+                Neuer Kontakt
+              </button>
+            </div>
+
+            {eigModus === "bestehend" ? (
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="eigentuemerId">
+                  Eigentümer
+                </label>
+                <select
+                  id="eigentuemerId"
+                  value={eigentuemerId}
+                  onChange={(e) => setEigentuemerId(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                >
+                  <option value="">Kontakt wählen…</option>
+                  {eigentuemerKontakte.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {kontaktName(k)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  value={neuEigVorname}
+                  onChange={(e) => setNeuEigVorname(e.target.value)}
+                  placeholder="Vorname"
+                  className="rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  type="text"
+                  value={neuEigNachname}
+                  onChange={(e) => setNeuEigNachname(e.target.value)}
+                  placeholder="Nachname"
+                  className="rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  type="text"
+                  value={neuEigTelefon}
+                  onChange={(e) => setNeuEigTelefon(e.target.value)}
+                  placeholder="Telefon"
+                  className="rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  type="email"
+                  value={neuEigEmail}
+                  onChange={(e) => setNeuEigEmail(e.target.value)}
+                  placeholder="E-Mail"
+                  className="rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="eigHausgeldAnteil">
+                  Hausgeld-Anteil (€)
+                </label>
+                <input
+                  id="eigHausgeldAnteil"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  required
+                  value={eigHausgeldAnteil}
+                  onChange={(e) => setEigHausgeldAnteil(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="eigAnteilProzent">
+                  Miteigentumsanteil (%, optional)
+                </label>
+                <input
+                  id="eigAnteilProzent"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  value={eigAnteilProzent}
+                  onChange={(e) => setEigAnteilProzent(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            {eigError && <p className="text-sm text-red-500">{eigError}</p>}
+
+            <button
+              type="submit"
+              disabled={createEigentuemerschaft.isPending || createKontakt.isPending}
+              className="w-full rounded-lg bg-primary py-2 font-medium text-primary-fg transition hover:opacity-90 disabled:opacity-50"
+            >
+              {createEigentuemerschaft.isPending || createKontakt.isPending ? "Wird hinzugefügt…" : "Eigentümer hinzufügen"}
             </button>
           </form>
         </Modal>

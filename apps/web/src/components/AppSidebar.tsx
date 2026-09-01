@@ -9,7 +9,6 @@ import {
   FileSignature,
   FileText,
   Gauge,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -33,7 +32,6 @@ const NAV_GROUPS = [
       { href: "/kontakte", label: "Kontakte", icon: Users },
       { href: "/vorgaenge", label: "Vorgänge", icon: ClipboardList },
       { href: "/mietvertraege", label: "Mietverträge", icon: FileSignature },
-      { href: "/eigentuemerschaften", label: "Eigentümer", icon: KeyRound },
     ],
   },
   {
