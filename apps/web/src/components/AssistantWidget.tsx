@@ -1,36 +1,25 @@
 "use client";
 
 import { useRef, useState, useEffect, FormEvent, ChangeEvent } from "react";
+import Link from "next/link";
 import {
   Check,
   CheckCircle2,
   Copy,
-  FileText,
   Loader2,
   Mail,
   Mic,
-  MessageCircle,
   MessageSquare,
   Paperclip,
-  RefreshCw,
   Send,
+  Settings,
   Sparkles,
-  Tag,
   Workflow,
   X,
 } from "lucide-react";
 import type { AssistantChatMessage, AssistantEmailDraft } from "@maklerprogram/types";
-import { useAssistantChat } from "@/lib/hooks";
+import { useAssistantChat, useWorkflows } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
-
-const WORKFLOWS = [
-  { icon: Tag, label: "Vorgang anlegen", prompt: "Leg einen Vorgang an: " },
-  { icon: RefreshCw, label: "Status ändern", prompt: "Setze den Status von Vorgang #" },
-  { icon: MessageCircle, label: "Kommentar hinzufügen", prompt: "Füge Vorgang # den Kommentar hinzu: " },
-  { icon: FileText, label: "Mietvertrag anlegen", prompt: "Leg einen Mietvertrag an für " },
-  { icon: Paperclip, label: "Dokument anhängen", prompt: "Häng die angehängte Datei an " },
-  { icon: Mail, label: "E-Mail entwerfen", prompt: "Entwirf eine E-Mail an " },
-];
 
 function speak(text: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -101,6 +90,7 @@ export function AssistantWidget() {
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const chat = useAssistantChat();
+  const { data: workflows } = useWorkflows();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
@@ -245,16 +235,26 @@ export function AssistantWidget() {
 
           {tab === "workflows" && (
             <div className="flex-1 space-y-1.5 overflow-y-auto px-3 py-3">
-              {WORKFLOWS.map((w) => (
+              {workflows && workflows.length === 0 && (
+                <p className="px-1 text-sm text-text-muted">Noch keine Workflows angelegt.</p>
+              )}
+              {workflows?.map((w) => (
                 <button
-                  key={w.label}
+                  key={w.id}
                   onClick={() => applyWorkflow(w.prompt)}
                   className="flex w-full items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-left text-sm transition hover:border-primary hover:text-primary"
                 >
-                  <w.icon size={16} />
+                  <Workflow size={16} />
                   {w.label}
                 </button>
               ))}
+              <Link
+                href="/workflows"
+                className="flex items-center gap-2.5 rounded-lg border border-dashed border-border px-3 py-2.5 text-left text-sm text-text-muted transition hover:border-primary hover:text-primary"
+              >
+                <Settings size={16} />
+                Workflows verwalten
+              </Link>
             </div>
           )}
 

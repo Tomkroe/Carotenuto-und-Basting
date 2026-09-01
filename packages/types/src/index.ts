@@ -183,6 +183,20 @@ export interface Label {
   farbe: string;
 }
 
+export interface Workflow {
+  id: string;
+  label: string;
+  prompt: string;
+  createdAt: string;
+}
+
+export interface CreateWorkflowRequest {
+  label: string;
+  prompt: string;
+}
+
+export type UpdateWorkflowRequest = Partial<CreateWorkflowRequest>;
+
 export interface CreateLabelRequest {
   name: string;
   farbe: string;

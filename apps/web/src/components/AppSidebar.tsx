@@ -14,6 +14,7 @@ import {
   LogOut,
   Plus,
   Receipt,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -41,6 +42,7 @@ const NAV_GROUPS = [
       { href: "/zaehler", label: "Zähler", icon: Gauge },
       { href: "/nebenkostenabrechnungen", label: "Nebenkosten", icon: Receipt },
       { href: "/dokumente", label: "Dokumente", icon: FileText },
+      { href: "/workflows", label: "Workflows", icon: Sparkles },
     ],
   },
 ];

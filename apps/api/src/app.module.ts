@@ -19,6 +19,7 @@ import { NebenkostenabrechnungenModule } from "./nebenkostenabrechnungen/nebenko
 import { NebenkostenpositionenModule } from "./nebenkostenpositionen/nebenkostenpositionen.module";
 import { LabelsModule } from "./labels/labels.module";
 import { AssistantModule } from "./assistant/assistant.module";
+import { WorkflowsModule } from "./workflows/workflows.module";
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AssistantModule } from "./assistant/assistant.module";
     NebenkostenpositionenModule,
     LabelsModule,
     AssistantModule,
+    WorkflowsModule,
   ],
 })
 export class AppModule {}

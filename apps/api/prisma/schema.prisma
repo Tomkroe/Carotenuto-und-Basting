@@ -27,6 +27,19 @@ model Mandant {
   labels                 Label[]
   zaehler                Zaehler[]
   dokumente              Dokument[]
+  workflows              Workflow[]
+}
+
+model Workflow {
+  id        String   @id @default(cuid())
+  label     String
+  prompt    String
+  createdAt DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  @@index([mandantId])
 }
 
 model User {

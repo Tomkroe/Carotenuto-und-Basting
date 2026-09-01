@@ -46,6 +46,9 @@ import type {
   UserListItem,
   Vorgang,
   VorgangVerlaufEintrag,
+  Workflow,
+  CreateWorkflowRequest,
+  UpdateWorkflowRequest,
   Zaehler,
   Zaehlerstand,
 } from "@maklerprogram/types";
@@ -723,6 +726,45 @@ export function useDeleteLabel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
+    },
+  });
+}
+
+export function useWorkflows() {
+  return useQuery<Workflow[]>({
+    queryKey: ["workflows"],
+    queryFn: () => apiFetch<Workflow[]>("/workflows"),
+  });
+}
+
+export function useCreateWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateWorkflowRequest) =>
+      apiFetch<Workflow>("/workflows", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    },
+  });
+}
+
+export function useUpdateWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateWorkflowRequest }) =>
+      apiFetch<Workflow>(`/workflows/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    },
+  });
+}
+
+export function useDeleteWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/workflows/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
     },
   });
 }
