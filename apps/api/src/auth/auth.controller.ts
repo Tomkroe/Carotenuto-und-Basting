@@ -45,7 +45,7 @@ export class AuthController {
       mandantId: result.user.mandantId,
       role: result.user.role,
     });
-    res.cookie("access_token", accessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 });
+    res.cookie("access_token", accessToken, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
     res.cookie("refresh_token", refreshToken, { ...COOKIE_OPTIONS, maxAge: 30 * 24 * 60 * 60 * 1000 });
   }
 }
