@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { ToDo } from "@maklerprogram/types";
+import { ToDo, ToDoListItem } from "@maklerprogram/types";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
@@ -31,6 +31,11 @@ export class VorgangTodosController {
 @UseGuards(JwtAuthGuard)
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
+
+  @Get()
+  findAll(@CurrentUser() user: JwtPayload): Promise<ToDoListItem[]> {
+    return this.todosService.findAllForMandant(user.mandantId);
+  }
 
   @Patch(":id")
   update(@CurrentUser() user: JwtPayload, @Param("id") id: string, @Body() dto: UpdateToDoDto): Promise<ToDo> {

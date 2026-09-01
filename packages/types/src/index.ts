@@ -221,12 +221,45 @@ export interface VorgangVerlaufEintrag {
   autor: { id: string; name: string };
 }
 
+export const TODO_ICON_NAMES = [
+  "Wrench",
+  "Phone",
+  "Mail",
+  "FileText",
+  "CalendarClock",
+  "KeyRound",
+  "Droplet",
+  "Zap",
+  "Flame",
+  "Trash2",
+  "Car",
+  "ShieldCheck",
+  "Home",
+  "UserRound",
+  "Package",
+  "AlertTriangle",
+  "ClipboardList",
+  "Hammer",
+  "Sparkles",
+  "Truck",
+  "Lightbulb",
+  "PaintRoller",
+  "CircleDot",
+] as const;
+
+export type TodoIconName = (typeof TODO_ICON_NAMES)[number];
+
 export interface ToDo {
   id: string;
   titel: string;
+  icon: TodoIconName | null;
   erledigt: boolean;
   vorgangId: string;
   createdAt: string;
+}
+
+export interface ToDoListItem extends ToDo {
+  vorgang: { id: string; titel: string };
 }
 
 export interface CreateToDoRequest {

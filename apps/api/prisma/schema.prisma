@@ -280,6 +280,7 @@ model VorgangLabel {
 model ToDo {
   id          String    @id @default(cuid())
   titel       String
+  icon        String?
   erledigt    Boolean   @default(false)
   faelligkeit DateTime?
   reihenfolge Int       @default(0)

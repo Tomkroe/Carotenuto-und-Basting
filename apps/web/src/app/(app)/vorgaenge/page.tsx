@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers } from "@/lib/hooks";
@@ -30,14 +30,16 @@ function kontaktName(k: { vorname: string | null; nachname: string | null; firma
 
 export default function VorgaengePage() {
   const router = useRouter();
-  const { isError: authError } = useCurrentUser();
+  const searchParams = useSearchParams();
+  const filter = searchParams.get("filter");
+  const { data: me, isError: authError } = useCurrentUser();
   const { data: vorgaenge, isLoading } = useVorgaenge();
   const { data: objekte } = useObjekte();
   const { data: kontakte } = useKontakte();
   const { data: users } = useUsers();
   const createVorgang = useCreateVorgang();
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(searchParams.get("neu") === "1");
   const [titel, setTitel] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
   const [objektId, setObjektId] = useState("");
@@ -55,15 +57,54 @@ export default function VorgaengePage() {
   const offen = (vorgaenge ?? []).filter((v) => v.status !== VorgangStatus.ABGESCHLOSSEN);
   const ueberfaellig = offen.filter((v) => v.faelligkeit && v.faelligkeit.slice(0, 10) < today);
 
+  const FILTER_LABEL: Record<string, string> = {
+    offen: "Offene Vorgänge",
+    ueberfaellig: "Überfällige Vorgänge",
+    "nicht-zugewiesen": "Nicht zugewiesene Vorgänge",
+    "meine-offen": "Meine offenen Vorgänge",
+    "meine-ueberfaellig": "Meine überfälligen Vorgänge",
+    "meine-heute": "Heute fällige Vorgänge",
+  };
+
   const gefilterteVorgaenge = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return vorgaenge ?? [];
-    return (vorgaenge ?? []).filter((v) =>
-      [v.titel, v.objekt?.name, v.kontakt ? kontaktName(v.kontakt) : null]
-        .filter(Boolean)
-        .some((f) => f!.toLowerCase().includes(query)),
-    );
-  }, [vorgaenge, search]);
+    return (vorgaenge ?? [])
+      .filter((v) => {
+        switch (filter) {
+          case "offen":
+            return v.status !== VorgangStatus.ABGESCHLOSSEN;
+          case "ueberfaellig":
+            return v.status !== VorgangStatus.ABGESCHLOSSEN && v.faelligkeit && v.faelligkeit.slice(0, 10) < today;
+          case "nicht-zugewiesen":
+            return v.status !== VorgangStatus.ABGESCHLOSSEN && !v.verantwortlicher;
+          case "meine-offen":
+            return v.status !== VorgangStatus.ABGESCHLOSSEN && v.verantwortlicher?.id === me?.user.id;
+          case "meine-ueberfaellig":
+            return (
+              v.status !== VorgangStatus.ABGESCHLOSSEN &&
+              v.verantwortlicher?.id === me?.user.id &&
+              v.faelligkeit &&
+              v.faelligkeit.slice(0, 10) < today
+            );
+          case "meine-heute":
+            return (
+              v.status !== VorgangStatus.ABGESCHLOSSEN &&
+              v.verantwortlicher?.id === me?.user.id &&
+              v.faelligkeit &&
+              v.faelligkeit.slice(0, 10) === today
+            );
+          default:
+            return true;
+        }
+      })
+      .filter(
+        (v) =>
+          !query ||
+          [v.titel, v.objekt?.name, v.kontakt ? kontaktName(v.kontakt) : null]
+            .filter(Boolean)
+            .some((f) => f!.toLowerCase().includes(query)),
+      );
+  }, [vorgaenge, search, filter, me, today]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -113,6 +154,15 @@ export default function VorgaengePage() {
         <StatCard value={offen.length} label="Offene Vorgänge" />
         <StatCard value={ueberfaellig.length} label="Überfällige Vorgänge" tone={ueberfaellig.length > 0 ? "danger" : "default"} />
       </div>
+
+      {filter && FILTER_LABEL[filter] && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+          <span>Gefiltert: {FILTER_LABEL[filter]}</span>
+          <button onClick={() => router.push("/vorgaenge")} className="ml-auto text-xs underline hover:opacity-80">
+            Filter zurücksetzen
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">

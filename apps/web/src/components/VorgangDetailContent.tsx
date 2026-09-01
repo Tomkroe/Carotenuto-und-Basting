@@ -24,6 +24,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
+import { TodoIcon } from "@/components/TodoIcon";
 
 const LABEL_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#f43f5e", "#f97316", "#06b6d4", "#64748b"];
 
@@ -405,6 +406,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
               <li key={t.id} className="flex items-center justify-between px-4 py-2.5">
                 <button onClick={() => toggleTodo.mutate({ id: t.id, erledigt: !t.erledigt })} className="flex items-center gap-2 text-left">
                   {t.erledigt ? <CheckSquare size={17} className="text-primary" /> : <Square size={17} className="text-text-muted" />}
+                  <TodoIcon icon={t.icon} size={15} className="text-text-muted" />
                   <span className={t.erledigt ? "text-text-muted line-through" : ""}>{t.titel}</span>
                 </button>
                 <button

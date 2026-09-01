@@ -33,6 +33,7 @@ import type {
   NebenkostenPosition,
   Objekt,
   ToDo,
+  ToDoListItem,
   UpdateEigentuemerschaftRequest,
   UpdateEinheitRequest,
   UpdateKontaktRequest,
@@ -285,6 +286,13 @@ export function useTodos(vorgangId: string) {
   });
 }
 
+export function useAllTodos() {
+  return useQuery<ToDoListItem[]>({
+    queryKey: ["todos"],
+    queryFn: () => apiFetch<ToDoListItem[]>("/todos"),
+  });
+}
+
 export function useCreateTodo(vorgangId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -292,6 +300,7 @@ export function useCreateTodo(vorgangId: string) {
       apiFetch<ToDo>(`/vorgaenge/${vorgangId}/todos`, { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }
@@ -304,6 +313,7 @@ export function useToggleTodo(vorgangId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }
@@ -314,6 +324,7 @@ export function useDeleteTodo(vorgangId: string) {
     mutationFn: (id: string) => apiFetch<void>(`/todos/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }
