@@ -171,23 +171,24 @@ export function AssistantWidget() {
     const recognition = new SpeechRecognitionCtor();
     recognition.lang = "de-DE";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    // continuous:true statt false — sonst stoppt die Web Speech API schon bei der ersten
+    // kurzen Sprechpause und schneidet den Satz ab. Jetzt hört sie zu, bis der Nutzer den
+    // Mikrofon-Button erneut klickt (siehe toggleListening oben).
+    recognition.continuous = true;
 
-    let finalTranscript = "";
+    let latestTranscript = "";
     recognition.onresult = (event: any) => {
       let transcript = "";
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
+      latestTranscript = transcript;
       setInput(transcript);
-      if (event.results[event.results.length - 1].isFinal) {
-        finalTranscript = transcript;
-      }
     };
     recognition.onend = () => {
       setListening(false);
-      if (finalTranscript.trim()) {
-        void sendMessage(finalTranscript.trim(), attachedFile);
+      if (latestTranscript.trim()) {
+        void sendMessage(latestTranscript.trim(), attachedFile);
       }
     };
     recognition.onerror = () => setListening(false);
