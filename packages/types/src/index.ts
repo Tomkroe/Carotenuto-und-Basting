@@ -365,6 +365,7 @@ export enum ZaehlerTyp {
   STROM = "STROM",
   GAS = "GAS",
   WASSER = "WASSER",
+  OEL = "OEL",
 }
 
 export interface Zaehler {

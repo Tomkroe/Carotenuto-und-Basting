@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Zap, Flame, Droplet, Plus, X, Star, Gauge, TrendingUp } from "lucide-react";
+import { Zap, Flame, Droplet, Fuel, Plus, X, Star, Gauge, TrendingUp } from "lucide-react";
 import { ZaehlerTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -21,6 +21,7 @@ const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className:
   [ZaehlerTyp.STROM]: { label: "Strom", icon: Zap, className: "bg-amber-500/10 text-amber-500", einheit: "kWh" },
   [ZaehlerTyp.GAS]: { label: "Gas", icon: Flame, className: "bg-orange-500/10 text-orange-500", einheit: "m³" },
   [ZaehlerTyp.WASSER]: { label: "Wasser", icon: Droplet, className: "bg-blue-500/10 text-blue-500", einheit: "m³" },
+  [ZaehlerTyp.OEL]: { label: "Öl", icon: Fuel, className: "bg-stone-500/10 text-stone-500", einheit: "L" },
 };
 
 export default function ZaehlerPage() {

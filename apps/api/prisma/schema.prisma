@@ -322,6 +322,7 @@ enum ZaehlerTyp {
   STROM
   GAS
   WASSER
+  OEL
 }
 
 model Zaehler {
