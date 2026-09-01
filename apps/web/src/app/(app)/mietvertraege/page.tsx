@@ -54,6 +54,9 @@ export default function MietvertraegePage() {
   const [kaltmiete, setKaltmiete] = useState("");
   const [nebenkosten, setNebenkosten] = useState("");
   const [beginn, setBeginn] = useState("");
+  const [kaution, setKaution] = useState("");
+  const [iban, setIban] = useState("");
+  const [sepaLastschrift, setSepaLastschrift] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [eigentuemerFilter, setEigentuemerFilter] = useState("ALLE");
@@ -136,6 +139,9 @@ export default function MietvertraegePage() {
         mieterId,
         kaltmiete: Number(kaltmiete),
         nebenkostenVorauszahlung: nebenkosten ? Number(nebenkosten) : undefined,
+        kaution: kaution ? Number(kaution) : undefined,
+        iban: iban || undefined,
+        sepaLastschrift,
         beginn,
       });
       setEinheitId("");
@@ -143,6 +149,9 @@ export default function MietvertraegePage() {
       setKaltmiete("");
       setNebenkosten("");
       setBeginn("");
+      setKaution("");
+      setIban("");
+      setSepaLastschrift(false);
       setShowForm(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Mietvertrag konnte nicht angelegt werden.");
@@ -270,6 +279,43 @@ export default function MietvertraegePage() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="kaution">
+                  Kaution (€, optional)
+                </label>
+                <input
+                  id="kaution"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={kaution}
+                  onChange={(e) => setKaution(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="iban">
+                  IBAN (optional)
+                </label>
+                <input
+                  id="iban"
+                  type="text"
+                  value={iban}
+                  onChange={(e) => setIban(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={sepaLastschrift}
+                onChange={(e) => setSepaLastschrift(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              SEPA-Lastschriftmandat vorhanden
+            </label>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -339,8 +385,17 @@ export default function MietvertraegePage() {
                 <td className="px-4 py-3 text-text-muted">
                   {mietvertrag ? kontaktName(mietvertrag.mieter) : "–"}
                 </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {mietvertrag ? `${mietvertrag.kaltmiete.toFixed(2)} €` : "–"}
+                <td className="px-4 py-3">
+                  {mietvertrag ? (
+                    <div>
+                      <p className="font-medium">{mietvertrag.kaltmiete.toFixed(2)} €</p>
+                      <p className="text-xs text-text-muted">
+                        {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toFixed(2)} € warm
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-text-muted">–</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-text-muted">
                   {mietvertrag ? (mietvertrag.ende ? "Befristet" : "Unbefristet") : "–"}

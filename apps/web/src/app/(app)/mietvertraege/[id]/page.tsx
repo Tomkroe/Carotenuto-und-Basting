@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarClock, CheckCircle2, Archive, Pencil, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Archive, Banknote, Pencil, ShieldCheck, Trash2 } from "lucide-react";
 import { MietvertragStatus } from "@maklerprogram/types";
 import { useCurrentUser, useMietvertrag, useUpdateMietvertrag, useDeleteMietvertrag } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -51,6 +51,9 @@ export default function MietvertragDetailPage() {
   const [editNebenkosten, setEditNebenkosten] = useState("");
   const [editBeginn, setEditBeginn] = useState("");
   const [editEnde, setEditEnde] = useState("");
+  const [editKaution, setEditKaution] = useState("");
+  const [editIban, setEditIban] = useState("");
+  const [editSepa, setEditSepa] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -72,6 +75,9 @@ export default function MietvertragDetailPage() {
     setEditNebenkosten(String(mietvertrag.nebenkostenVorauszahlung));
     setEditBeginn(toDateInput(mietvertrag.beginn));
     setEditEnde(mietvertrag.ende ? toDateInput(mietvertrag.ende) : "");
+    setEditKaution(mietvertrag.kaution != null ? String(mietvertrag.kaution) : "");
+    setEditIban(mietvertrag.iban ?? "");
+    setEditSepa(mietvertrag.sepaLastschrift);
     setEditError(null);
     setEditing(true);
   }
@@ -85,6 +91,9 @@ export default function MietvertragDetailPage() {
         nebenkostenVorauszahlung: Number(editNebenkosten),
         beginn: editBeginn,
         ende: editEnde || undefined,
+        kaution: editKaution ? Number(editKaution) : undefined,
+        iban: editIban || undefined,
+        sepaLastschrift: editSepa,
       });
       setEditing(false);
     } catch (err) {
@@ -121,11 +130,29 @@ export default function MietvertragDetailPage() {
                 {mietvertrag.kaltmiete.toFixed(2)} € kalt
                 {mietvertrag.nebenkostenVorauszahlung > 0 &&
                   ` · ${mietvertrag.nebenkostenVorauszahlung.toFixed(2)} € Nebenkosten`}
+                {` · ${(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toFixed(2)} € warm`}
               </p>
               <p className="mt-1 text-sm text-text-muted">
                 Beginn {new Date(mietvertrag.beginn).toLocaleDateString("de-DE")}
                 {mietvertrag.ende && ` · Ende ${new Date(mietvertrag.ende).toLocaleDateString("de-DE")}`}
               </p>
+              {(mietvertrag.kaution != null || mietvertrag.iban || mietvertrag.sepaLastschrift) && (
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                  {mietvertrag.kaution != null && (
+                    <span className="flex items-center gap-1">
+                      <Banknote size={13} />
+                      {mietvertrag.kaution.toFixed(2)} € Kaution
+                    </span>
+                  )}
+                  {mietvertrag.iban && <span>IBAN {mietvertrag.iban}</span>}
+                  {mietvertrag.sepaLastschrift && (
+                    <span className="flex items-center gap-1 text-emerald-500">
+                      <ShieldCheck size={13} />
+                      SEPA-Mandat
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -229,6 +256,43 @@ export default function MietvertragDetailPage() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editKaution">
+                  Kaution (€, optional)
+                </label>
+                <input
+                  id="editKaution"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={editKaution}
+                  onChange={(e) => setEditKaution(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editIban">
+                  IBAN (optional)
+                </label>
+                <input
+                  id="editIban"
+                  type="text"
+                  value={editIban}
+                  onChange={(e) => setEditIban(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editSepa}
+                onChange={(e) => setEditSepa(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              SEPA-Lastschriftmandat vorhanden
+            </label>
 
             {editError && <p className="text-sm text-red-500">{editError}</p>}
 
