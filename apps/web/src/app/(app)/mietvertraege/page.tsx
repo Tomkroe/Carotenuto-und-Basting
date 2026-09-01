@@ -10,6 +10,7 @@ import {
   useCreateMietvertrag,
   useEinheitenFlat,
   useKontakte,
+  useEigentuemerschaften,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
@@ -44,6 +45,7 @@ export default function MietvertraegePage() {
   const { data: mietvertraege, isLoading } = useMietvertraege();
   const { data: einheiten } = useEinheitenFlat();
   const { data: kontakte } = useKontakte();
+  const { data: eigentuemerschaften } = useEigentuemerschaften();
   const createMietvertrag = useCreateMietvertrag();
 
   const [showForm, setShowForm] = useState(false);
@@ -54,6 +56,7 @@ export default function MietvertraegePage() {
   const [beginn, setBeginn] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [eigentuemerFilter, setEigentuemerFilter] = useState("ALLE");
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -61,27 +64,59 @@ export default function MietvertraegePage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  const eigentuemerByEinheit = useMemo(() => {
+    const map = new Map<string, { id: string; vorname: string | null; nachname: string | null; firma: string | null }>();
+    for (const w of eigentuemerschaften ?? []) {
+      map.set(w.einheit.id, w.eigentuemer);
+    }
+    return map;
+  }, [eigentuemerschaften]);
+
+  const eigentuemerOptionen = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const w of eigentuemerschaften ?? []) {
+      if (!seen.has(w.eigentuemer.id)) seen.set(w.eigentuemer.id, kontaktName(w.eigentuemer));
+    }
+    return Array.from(seen.entries());
+  }, [eigentuemerschaften]);
+
   const einheitenMitStatus = useMemo(() => {
     return (einheiten ?? []).map((e) => {
-      const aktuellerVertrag = (mietvertraege ?? []).find(
-        (m) => m.einheit.id === e.id && m.beginn.slice(0, 10) <= today && (!m.ende || m.ende.slice(0, 10) >= today),
+      const vertraegeFuerEinheit = (mietvertraege ?? []).filter((m) => m.einheit.id === e.id);
+      const aktuellerVertrag = vertraegeFuerEinheit.find(
+        (m) => m.beginn.slice(0, 10) <= today && (!m.ende || m.ende.slice(0, 10) >= today),
       );
-      return { einheit: e, mietvertrag: aktuellerVertrag ?? null };
+      const zukuenftigerVertrag = vertraegeFuerEinheit
+        .filter((m) => m.beginn.slice(0, 10) > today)
+        .sort((a, b) => a.beginn.localeCompare(b.beginn))[0];
+
+      const mietstatus: "vermietet" | "reserviert" | "leerstand" = aktuellerVertrag
+        ? "vermietet"
+        : zukuenftigerVertrag
+          ? "reserviert"
+          : "leerstand";
+      const mietvertrag = aktuellerVertrag ?? zukuenftigerVertrag ?? null;
+
+      return { einheit: e, mietvertrag, mietstatus };
     });
   }, [einheiten, mietvertraege, today]);
 
-  const vermietet = einheitenMitStatus.filter((r) => r.mietvertrag);
-  const leerstehend = einheitenMitStatus.filter((r) => !r.mietvertrag);
+  const vermietet = einheitenMitStatus.filter((r) => r.mietstatus === "vermietet");
+  const reserviert = einheitenMitStatus.filter((r) => r.mietstatus === "reserviert");
+  const leerstehend = einheitenMitStatus.filter((r) => r.mietstatus === "leerstand");
 
   const gefilterteEinheiten = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return einheitenMitStatus;
-    return einheitenMitStatus.filter((r) =>
-      [r.einheit.objekt.name, r.einheit.name, r.mietvertrag ? kontaktName(r.mietvertrag.mieter) : null]
-        .filter(Boolean)
-        .some((f) => f!.toLowerCase().includes(query)),
-    );
-  }, [einheitenMitStatus, search]);
+    return einheitenMitStatus
+      .filter((r) => eigentuemerFilter === "ALLE" || eigentuemerByEinheit.get(r.einheit.id)?.id === eigentuemerFilter)
+      .filter(
+        (r) =>
+          !query ||
+          [r.einheit.objekt.name, r.einheit.name, r.mietvertrag ? kontaktName(r.mietvertrag.mieter) : null]
+            .filter(Boolean)
+            .some((f) => f!.toLowerCase().includes(query)),
+      );
+  }, [einheitenMitStatus, search, eigentuemerFilter, eigentuemerByEinheit]);
 
   const einheitenByObjekt = useMemo(() => {
     const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
@@ -134,9 +169,10 @@ export default function MietvertraegePage() {
         </button>
       </div>
 
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard value={einheitenMitStatus.length} label="Alle Einheiten" />
         <StatCard value={vermietet.length} label="Vermietet" tone="success" />
+        <StatCard value={reserviert.length} label="Reserviert" tone={reserviert.length > 0 ? "warning" : "default"} />
         <StatCard value={leerstehend.length} label="Leerstehend" tone={leerstehend.length > 0 ? "warning" : "default"} />
       </div>
 
@@ -247,8 +283,24 @@ export default function MietvertraegePage() {
           </form>
         )}
 
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Mietverträge durchsuchen…" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <SearchInput value={search} onChange={setSearch} placeholder="Mietverträge durchsuchen…" />
+        </div>
+        {eigentuemerOptionen.length > 0 && (
+          <select
+            value={eigentuemerFilter}
+            onChange={(e) => setEigentuemerFilter(e.target.value)}
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+          >
+            <option value="ALLE">Alle Eigentümer</option>
+            {eigentuemerOptionen.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {isLoading && <p className="text-text-muted">Lädt…</p>}
@@ -264,13 +316,17 @@ export default function MietvertraegePage() {
             { key: "einheit", header: "Einheit" },
             { key: "mieter", header: "Mieter" },
             { key: "miete", header: "Kaltmiete" },
+            { key: "vertragsart", header: "Vertragsart" },
             { key: "status", header: "Mietstatus" },
           ]}
         >
-          {gefilterteEinheiten.map(({ einheit, mietvertrag }) => {
-            const meta = mietvertrag
-              ? STATUS_META[MietvertragStatus.AKTIV]
-              : { label: "Leerstand", icon: CircleDashed, className: "bg-amber-500/10 text-amber-500" };
+          {gefilterteEinheiten.map(({ einheit, mietvertrag, mietstatus }) => {
+            const meta =
+              mietstatus === "vermietet"
+                ? STATUS_META[MietvertragStatus.AKTIV]
+                : mietstatus === "reserviert"
+                  ? { label: "Reserviert", icon: CalendarClock, className: "bg-blue-500/10 text-blue-500" }
+                  : { label: "Leerstand", icon: CircleDashed, className: "bg-amber-500/10 text-amber-500" };
             const Icon = meta.icon;
             return (
               <tr
@@ -285,6 +341,9 @@ export default function MietvertraegePage() {
                 </td>
                 <td className="px-4 py-3 text-text-muted">
                   {mietvertrag ? `${mietvertrag.kaltmiete.toFixed(2)} €` : "–"}
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {mietvertrag ? (mietvertrag.ende ? "Befristet" : "Unbefristet") : "–"}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
