@@ -20,6 +20,7 @@ import type {
   CreateZaehlerstandRequest,
   Dokument,
   DokumentMitZuordnung,
+  UpdateDokumentRequest,
   Eigentuemerschaft,
   Einheit,
   EinheitListItem,
@@ -431,6 +432,18 @@ export function useUploadDokument(parent: DokumentParent) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
+    },
+  });
+}
+
+export function useUpdateDokument(parent?: DokumentParent) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateDokumentRequest }) =>
+      apiFetch<Dokument>(`/dokumente/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      if (parent) queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
+      queryClient.invalidateQueries({ queryKey: ["dokumente"] });
     },
   });
 }

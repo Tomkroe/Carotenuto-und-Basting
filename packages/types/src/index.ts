@@ -331,13 +331,29 @@ export interface CreateMietvertragRequest {
 
 export type UpdateMietvertragRequest = Partial<CreateMietvertragRequest>;
 
+export enum DokumentKategorie {
+  ANSCHAFFUNGSKOSTEN = "ANSCHAFFUNGSKOSTEN",
+  BETRIEBS_NEBENKOSTEN = "BETRIEBS_NEBENKOSTEN",
+  FINANZIERUNG_KREDITE_VERSICHERUNGEN = "FINANZIERUNG_KREDITE_VERSICHERUNGEN",
+  INDIVIDUELLE_KOSTEN = "INDIVIDUELLE_KOSTEN",
+  MIETE_NEBENKOSTEN_KAUTION = "MIETE_NEBENKOSTEN_KAUTION",
+  RENOVIERUNG_REPARATUR_INVESTITIONEN = "RENOVIERUNG_REPARATUR_INVESTITIONEN",
+  SONSTIGE_AUSGABEN = "SONSTIGE_AUSGABEN",
+  SONSTIGE_EINNAHMEN = "SONSTIGE_EINNAHMEN",
+}
+
 export interface Dokument {
   id: string;
   dateiname: string;
   mimeType: string;
   groesseBytes: number;
+  kategorie: DokumentKategorie | null;
   createdAt: string;
   hochgeladenVon: { id: string; name: string };
+}
+
+export interface UpdateDokumentRequest {
+  kategorie: DokumentKategorie | null;
 }
 
 export interface DokumentMitZuordnung extends Dokument {

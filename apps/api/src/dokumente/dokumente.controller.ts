@@ -1,11 +1,13 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Redirect,
   UploadedFile,
@@ -18,6 +20,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtPayload } from "../auth/jwt-payload.interface";
 import { DokumenteService } from "./dokumente.service";
+import { UpdateDokumentDto } from "./dto/update-dokument.dto";
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
@@ -172,6 +175,15 @@ export class DokumenteController {
   async download(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
     const url = await this.dokumenteService.getDownloadUrl(user.mandantId, id);
     return { url, statusCode: HttpStatus.FOUND };
+  }
+
+  @Patch(":id")
+  update(
+    @CurrentUser() user: JwtPayload,
+    @Param("id") id: string,
+    @Body() dto: UpdateDokumentDto,
+  ): Promise<Dokument> {
+    return this.dokumenteService.update(user.mandantId, id, dto);
   }
 
   @Delete(":id")

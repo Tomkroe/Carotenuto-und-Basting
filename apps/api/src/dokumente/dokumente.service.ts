@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { Dokument, DokumentMitZuordnung } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
+import { UpdateDokumentDto } from "./dto/update-dokument.dto";
 
 const INCLUDE = { hochgeladenVon: { select: { id: true, name: true } } } as const;
 
@@ -113,6 +114,17 @@ export class DokumenteService {
     return this.storage.getPresignedDownloadUrl(dokument.speicherKey);
   }
 
+  async update(mandantId: string, id: string, dto: UpdateDokumentDto): Promise<Dokument> {
+    const existing = await this.prisma.dokument.findFirst({ where: { id, mandantId } });
+    if (!existing) throw new NotFoundException("Dokument nicht gefunden.");
+    const dokument = await this.prisma.dokument.update({
+      where: { id },
+      data: { kategorie: dto.kategorie },
+      include: INCLUDE,
+    });
+    return toDokument(dokument);
+  }
+
   async remove(mandantId: string, id: string): Promise<void> {
     const dokument = await this.prisma.dokument.findFirst({ where: { id, mandantId } });
     if (!dokument) throw new NotFoundException("Dokument nicht gefunden.");
@@ -195,6 +207,7 @@ function toDokument(dokument: {
   dateiname: string;
   mimeType: string;
   groesseBytes: number;
+  kategorie: string | null;
   createdAt: Date;
   hochgeladenVon: { id: string; name: string };
 }): Dokument {
@@ -203,6 +216,7 @@ function toDokument(dokument: {
     dateiname: dokument.dateiname,
     mimeType: dokument.mimeType,
     groesseBytes: dokument.groesseBytes,
+    kategorie: dokument.kategorie as Dokument["kategorie"],
     createdAt: dokument.createdAt.toISOString(),
     hochgeladenVon: dokument.hochgeladenVon,
   };

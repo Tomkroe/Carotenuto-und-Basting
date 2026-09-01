@@ -362,12 +362,24 @@ model Zaehlerstand {
 
 // ── Dokumente ─────────────────────────────────────────────────
 
+enum DokumentKategorie {
+  ANSCHAFFUNGSKOSTEN
+  BETRIEBS_NEBENKOSTEN
+  FINANZIERUNG_KREDITE_VERSICHERUNGEN
+  INDIVIDUELLE_KOSTEN
+  MIETE_NEBENKOSTEN_KAUTION
+  RENOVIERUNG_REPARATUR_INVESTITIONEN
+  SONSTIGE_AUSGABEN
+  SONSTIGE_EINNAHMEN
+}
+
 model Dokument {
   id         String   @id @default(cuid())
   dateiname  String
   speicherKey String  // Object-Storage Key/Pfad
   mimeType   String
   groesseBytes Int
+  kategorie  DokumentKategorie?
   createdAt  DateTime @default(now())
 
   mandantId String

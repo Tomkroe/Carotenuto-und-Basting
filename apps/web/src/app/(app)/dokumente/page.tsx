@@ -12,12 +12,14 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useCurrentUser, useAlleDokumente, useDeleteDokumentGlobal } from "@/lib/hooks";
+import { useCurrentUser, useAlleDokumente, useDeleteDokumentGlobal, useUpdateDokument } from "@/lib/hooks";
 import { API_URL } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { DokumentKategorie } from "@maklerprogram/types";
 import type { DokumentMitZuordnung } from "@maklerprogram/types";
+import { DOKUMENT_KATEGORIE_LABEL } from "@/lib/dokumentKategorien";
 
 const ZUORDNUNG_ICON: Record<NonNullable<DokumentMitZuordnung["zugeordnetTyp"]>, typeof Building2> = {
   objekt: Building2,
@@ -38,8 +40,10 @@ export default function DokumentePage() {
   const { isError: authError } = useCurrentUser();
   const { data: dokumente, isLoading } = useAlleDokumente();
   const deleteDokument = useDeleteDokumentGlobal();
+  const updateDokument = useUpdateDokument();
 
   const [search, setSearch] = useState("");
+  const [kategorieFilter, setKategorieFilter] = useState<DokumentKategorie | "ALLE" | "OHNE">("ALLE");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,11 +52,18 @@ export default function DokumentePage() {
 
   const gefilterteDokumente = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return dokumente ?? [];
-    return (dokumente ?? []).filter((d) =>
-      [d.dateiname, d.zugeordnetZu, d.hochgeladenVon.name].filter(Boolean).some((f) => f!.toLowerCase().includes(query)),
-    );
-  }, [dokumente, search]);
+    return (dokumente ?? [])
+      .filter((d) => {
+        if (kategorieFilter === "ALLE") return true;
+        if (kategorieFilter === "OHNE") return !d.kategorie;
+        return d.kategorie === kategorieFilter;
+      })
+      .filter(
+        (d) =>
+          !query ||
+          [d.dateiname, d.zugeordnetZu, d.hochgeladenVon.name].filter(Boolean).some((f) => f!.toLowerCase().includes(query)),
+      );
+  }, [dokumente, search, kategorieFilter]);
 
   const ohneZuordnung = (dokumente ?? []).filter((d) => !d.zugeordnetZu);
   const gesamtgroesse = (dokumente ?? []).reduce((sum, d) => sum + d.groesseBytes, 0);
@@ -73,8 +84,23 @@ export default function DokumentePage() {
         />
       </div>
 
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Dokumente durchsuchen…" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <SearchInput value={search} onChange={setSearch} placeholder="Dokumente durchsuchen…" />
+        </div>
+        <select
+          value={kategorieFilter}
+          onChange={(e) => setKategorieFilter(e.target.value as DokumentKategorie | "ALLE" | "OHNE")}
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="ALLE">Alle Kategorien</option>
+          <option value="OHNE">Ohne Kategorie</option>
+          {Object.values(DokumentKategorie).map((k) => (
+            <option key={k} value={k}>
+              {DOKUMENT_KATEGORIE_LABEL[k]}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isLoading && <p className="text-text-muted">Lädt…</p>}
@@ -86,6 +112,7 @@ export default function DokumentePage() {
           columns={[
             { key: "dokument", header: "Dokument" },
             { key: "zuordnung", header: "Zugeordnet zu" },
+            { key: "kategorie", header: "Kategorie" },
             { key: "hochgeladen", header: "Hochgeladen von" },
             { key: "aktionen", header: "" },
           ]}
@@ -114,6 +141,25 @@ export default function DokumentePage() {
                   ) : (
                     <span className="text-amber-500">Ohne Zuordnung</span>
                   )}
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={d.kategorie ?? ""}
+                    onChange={(e) =>
+                      updateDokument.mutate({
+                        id: d.id,
+                        data: { kategorie: (e.target.value || null) as DokumentMitZuordnung["kategorie"] },
+                      })
+                    }
+                    className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
+                  >
+                    <option value="">Keine Kategorie</option>
+                    {Object.values(DokumentKategorie).map((k) => (
+                      <option key={k} value={k}>
+                        {DOKUMENT_KATEGORIE_LABEL[k]}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td className="px-4 py-3 text-text-muted">{d.hochgeladenVon.name}</td>
                 <td className="px-4 py-3">

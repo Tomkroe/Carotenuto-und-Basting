@@ -2,8 +2,10 @@
 
 import { useState, ChangeEvent } from "react";
 import { Upload, FileText, Download, Trash2, Paperclip } from "lucide-react";
-import { useDokumente, useUploadDokument, useDeleteDokument, DokumentParent } from "@/lib/hooks";
+import { DokumentKategorie } from "@maklerprogram/types";
+import { useDokumente, useUploadDokument, useDeleteDokument, useUpdateDokument, DokumentParent } from "@/lib/hooks";
 import { API_URL, ApiError } from "@/lib/api";
+import { DOKUMENT_KATEGORIE_LABEL } from "@/lib/dokumentKategorien";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -15,6 +17,7 @@ export function DokumenteSection({ parent }: { parent: DokumentParent }) {
   const { data: dokumente } = useDokumente(parent);
   const uploadDokument = useUploadDokument(parent);
   const deleteDokument = useDeleteDokument(parent);
+  const updateDokument = useUpdateDokument(parent);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
@@ -67,6 +70,23 @@ export function DokumenteSection({ parent }: { parent: DokumentParent }) {
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <select
+                  value={d.kategorie ?? ""}
+                  onChange={(e) =>
+                    updateDokument.mutate({
+                      id: d.id,
+                      data: { kategorie: (e.target.value || null) as DokumentKategorie | null },
+                    })
+                  }
+                  className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
+                >
+                  <option value="">Keine Kategorie</option>
+                  {Object.values(DokumentKategorie).map((k) => (
+                    <option key={k} value={k}>
+                      {DOKUMENT_KATEGORIE_LABEL[k]}
+                    </option>
+                  ))}
+                </select>
                 <a
                   href={`${API_URL}/dokumente/${d.id}/download`}
                   target="_blank"
