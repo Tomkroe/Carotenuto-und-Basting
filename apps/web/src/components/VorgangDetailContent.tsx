@@ -3,7 +3,21 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleDot, Clock, CheckCircle2, History, Pencil, Trash2, Square, CheckSquare, Tag, Plus, X } from "lucide-react";
+import {
+  CircleDot,
+  Clock,
+  CheckCircle2,
+  History,
+  Pencil,
+  Trash2,
+  Square,
+  CheckSquare,
+  Tag,
+  Plus,
+  X,
+  Undo2,
+  Home,
+} from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -20,6 +34,7 @@ import {
   useDetachLabel,
   useUsers,
   useVorgangVerlauf,
+  useEinheitenFlat,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
@@ -65,19 +80,31 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const detachLabel = useDetachLabel(vorgangId);
   const { data: users } = useUsers();
   const { data: verlauf } = useVorgangVerlauf(vorgangId);
+  const { data: einheiten } = useEinheitenFlat();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
   const [showLabelPicker, setShowLabelPicker] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
+  const [previousStatus, setPreviousStatus] = useState<VorgangStatus | null>(null);
 
   const [editing, setEditing] = useState(false);
   const [editTitel, setEditTitel] = useState("");
   const [editBeschreibung, setEditBeschreibung] = useState("");
   const [editFaelligkeit, setEditFaelligkeit] = useState("");
   const [editVerantwortlicherId, setEditVerantwortlicherId] = useState("");
+  const [editEinheitId, setEditEinheitId] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
+
+  const einheitenByObjekt = (() => {
+    const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
+    for (const e of einheiten ?? []) {
+      if (!groups.has(e.objekt.id)) groups.set(e.objekt.id, { objektName: e.objekt.name, einheiten: [] });
+      groups.get(e.objekt.id)!.einheiten!.push(e);
+    }
+    return Array.from(groups.values());
+  })();
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -105,6 +132,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
     setEditBeschreibung(vorgang.beschreibung ?? "");
     setEditFaelligkeit(vorgang.faelligkeit ? vorgang.faelligkeit.slice(0, 10) : "");
     setEditVerantwortlicherId(vorgang.verantwortlicher?.id ?? "");
+    setEditEinheitId(vorgang.einheit?.id ?? "");
     setEditError(null);
     setEditing(true);
   }
@@ -118,11 +146,24 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
         beschreibung: editBeschreibung || undefined,
         faelligkeit: editFaelligkeit || undefined,
         verantwortlicherId: editVerantwortlicherId || undefined,
+        einheitId: editEinheitId || undefined,
       });
       setEditing(false);
     } catch (err) {
       setEditError(err instanceof ApiError ? err.message : "Vorgang konnte nicht gespeichert werden.");
     }
+  }
+
+  function handleStatusChange(status: VorgangStatus) {
+    if (!vorgang || status === vorgang.status) return;
+    setPreviousStatus(vorgang.status);
+    updateVorgang.mutate({ status });
+  }
+
+  function handleUndoStatus() {
+    if (!previousStatus) return;
+    updateVorgang.mutate({ status: previousStatus });
+    setPreviousStatus(null);
   }
 
   async function handleCreateAndAttachLabel(e: FormEvent) {
@@ -155,6 +196,14 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
             {vorgang.beschreibung && <p className="mt-2 max-w-xl text-text-muted">{vorgang.beschreibung}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-muted">
               {vorgang.objekt && <span>{vorgang.objekt.name}</span>}
+              {vorgang.einheit && (
+                <Link
+                  href={`/objekte/${vorgang.einheit.objekt.id}/einheiten/${vorgang.einheit.id}`}
+                  className="flex items-center gap-1 hover:text-primary"
+                >
+                  <Home size={13} />· {vorgang.einheit.objekt.name} · {vorgang.einheit.name}
+                </Link>
+              )}
               {vorgang.kontakt && <span>· {kontaktName(vorgang.kontakt)}</span>}
               {vorgang.faelligkeit && <span>· fällig {new Date(vorgang.faelligkeit).toLocaleDateString("de-DE")}</span>}
               {vorgang.verantwortlicher && <span>· {vorgang.verantwortlicher.name}</span>}
@@ -259,6 +308,28 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1 block text-sm text-text-muted" htmlFor="editEinheitId">
+              Wohnung/Einheit
+            </label>
+            <select
+              id="editEinheitId"
+              value={editEinheitId}
+              onChange={(e) => setEditEinheitId(e.target.value)}
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+            >
+              <option value="">–</option>
+              {einheitenByObjekt.map((group) => (
+                <optgroup key={group.objektName} label={group.objektName}>
+                  {group.einheiten!.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
 
           {editError && <p className="text-sm text-red-500">{editError}</p>}
 
@@ -360,7 +431,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
         )}
       </div>
 
-      <div className="mb-8 flex gap-2">
+      <div className="mb-8 flex items-center gap-2">
         {Object.values(VorgangStatus).map((s) => {
           const meta = STATUS_META[s];
           const Icon = meta.icon;
@@ -368,7 +439,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
           return (
             <button
               key={s}
-              onClick={() => updateVorgang.mutate({ status: s })}
+              onClick={() => handleStatusChange(s)}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${
                 active ? meta.className : "border border-border text-text-muted hover:border-primary"
               }`}
@@ -378,6 +449,15 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
             </button>
           );
         })}
+        {previousStatus && (
+          <button
+            onClick={handleUndoStatus}
+            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-text-muted transition hover:border-primary hover:text-primary"
+          >
+            <Undo2 size={14} />
+            Rückgängig
+          </button>
+        )}
       </div>
 
       <div className="mb-8">

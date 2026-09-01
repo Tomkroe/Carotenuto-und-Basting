@@ -25,6 +25,10 @@ export class UpdateVorgangDto {
 
   @IsString()
   @IsOptional()
+  einheitId?: string;
+
+  @IsString()
+  @IsOptional()
   kontaktId?: string;
 
   @IsString()

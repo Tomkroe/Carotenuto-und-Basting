@@ -197,6 +197,7 @@ export interface Vorgang {
   faelligkeit: string | null;
   createdAt: string;
   objekt: ObjektRef | null;
+  einheit: EinheitRef | null;
   kontakt: KontaktRef | null;
   verantwortlicher: UserListItem | null;
   labels: Label[];
@@ -208,6 +209,7 @@ export interface CreateVorgangRequest {
   status?: VorgangStatus;
   faelligkeit?: string;
   objektId?: string;
+  einheitId?: string;
   kontaktId?: string;
   verantwortlicherId?: string;
 }

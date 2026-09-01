@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
-import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers } from "@/lib/hooks";
+import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers, useEinheitenFlat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
@@ -37,12 +37,14 @@ export default function VorgaengePage() {
   const { data: objekte } = useObjekte();
   const { data: kontakte } = useKontakte();
   const { data: users } = useUsers();
+  const { data: einheiten } = useEinheitenFlat();
   const createVorgang = useCreateVorgang();
 
   const [showForm, setShowForm] = useState(searchParams.get("neu") === "1");
   const [titel, setTitel] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
   const [objektId, setObjektId] = useState("");
+  const [einheitId, setEinheitId] = useState("");
   const [kontaktId, setKontaktId] = useState("");
   const [verantwortlicherId, setVerantwortlicherId] = useState("");
   const [faelligkeit, setFaelligkeit] = useState("");
@@ -106,6 +108,15 @@ export default function VorgaengePage() {
       );
   }, [vorgaenge, search, filter, me, today]);
 
+  const einheitenByObjekt = useMemo(() => {
+    const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
+    for (const e of einheiten ?? []) {
+      if (!groups.has(e.objekt.id)) groups.set(e.objekt.id, { objektName: e.objekt.name, einheiten: [] });
+      groups.get(e.objekt.id)!.einheiten!.push(e);
+    }
+    return Array.from(groups.values());
+  }, [einheiten]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -114,6 +125,7 @@ export default function VorgaengePage() {
         titel,
         beschreibung: beschreibung || undefined,
         objektId: objektId || undefined,
+        einheitId: einheitId || undefined,
         kontaktId: kontaktId || undefined,
         verantwortlicherId: verantwortlicherId || undefined,
         faelligkeit: faelligkeit || undefined,
@@ -121,6 +133,7 @@ export default function VorgaengePage() {
       setTitel("");
       setBeschreibung("");
       setObjektId("");
+      setEinheitId("");
       setKontaktId("");
       setVerantwortlicherId("");
       setFaelligkeit("");
@@ -207,6 +220,28 @@ export default function VorgaengePage() {
                   <option key={o.id} value={o.id}>
                     {o.name}
                   </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="einheitId">
+                Wohnung/Einheit (optional)
+              </label>
+              <select
+                id="einheitId"
+                value={einheitId}
+                onChange={(e) => setEinheitId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              >
+                <option value="">–</option>
+                {einheitenByObjekt.map((group) => (
+                  <optgroup key={group.objektName} label={group.objektName}>
+                    {group.einheiten!.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

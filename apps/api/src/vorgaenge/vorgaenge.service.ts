@@ -7,6 +7,7 @@ import { VerlaufService } from "./verlauf.service";
 
 const INCLUDE = {
   objekt: { select: { id: true, name: true } },
+  einheit: { select: { id: true, name: true, objekt: { select: { id: true, name: true } } } },
   kontakt: { select: { id: true, vorname: true, nachname: true, firma: true } },
   verantwortlicher: { select: { id: true, name: true } },
   labels: { include: { label: { select: { id: true, name: true, farbe: true } } } },
@@ -44,7 +45,7 @@ export class VorgaengeService {
   }
 
   async create(mandantId: string, userId: string, dto: CreateVorgangDto): Promise<Vorgang> {
-    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
+    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.einheitId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.create({
       data: {
         titel: dto.titel,
@@ -52,6 +53,7 @@ export class VorgaengeService {
         status: dto.status ?? VorgangStatus.OFFEN,
         faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
         objektId: dto.objektId,
+        einheitId: dto.einheitId,
         kontaktId: dto.kontaktId,
         verantwortlicherId: dto.verantwortlicherId,
         mandantId,
@@ -64,7 +66,7 @@ export class VorgaengeService {
 
   async update(mandantId: string, id: string, userId: string, dto: UpdateVorgangDto): Promise<Vorgang> {
     const before = await this.findOne(mandantId, id);
-    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.kontaktId, dto.verantwortlicherId);
+    await this.assertRefsBelongToMandant(mandantId, dto.objektId, dto.einheitId, dto.kontaktId, dto.verantwortlicherId);
     const vorgang = await this.prisma.vorgang.update({
       where: { id },
       data: {
@@ -95,12 +97,17 @@ export class VorgaengeService {
   private async assertRefsBelongToMandant(
     mandantId: string,
     objektId?: string,
+    einheitId?: string,
     kontaktId?: string,
     verantwortlicherId?: string,
   ) {
     if (objektId) {
       const objekt = await this.prisma.objekt.findFirst({ where: { id: objektId, mandantId } });
       if (!objekt) throw new NotFoundException("Objekt nicht gefunden.");
+    }
+    if (einheitId) {
+      const einheit = await this.prisma.einheit.findFirst({ where: { id: einheitId, objekt: { mandantId } } });
+      if (!einheit) throw new NotFoundException("Einheit nicht gefunden.");
     }
     if (kontaktId) {
       const kontakt = await this.prisma.kontakt.findFirst({ where: { id: kontaktId, mandantId } });
@@ -142,6 +149,7 @@ function toVorgang(vorgang: {
   faelligkeit: Date | null;
   createdAt: Date;
   objekt: { id: string; name: string } | null;
+  einheit: { id: string; name: string; objekt: { id: string; name: string } } | null;
   kontakt: { id: string; vorname: string | null; nachname: string | null; firma: string | null } | null;
   verantwortlicher: { id: string; name: string } | null;
   labels: { label: { id: string; name: string; farbe: string } }[];
@@ -155,6 +163,7 @@ function toVorgang(vorgang: {
     faelligkeit: vorgang.faelligkeit ? vorgang.faelligkeit.toISOString() : null,
     createdAt: vorgang.createdAt.toISOString(),
     objekt: vorgang.objekt,
+    einheit: vorgang.einheit,
     kontakt: vorgang.kontakt,
     verantwortlicher: vorgang.verantwortlicher,
     labels: vorgang.labels.map((l) => l.label),
