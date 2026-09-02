@@ -107,6 +107,32 @@ export function useUpdateObjekt(id: string) {
   });
 }
 
+export function useUploadObjektTitelbild(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return apiUpload<Objekt>(`/objekte/${id}/titelbild`, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["objekte"] });
+      queryClient.invalidateQueries({ queryKey: ["objekte", id] });
+    },
+  });
+}
+
+export function useDeleteObjektTitelbild(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch<Objekt>(`/objekte/${id}/titelbild`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["objekte"] });
+      queryClient.invalidateQueries({ queryKey: ["objekte", id] });
+    },
+  });
+}
+
 export function useDeleteObjekt() {
   const queryClient = useQueryClient();
   return useMutation({

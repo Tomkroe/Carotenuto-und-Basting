@@ -55,4 +55,24 @@ export class UpdateObjektDto {
   @IsString()
   @IsOptional()
   ansprechpartnerId?: string;
+
+  @IsString()
+  @IsOptional()
+  abrechnungszeitraumStart?: string;
+
+  @IsString()
+  @IsOptional()
+  abrechnungszeitraumEnde?: string;
+
+  @IsString()
+  @IsOptional()
+  bankKontoinhaber?: string;
+
+  @IsString()
+  @IsOptional()
+  bankIban?: string;
+
+  @IsString()
+  @IsOptional()
+  bankBic?: string;
 }

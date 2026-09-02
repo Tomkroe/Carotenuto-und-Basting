@@ -83,6 +83,12 @@ model Objekt {
   flaeche   Decimal? @db.Decimal(10, 2)
   hausgeld  Decimal? @db.Decimal(10, 2)
   eigenschaften Json  @default("{}")
+  titelbildKey String?
+  abrechnungszeitraumStart String? @default("01-01")
+  abrechnungszeitraumEnde  String? @default("31-12")
+  bankKontoinhaber String?
+  bankIban         String?
+  bankBic          String?
   createdAt DateTime @default(now())
 
   mandantId String

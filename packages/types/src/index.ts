@@ -65,6 +65,12 @@ export interface Objekt {
   hausgeld: number | null;
   eigenschaften: string[];
   ansprechpartner: KontaktRef | null;
+  titelbildUrl: string | null;
+  abrechnungszeitraumStart: string | null;
+  abrechnungszeitraumEnde: string | null;
+  bankKontoinhaber: string | null;
+  bankIban: string | null;
+  bankBic: string | null;
   createdAt: string;
 }
 
@@ -81,6 +87,11 @@ export interface CreateObjektRequest {
   hausgeld?: number;
   eigenschaften?: string[];
   ansprechpartnerId?: string;
+  abrechnungszeitraumStart?: string;
+  abrechnungszeitraumEnde?: string;
+  bankKontoinhaber?: string;
+  bankIban?: string;
+  bankBic?: string;
 }
 
 export type UpdateObjektRequest = Partial<CreateObjektRequest>;
@@ -469,6 +480,12 @@ export enum VerteilerSchluessel {
   EINHEITEN = "EINHEITEN",
 }
 
+export interface NebenkostenKostenanteil {
+  einheit: { id: string; name: string };
+  betrag: number;
+  positionen: { positionId: string; betrag: number }[];
+}
+
 export interface Nebenkostenabrechnung {
   id: string;
   zeitraumVon: string;
@@ -476,6 +493,7 @@ export interface Nebenkostenabrechnung {
   status: NebenkostenStatus;
   createdAt: string;
   objekt: ObjektRef;
+  kostenverteilung?: NebenkostenKostenanteil[];
 }
 
 export interface CreateNebenkostenabrechnungRequest {

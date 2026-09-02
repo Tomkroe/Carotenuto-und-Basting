@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState, FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { KeyRound, Pencil, Phone, Ruler, Sparkles, UserRound, UsersRound } from "lucide-react";
+import {
+  Building2,
+  ImagePlus,
+  KeyRound,
+  Landmark,
+  Pencil,
+  Phone,
+  Ruler,
+  Sparkles,
+  Trash2,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 import { KontaktTyp, MietvertragStatus, ObjektTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -15,6 +27,8 @@ import {
   useMietvertraege,
   useEigentuemerschaften,
   useKontakte,
+  useUploadObjektTitelbild,
+  useDeleteObjektTitelbild,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
@@ -32,6 +46,12 @@ function kontaktName(k: { vorname: string | null; nachname: string | null; firma
   return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
 }
 
+function formatTagMonat(value: string | null): string {
+  if (!value) return "–";
+  const [tag, monat] = value.split("-");
+  return `${tag}.${monat}.`;
+}
+
 export default function ObjektDetailPage() {
   const params = useParams<{ id: string }>();
   const objektId = params.id;
@@ -43,6 +63,8 @@ export default function ObjektDetailPage() {
   const { data: einheiten } = useEinheiten(objektId);
   const createEinheit = useCreateEinheit(objektId);
   const deleteObjekt = useDeleteObjekt();
+  const uploadTitelbild = useUploadObjektTitelbild(objektId);
+  const deleteTitelbild = useDeleteObjektTitelbild(objektId);
   const { data: mietvertraege } = useMietvertraege();
   const { data: eigentuemerschaften } = useEigentuemerschaften();
   const { data: kontakte } = useKontakte();
@@ -63,9 +85,15 @@ export default function ObjektDetailPage() {
   const [editKaltmiete, setEditKaltmiete] = useState("");
   const [editFlaeche, setEditFlaeche] = useState("");
   const [editHausgeld, setEditHausgeld] = useState("");
+  const [editAbrechnungszeitraumStart, setEditAbrechnungszeitraumStart] = useState("");
+  const [editAbrechnungszeitraumEnde, setEditAbrechnungszeitraumEnde] = useState("");
+  const [editBankKontoinhaber, setEditBankKontoinhaber] = useState("");
+  const [editBankIban, setEditBankIban] = useState("");
+  const [editBankBic, setEditBankBic] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<"uebersicht" | "eigenschaften">("uebersicht");
+  const [activeTab, setActiveTab] = useState<"uebersicht" | "abrechnungsdaten" | "eigenschaften">("uebersicht");
+  const titelbildInputRef = useRef<HTMLInputElement>(null);
   const [showAnsprechpartnerForm, setShowAnsprechpartnerForm] = useState(false);
   const [ansprechpartnerAuswahl, setAnsprechpartnerAuswahl] = useState("");
 
@@ -126,6 +154,11 @@ export default function ObjektDetailPage() {
     setEditKaltmiete(objekt.kaltmiete != null ? String(objekt.kaltmiete) : "");
     setEditFlaeche(objekt.flaeche != null ? String(objekt.flaeche) : "");
     setEditHausgeld(objekt.hausgeld != null ? String(objekt.hausgeld) : "");
+    setEditAbrechnungszeitraumStart(objekt.abrechnungszeitraumStart ?? "01-01");
+    setEditAbrechnungszeitraumEnde(objekt.abrechnungszeitraumEnde ?? "31-12");
+    setEditBankKontoinhaber(objekt.bankKontoinhaber ?? "");
+    setEditBankIban(objekt.bankIban ?? "");
+    setEditBankBic(objekt.bankBic ?? "");
     setEditError(null);
     setEditingObjekt(true);
   }
@@ -144,11 +177,22 @@ export default function ObjektDetailPage() {
         kaltmiete: editKaltmiete ? Number(editKaltmiete) : undefined,
         flaeche: editFlaeche ? Number(editFlaeche) : undefined,
         hausgeld: editHausgeld ? Number(editHausgeld) : undefined,
+        abrechnungszeitraumStart: editAbrechnungszeitraumStart || undefined,
+        abrechnungszeitraumEnde: editAbrechnungszeitraumEnde || undefined,
+        bankKontoinhaber: editBankKontoinhaber || undefined,
+        bankIban: editBankIban || undefined,
+        bankBic: editBankBic || undefined,
       });
       setEditingObjekt(false);
     } catch (err) {
       setEditError(err instanceof ApiError ? err.message : "Objekt konnte nicht gespeichert werden.");
     }
+  }
+
+  function handleTitelbildChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadTitelbild.mutate(file);
+    e.target.value = "";
   }
 
   function handleAddEigenschaft(tag: string) {
@@ -186,6 +230,45 @@ export default function ObjektDetailPage() {
         <span>/</span>
         <span className="text-text">{objekt.name}</span>
       </nav>
+
+      <input
+        ref={titelbildInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleTitelbildChange}
+      />
+      {objekt.titelbildUrl ? (
+        <div className="group relative mb-6 h-48 w-full overflow-hidden rounded-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={objekt.titelbildUrl} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 flex items-start justify-end gap-2 bg-black/0 p-3 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+            <button
+              onClick={() => titelbildInputRef.current?.click()}
+              className="rounded-full bg-white/90 p-2 text-text transition hover:bg-white"
+              aria-label="Titelbild ändern"
+            >
+              <ImagePlus size={16} />
+            </button>
+            <button
+              onClick={() => deleteTitelbild.mutate()}
+              className="rounded-full bg-white/90 p-2 text-red-500 transition hover:bg-white"
+              aria-label="Titelbild entfernen"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => titelbildInputRef.current?.click()}
+          disabled={uploadTitelbild.isPending}
+          className="mb-6 flex h-24 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border text-sm text-text-muted transition hover:border-primary hover:text-primary disabled:opacity-50"
+        >
+          <ImagePlus size={16} />
+          {uploadTitelbild.isPending ? "Wird hochgeladen…" : "Titelbild hinzufügen"}
+        </button>
+      )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <ObjektEinheitenSidebar
@@ -430,6 +513,57 @@ export default function ObjektDetailPage() {
                 </div>
               )}
 
+              <div>
+                <p className="mb-1 text-sm text-text-muted">Abrechnungszeitraum für Betriebskosten (TT-MM)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="01-01"
+                    pattern="\d{2}-\d{2}"
+                    value={editAbrechnungszeitraumStart}
+                    onChange={(e) => setEditAbrechnungszeitraumStart(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                  <input
+                    type="text"
+                    placeholder="31-12"
+                    pattern="\d{2}-\d{2}"
+                    value={editAbrechnungszeitraumEnde}
+                    onChange={(e) => setEditAbrechnungszeitraumEnde(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">Bankkonto des Objekts (optional)</p>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Kontoinhaber"
+                      value={editBankKontoinhaber}
+                      onChange={(e) => setEditBankKontoinhaber(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      placeholder="IBAN"
+                      value={editBankIban}
+                      onChange={(e) => setEditBankIban(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="BIC"
+                    value={editBankBic}
+                    onChange={(e) => setEditBankBic(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
               {editError && <p className="text-sm text-red-500">{editError}</p>}
 
               <div className="flex gap-2">
@@ -463,6 +597,17 @@ export default function ObjektDetailPage() {
               Übersicht
             </button>
             <button
+              onClick={() => setActiveTab("abrechnungsdaten")}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition ${
+                activeTab === "abrechnungsdaten"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-text-muted hover:text-text"
+              }`}
+            >
+              <Landmark size={14} />
+              Abrechnungsdaten
+            </button>
+            <button
               onClick={() => setActiveTab("eigenschaften")}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition ${
                 activeTab === "eigenschaften"
@@ -479,6 +624,53 @@ export default function ObjektDetailPage() {
               )}
             </button>
           </div>
+
+          {activeTab === "abrechnungsdaten" && (
+            <div className="mb-8 space-y-6">
+              <div>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
+                  Abrechnungszeitraum für Betriebskosten
+                </h2>
+                <div className="flex items-center gap-6 rounded-lg border border-border bg-surface p-4 text-sm">
+                  <span>
+                    <span className="text-text-muted">Anfang: </span>
+                    {formatTagMonat(objekt.abrechnungszeitraumStart)}
+                  </span>
+                  <span>
+                    <span className="text-text-muted">Ende: </span>
+                    {formatTagMonat(objekt.abrechnungszeitraumEnde)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-text-muted">
+                  <Building2 size={14} />
+                  Bankkonto des Objekts
+                </h2>
+                {objekt.bankIban || objekt.bankKontoinhaber ? (
+                  <div className="grid grid-cols-3 gap-4 rounded-lg border border-border bg-surface p-4 text-sm">
+                    <div>
+                      <p className="text-xs text-text-muted">Kontoinhaber</p>
+                      <p className="mt-0.5">{objekt.bankKontoinhaber || "–"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-text-muted">IBAN</p>
+                      <p className="mt-0.5">{objekt.bankIban || "–"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-text-muted">BIC</p>
+                      <p className="mt-0.5">{objekt.bankBic || "–"}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-border p-4 text-sm text-text-muted">
+                    Kein Bankkonto hinterlegt. Über den Bearbeiten-Stift oben ergänzbar.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {activeTab === "eigenschaften" && (
             <div className="mb-8">

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { Nebenkostenabrechnung, NebenkostenStatus } from "@maklerprogram/types";
+import { Nebenkostenabrechnung, NebenkostenKostenanteil, NebenkostenStatus } from "@maklerprogram/types";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateNebenkostenabrechnungDto } from "./dto/create-nebenkostenabrechnung.dto";
 import { UpdateNebenkostenabrechnungDto } from "./dto/update-nebenkostenabrechnung.dto";
@@ -16,16 +16,22 @@ export class NebenkostenabrechnungenService {
       include: INCLUDE,
       orderBy: { createdAt: "desc" },
     });
-    return abrechnungen.map(toNebenkostenabrechnung);
+    return abrechnungen.map((a) => toNebenkostenabrechnung(a));
   }
 
   async findOne(mandantId: string, id: string): Promise<Nebenkostenabrechnung> {
     const abrechnung = await this.prisma.nebenkostenabrechnung.findFirst({
       where: { id, objekt: { mandantId } },
-      include: INCLUDE,
+      include: { ...INCLUDE, positionen: true },
     });
     if (!abrechnung) throw new NotFoundException("Nebenkostenabrechnung nicht gefunden.");
-    return toNebenkostenabrechnung(abrechnung);
+
+    const einheiten = await this.prisma.einheit.findMany({
+      where: { objektId: abrechnung.objektId },
+      select: { id: true, name: true, flaeche: true },
+    });
+
+    return toNebenkostenabrechnung(abrechnung, computeKostenverteilung(abrechnung.positionen, einheiten));
   }
 
   async create(mandantId: string, dto: CreateNebenkostenabrechnungDto): Promise<Nebenkostenabrechnung> {
@@ -64,14 +70,48 @@ export class NebenkostenabrechnungenService {
   }
 }
 
-function toNebenkostenabrechnung(abrechnung: {
-  id: string;
-  zeitraumVon: Date;
-  zeitraumBis: Date;
-  status: string;
-  createdAt: Date;
-  objekt: { id: string; name: string };
-}): Nebenkostenabrechnung {
+function computeKostenverteilung(
+  positionen: { id: string; betrag: unknown; verteilerschluessel: string }[],
+  einheiten: { id: string; name: string; flaeche: unknown }[],
+): NebenkostenKostenanteil[] {
+  if (einheiten.length === 0 || positionen.length === 0) {
+    return einheiten.map((e) => ({ einheit: { id: e.id, name: e.name }, betrag: 0, positionen: [] }));
+  }
+
+  const gesamtFlaeche = einheiten.reduce((sum, e) => sum + Number(e.flaeche ?? 0), 0);
+
+  const anteile = new Map<string, NebenkostenKostenanteil>(
+    einheiten.map((e) => [e.id, { einheit: { id: e.id, name: e.name }, betrag: 0, positionen: [] }]),
+  );
+
+  for (const pos of positionen) {
+    const betrag = Number(pos.betrag);
+    for (const e of einheiten) {
+      const anteil =
+        pos.verteilerschluessel === "QM" && gesamtFlaeche > 0
+          ? Number(e.flaeche ?? 0) / gesamtFlaeche
+          : 1 / einheiten.length;
+      const anteilBetrag = Math.round(betrag * anteil * 100) / 100;
+      const eintrag = anteile.get(e.id)!;
+      eintrag.positionen.push({ positionId: pos.id, betrag: anteilBetrag });
+      eintrag.betrag = Math.round((eintrag.betrag + anteilBetrag) * 100) / 100;
+    }
+  }
+
+  return Array.from(anteile.values());
+}
+
+function toNebenkostenabrechnung(
+  abrechnung: {
+    id: string;
+    zeitraumVon: Date;
+    zeitraumBis: Date;
+    status: string;
+    createdAt: Date;
+    objekt: { id: string; name: string };
+  },
+  kostenverteilung?: NebenkostenKostenanteil[],
+): Nebenkostenabrechnung {
   return {
     id: abrechnung.id,
     zeitraumVon: abrechnung.zeitraumVon.toISOString(),
@@ -79,5 +119,6 @@ function toNebenkostenabrechnung(abrechnung: {
     status: abrechnung.status as Nebenkostenabrechnung["status"],
     createdAt: abrechnung.createdAt.toISOString(),
     objekt: abrechnung.objekt,
+    kostenverteilung,
   };
 }

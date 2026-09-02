@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FileEdit, Send, Trash2, Receipt, Pencil } from "lucide-react";
+import { FileEdit, Send, Trash2, Receipt, Pencil, PieChart } from "lucide-react";
 import { NebenkostenStatus, VerteilerSchluessel } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -341,6 +341,28 @@ export default function NebenkostenabrechnungDetailPage() {
               Summe: {formatEuro(summe)} €
             </div>
           </>
+        )}
+
+        {abrechnung.kostenverteilung && abrechnung.kostenverteilung.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-3 flex items-center gap-1.5 text-lg font-semibold">
+              <PieChart size={18} />
+              Kostenverteilung je Einheit
+            </h2>
+            <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+              {abrechnung.kostenverteilung.map((k) => (
+                <li key={k.einheit.id} className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-sm">{k.einheit.name}</span>
+                  <span className="text-sm font-medium">{formatEuro(k.betrag)} €</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-text-muted">
+              Positionen mit Verteilerschlüssel „{VERTEILER_LABEL[VerteilerSchluessel.QM]}“ werden nach
+              Wohnflächenanteil verteilt, alle anderen aktuell zu gleichen Teilen (Personen-/Verbrauchswerte pro
+              Einheit sind noch nicht erfasst).
+            </p>
+          </div>
         )}
 
         <div className="mt-8">
