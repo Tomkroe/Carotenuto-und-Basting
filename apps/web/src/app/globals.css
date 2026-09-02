@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: 255 255 255;
-  --color-surface: 248 248 250;
-  --color-border: 228 228 231;
+  --color-bg: 240 249 255; /* sky-50 */
+  --color-surface: 224 242 254; /* sky-100 */
+  --color-border: 186 230 253; /* sky-200 */
   --color-text: 24 24 27;
   --color-text-muted: 113 113 122;
   --color-primary: 255 45 154; /* Hot Pink #FF2D9A */
@@ -13,19 +13,6 @@
   --color-chart-1: #2a78d6; /* Einnahmen */
   --color-chart-2: #eb6834; /* Ausgaben */
   --color-chart-3: #1baf7a; /* Überschuss */
-}
-
-.light-blue {
-  --color-bg: 240 249 255; /* sky-50 */
-  --color-surface: 224 242 254; /* sky-100 */
-  --color-border: 186 230 253; /* sky-200 */
-  --color-text: 24 24 27;
-  --color-text-muted: 113 113 122;
-  --color-primary: 255 45 154;
-  --color-primary-fg: 255 255 255;
-  --color-chart-1: #2a78d6;
-  --color-chart-2: #eb6834;
-  --color-chart-3: #1baf7a;
 }
 
 .dark {

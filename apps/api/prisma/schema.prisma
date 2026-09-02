@@ -146,6 +146,12 @@ model Kontakt {
   adresseHausnummer String?
   adressePlz        String?
   adresseOrt        String?
+  notizen             String?
+  bankKontoinhaber    String?
+  bankName            String?
+  bankIban            String?
+  bankBic             String?
+  bankGlaeubigerId    String?
   createdAt  DateTime   @default(now())
 
   mandantId String
@@ -276,6 +282,7 @@ model Label {
   mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
 
   vorgaenge VorgangLabel[]
+  todos     ToDoLabel[]
 
   @@index([mandantId])
 }
@@ -302,7 +309,19 @@ model ToDo {
   vorgangId String
   vorgang   Vorgang @relation(fields: [vorgangId], references: [id], onDelete: Cascade)
 
+  labels ToDoLabel[]
+
   @@index([vorgangId])
+}
+
+model ToDoLabel {
+  todoId String
+  todo   ToDo @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  labelId String
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([todoId, labelId])
 }
 
 model Kommentar {

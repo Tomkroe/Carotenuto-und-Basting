@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-type Theme = "light" | "light-blue" | "dark";
+type Theme = "light" | "dark";
 
 const THEME_META: Record<Theme, { icon: string; label: string; next: Theme }> = {
-  light: { icon: "☀️", label: "Hell", next: "light-blue" },
-  "light-blue": { icon: "🩵", label: "Hellblau", next: "dark" },
+  light: { icon: "☀️", label: "Hell", next: "dark" },
   dark: { icon: "🌙", label: "Dunkel", next: "light" },
 };
 
 function applyTheme(theme: Theme) {
-  document.documentElement.classList.remove("dark", "light-blue");
-  if (theme !== "light") document.documentElement.classList.add(theme);
+  document.documentElement.classList.remove("dark");
+  if (theme === "dark") document.documentElement.classList.add(theme);
   localStorage.setItem("theme", theme);
 }
 

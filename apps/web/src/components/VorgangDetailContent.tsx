@@ -7,6 +7,8 @@ import {
   CircleDot,
   Clock,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   History,
   Pencil,
   Trash2,
@@ -17,6 +19,7 @@ import {
   X,
   Undo2,
   Home,
+  Flag,
 } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import {
@@ -27,11 +30,14 @@ import {
   useTodos,
   useCreateTodo,
   useToggleTodo,
+  useUpdateTodo,
   useDeleteTodo,
   useLabels,
   useCreateLabel,
   useAttachLabel,
   useDetachLabel,
+  useAttachTodoLabel,
+  useDetachTodoLabel,
   useUsers,
   useVorgangVerlauf,
   useEinheitenFlat,
@@ -61,6 +67,15 @@ function kontaktName(k: { vorname: string | null; nachname: string | null; firma
   return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
 }
 
+function todoFaelligkeitMeta(faelligkeit: string | null, erledigt: boolean) {
+  if (!faelligkeit) return null;
+  const due = new Date(faelligkeit);
+  const overdue = !erledigt && due.getTime() < Date.now();
+  if (!overdue) return { label: due.toLocaleDateString("de-DE"), overdue: false };
+  const tage = Math.max(1, Math.floor((Date.now() - due.getTime()) / 86400000));
+  return { label: `Überfällig seit ${tage} Tag${tage === 1 ? "" : "en"}`, overdue: true };
+}
+
 export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const router = useRouter();
 
@@ -72,7 +87,10 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const { data: todos } = useTodos(vorgangId);
   const createTodo = useCreateTodo(vorgangId);
   const toggleTodo = useToggleTodo(vorgangId);
+  const updateTodo = useUpdateTodo(vorgangId);
   const deleteTodo = useDeleteTodo(vorgangId);
+  const attachTodoLabel = useAttachTodoLabel(vorgangId);
+  const detachTodoLabel = useDetachTodoLabel(vorgangId);
 
   const { data: alleLabels } = useLabels();
   const createLabel = useCreateLabel();
@@ -85,6 +103,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newTodo, setNewTodo] = useState("");
   const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
+  const [todoLabelPickerId, setTodoLabelPickerId] = useState<string | null>(null);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
   const [previousStatus, setPreviousStatus] = useState<VorgangStatus | null>(null);
@@ -482,22 +502,122 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
 
         {todos && todos.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
-            {todos.map((t) => (
-              <li key={t.id} className="flex items-center justify-between px-4 py-2.5">
-                <button onClick={() => toggleTodo.mutate({ id: t.id, erledigt: !t.erledigt })} className="flex items-center gap-2 text-left">
-                  {t.erledigt ? <CheckSquare size={17} className="text-primary" /> : <Square size={17} className="text-text-muted" />}
-                  <TodoIcon icon={t.icon} size={15} className="text-text-muted" />
-                  <span className={t.erledigt ? "text-text-muted line-through" : ""}>{t.titel}</span>
-                </button>
-                <button
-                  onClick={() => deleteTodo.mutate(t.id)}
-                  className="text-text-muted transition hover:text-red-500"
-                  aria-label="ToDo löschen"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
+            {todos.map((t) => {
+              const faelligkeitMeta = todoFaelligkeitMeta(t.faelligkeit, t.erledigt);
+              const expanded = expandedTodoId === t.id;
+              return (
+                <li key={t.id}>
+                  <div className="flex items-center justify-between px-4 py-2.5">
+                    <button
+                      onClick={() => toggleTodo.mutate({ id: t.id, erledigt: !t.erledigt })}
+                      className="flex items-center gap-2 text-left"
+                    >
+                      {t.erledigt ? <CheckSquare size={17} className="text-primary" /> : <Square size={17} className="text-text-muted" />}
+                      <TodoIcon icon={t.icon} size={15} className="text-text-muted" />
+                      <span className={t.erledigt ? "text-text-muted line-through" : ""}>{t.titel}</span>
+                    </button>
+                    <div className="flex items-center gap-3">
+                      {t.labels.map((l) => (
+                        <span
+                          key={l.id}
+                          className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                          style={{ backgroundColor: l.farbe }}
+                        >
+                          {l.name}
+                        </span>
+                      ))}
+                      {faelligkeitMeta && (
+                        <span
+                          className={`flex items-center gap-1 text-xs ${
+                            faelligkeitMeta.overdue ? "text-red-500" : "text-text-muted"
+                          }`}
+                        >
+                          <Flag size={12} />
+                          {faelligkeitMeta.label}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => deleteTodo.mutate(t.id)}
+                        className="text-text-muted transition hover:text-red-500"
+                        aria-label="ToDo löschen"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => setExpandedTodoId(expanded ? null : t.id)}
+                        className="text-text-muted transition hover:text-primary"
+                        aria-label={expanded ? "Details schließen" : "Details anzeigen"}
+                      >
+                        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {expanded && (
+                    <div className="space-y-3 border-t border-border bg-bg px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-muted" htmlFor={`todo-faelligkeit-${t.id}`}>
+                          Fälligkeit
+                        </label>
+                        <input
+                          id={`todo-faelligkeit-${t.id}`}
+                          type="date"
+                          value={t.faelligkeit ? t.faelligkeit.slice(0, 10) : ""}
+                          onChange={(e) =>
+                            updateTodo.mutate({ id: t.id, data: { faelligkeit: e.target.value || undefined } })
+                          }
+                          className="rounded-lg border border-border bg-surface px-2 py-1 text-sm outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {t.labels.map((l) => (
+                          <span
+                            key={l.id}
+                            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                            style={{ backgroundColor: l.farbe }}
+                          >
+                            {l.name}
+                            <button
+                              onClick={() => detachTodoLabel.mutate({ todoId: t.id, labelId: l.id })}
+                              aria-label={`Label ${l.name} entfernen`}
+                              className="opacity-80 hover:opacity-100"
+                            >
+                              <X size={11} />
+                            </button>
+                          </span>
+                        ))}
+                        <button
+                          onClick={() => setTodoLabelPickerId(todoLabelPickerId === t.id ? null : t.id)}
+                          className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-text-muted transition hover:border-primary hover:text-primary"
+                        >
+                          <Tag size={12} />
+                          Label
+                        </button>
+                      </div>
+
+                      {todoLabelPickerId === t.id && alleLabels && alleLabels.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {alleLabels
+                            .filter((l) => !t.labels.some((tl) => tl.id === l.id))
+                            .map((l) => (
+                              <button
+                                key={l.id}
+                                onClick={() => attachTodoLabel.mutate({ todoId: t.id, labelId: l.id })}
+                                className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white transition hover:opacity-80"
+                                style={{ backgroundColor: l.farbe }}
+                              >
+                                <Plus size={11} />
+                                {l.name}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

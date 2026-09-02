@@ -9,6 +9,10 @@ import { UpdateToDoDto } from "./dto/update-todo.dto";
 
 const MODEL = "gemini-flash-lite-latest";
 
+const INCLUDE = {
+  labels: { include: { label: { select: { id: true, name: true, farbe: true } } } },
+} as const;
+
 @Injectable()
 export class TodosService {
   private readonly ai: GoogleGenAI | null;
@@ -25,7 +29,7 @@ export class TodosService {
   async findAllForMandant(mandantId: string): Promise<ToDoListItem[]> {
     const todos = await this.prisma.toDo.findMany({
       where: { vorgang: { mandantId } },
-      include: { vorgang: { select: { id: true, titel: true } } },
+      include: { ...INCLUDE, vorgang: { select: { id: true, titel: true } } },
       orderBy: { createdAt: "desc" },
     });
     return todos.map((t) => ({ ...toToDo(t), vorgang: t.vorgang }));
@@ -35,6 +39,7 @@ export class TodosService {
     await this.assertVorgangOwnership(mandantId, vorgangId);
     const todos = await this.prisma.toDo.findMany({
       where: { vorgangId },
+      include: INCLUDE,
       orderBy: [{ reihenfolge: "asc" }, { createdAt: "asc" }],
     });
     return todos.map(toToDo);
@@ -43,7 +48,15 @@ export class TodosService {
   async create(mandantId: string, vorgangId: string, dto: CreateToDoDto): Promise<ToDo> {
     await this.assertVorgangOwnership(mandantId, vorgangId);
     const icon = await this.suggestIcon(dto.titel);
-    const todo = await this.prisma.toDo.create({ data: { ...dto, icon, vorgangId } });
+    const todo = await this.prisma.toDo.create({
+      data: {
+        titel: dto.titel,
+        faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
+        icon,
+        vorgangId,
+      },
+      include: INCLUDE,
+    });
     return toToDo(todo);
   }
 
@@ -52,11 +65,26 @@ export class TodosService {
       where: { id, vorgang: { mandantId } },
     });
     if (!existing) throw new NotFoundException("ToDo nicht gefunden.");
-    const todo = await this.prisma.toDo.update({ where: { id }, data: dto });
+    const todo = await this.prisma.toDo.update({
+      where: { id },
+      data: {
+        erledigt: dto.erledigt,
+        faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
+      },
+      include: INCLUDE,
+    });
 
     if (dto.erledigt !== undefined && dto.erledigt !== existing.erledigt) {
       const text = dto.erledigt ? `ToDo „${todo.titel}“ erledigt` : `ToDo „${todo.titel}“ wieder geöffnet`;
       await this.verlaufService.log(existing.vorgangId, userId, text);
+    }
+
+    if (dto.faelligkeit !== undefined && existing.faelligkeit?.toISOString() !== todo.faelligkeit?.toISOString()) {
+      await this.verlaufService.log(
+        existing.vorgangId,
+        userId,
+        `ToDo „${todo.titel}“ Fälligkeit gesetzt auf ${new Date(dto.faelligkeit).toLocaleDateString("de-DE")}`,
+      );
     }
 
     return toToDo(todo);
@@ -98,15 +126,19 @@ function toToDo(todo: {
   titel: string;
   icon: string | null;
   erledigt: boolean;
+  faelligkeit: Date | null;
   vorgangId: string;
   createdAt: Date;
+  labels: { label: { id: string; name: string; farbe: string } }[];
 }): ToDo {
   return {
     id: todo.id,
     titel: todo.titel,
     icon: (TODO_ICON_NAMES as readonly string[]).includes(todo.icon ?? "") ? (todo.icon as TodoIconName) : null,
     erledigt: todo.erledigt,
+    faelligkeit: todo.faelligkeit ? todo.faelligkeit.toISOString() : null,
     vorgangId: todo.vorgangId,
     createdAt: todo.createdAt.toISOString(),
+    labels: todo.labels.map((l) => l.label),
   };
 }

@@ -55,6 +55,12 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const [editAdresseHausnummer, setEditAdresseHausnummer] = useState("");
   const [editAdressePlz, setEditAdressePlz] = useState("");
   const [editAdresseOrt, setEditAdresseOrt] = useState("");
+  const [editNotizen, setEditNotizen] = useState("");
+  const [editBankKontoinhaber, setEditBankKontoinhaber] = useState("");
+  const [editBankName, setEditBankName] = useState("");
+  const [editBankIban, setEditBankIban] = useState("");
+  const [editBankBic, setEditBankBic] = useState("");
+  const [editBankGlaeubigerId, setEditBankGlaeubigerId] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -85,6 +91,12 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
     setEditAdresseHausnummer(kontakt.adresseHausnummer ?? "");
     setEditAdressePlz(kontakt.adressePlz ?? "");
     setEditAdresseOrt(kontakt.adresseOrt ?? "");
+    setEditNotizen(kontakt.notizen ?? "");
+    setEditBankKontoinhaber(kontakt.bankKontoinhaber ?? "");
+    setEditBankName(kontakt.bankName ?? "");
+    setEditBankIban(kontakt.bankIban ?? "");
+    setEditBankBic(kontakt.bankBic ?? "");
+    setEditBankGlaeubigerId(kontakt.bankGlaeubigerId ?? "");
     setEditError(null);
     setEditing(true);
   }
@@ -107,6 +119,12 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
         adresseHausnummer: editAdresseHausnummer || undefined,
         adressePlz: editAdressePlz || undefined,
         adresseOrt: editAdresseOrt || undefined,
+        notizen: editNotizen || undefined,
+        bankKontoinhaber: editBankKontoinhaber || undefined,
+        bankName: editBankName || undefined,
+        bankIban: editBankIban || undefined,
+        bankBic: editBankBic || undefined,
+        bankGlaeubigerId: editBankGlaeubigerId || undefined,
       });
       setEditing(false);
     } catch (err) {
@@ -171,6 +189,13 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                     `${kontakt.adresseStrasse} ${kontakt.adresseHausnummer ?? ""}, ${kontakt.adressePlz ?? ""} ${kontakt.adresseOrt ?? ""}`}
                 </p>
               )}
+              {(kontakt.bankIban || kontakt.bankKontoinhaber) && (
+                <p className="mt-1 text-xs text-text-muted">
+                  {kontakt.bankKontoinhaber && `${kontakt.bankKontoinhaber} · `}
+                  {kontakt.bankIban}
+                  {kontakt.bankBic && ` · ${kontakt.bankBic}`}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -214,6 +239,12 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
           </div>
         )}
       </div>
+
+      {!editing && kontakt.notizen && (
+        <div className="mb-8 max-w-xl rounded-lg border border-border bg-surface p-3 text-sm text-text-muted">
+          {kontakt.notizen}
+        </div>
+      )}
 
       {editing && (
         <form onSubmit={handleSaveEdit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
@@ -386,6 +417,89 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                 onChange={(e) => setEditAdresseOrt(e.target.value)}
                 className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
               />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-text-muted" htmlFor="editNotizen">
+              Notizen (optional)
+            </label>
+            <textarea
+              id="editNotizen"
+              rows={3}
+              value={editNotizen}
+              onChange={(e) => setEditNotizen(e.target.value)}
+              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium">Bankverbindung (optional)</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm text-text-muted" htmlFor="editBankKontoinhaber">
+                    Kontoinhaber
+                  </label>
+                  <input
+                    id="editBankKontoinhaber"
+                    type="text"
+                    value={editBankKontoinhaber}
+                    onChange={(e) => setEditBankKontoinhaber(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm text-text-muted" htmlFor="editBankName">
+                    Bank
+                  </label>
+                  <input
+                    id="editBankName"
+                    type="text"
+                    value={editBankName}
+                    onChange={(e) => setEditBankName(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm text-text-muted" htmlFor="editBankIban">
+                    IBAN
+                  </label>
+                  <input
+                    id="editBankIban"
+                    type="text"
+                    value={editBankIban}
+                    onChange={(e) => setEditBankIban(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm text-text-muted" htmlFor="editBankBic">
+                    BIC
+                  </label>
+                  <input
+                    id="editBankBic"
+                    type="text"
+                    value={editBankBic}
+                    onChange={(e) => setEditBankBic(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-text-muted" htmlFor="editBankGlaeubigerId">
+                  Gläubiger-ID
+                </label>
+                <input
+                  id="editBankGlaeubigerId"
+                  type="text"
+                  value={editBankGlaeubigerId}
+                  onChange={(e) => setEditBankGlaeubigerId(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                />
+              </div>
             </div>
           </div>
 

@@ -30,7 +30,7 @@ const THEME_INIT_SCRIPT = `
     var stored = localStorage.getItem('theme');
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     var theme = stored || (prefersDark ? 'dark' : 'light');
-    if (theme === 'dark' || theme === 'light-blue') document.documentElement.classList.add(theme);
+    if (theme === 'dark') document.documentElement.classList.add(theme);
   } catch (e) {}
 })();
 `;

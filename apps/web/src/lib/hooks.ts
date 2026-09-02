@@ -40,6 +40,7 @@ import type {
   UpdateMietvertragRequest,
   UpdateNebenkostenabrechnungRequest,
   UpdateObjektRequest,
+  UpdateToDoRequest,
   UpdateVorgangRequest,
   UpdateZaehlerRequest,
   UserListItem,
@@ -316,6 +317,43 @@ export function useToggleTodo(vorgangId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+}
+
+export function useUpdateTodo(vorgangId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateToDoRequest }) =>
+      apiFetch<ToDo>(`/todos/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "verlauf"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+}
+
+export function useAttachTodoLabel(vorgangId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ todoId, labelId }: { todoId: string; labelId: string }) =>
+      apiFetch<void>(`/todos/${todoId}/labels/${labelId}`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+}
+
+export function useDetachTodoLabel(vorgangId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ todoId, labelId }: { todoId: string; labelId: string }) =>
+      apiFetch<void>(`/todos/${todoId}/labels/${labelId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge", vorgangId, "todos"] });
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });

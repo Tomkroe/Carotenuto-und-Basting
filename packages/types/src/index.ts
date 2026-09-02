@@ -132,6 +132,12 @@ export interface Kontakt {
   adresseHausnummer: string | null;
   adressePlz: string | null;
   adresseOrt: string | null;
+  notizen: string | null;
+  bankKontoinhaber: string | null;
+  bankName: string | null;
+  bankIban: string | null;
+  bankBic: string | null;
+  bankGlaeubigerId: string | null;
   createdAt: string;
 }
 
@@ -155,6 +161,12 @@ export interface CreateKontaktRequest {
   adresseHausnummer?: string;
   adressePlz?: string;
   adresseOrt?: string;
+  notizen?: string;
+  bankKontoinhaber?: string;
+  bankName?: string;
+  bankIban?: string;
+  bankBic?: string;
+  bankGlaeubigerId?: string;
 }
 
 export type UpdateKontaktRequest = Partial<CreateKontaktRequest>;
@@ -270,8 +282,10 @@ export interface ToDo {
   titel: string;
   icon: TodoIconName | null;
   erledigt: boolean;
+  faelligkeit: string | null;
   vorgangId: string;
   createdAt: string;
+  labels: Label[];
 }
 
 export interface ToDoListItem extends ToDo {
@@ -280,6 +294,12 @@ export interface ToDoListItem extends ToDo {
 
 export interface CreateToDoRequest {
   titel: string;
+  faelligkeit?: string;
+}
+
+export interface UpdateToDoRequest {
+  erledigt?: boolean;
+  faelligkeit?: string;
 }
 
 export interface Kommentar {

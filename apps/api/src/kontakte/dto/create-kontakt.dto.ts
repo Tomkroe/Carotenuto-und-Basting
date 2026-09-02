@@ -52,4 +52,28 @@ export class CreateKontaktDto {
   @IsString()
   @IsOptional()
   adresseOrt?: string;
+
+  @IsString()
+  @IsOptional()
+  notizen?: string;
+
+  @IsString()
+  @IsOptional()
+  bankKontoinhaber?: string;
+
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
+  @IsString()
+  @IsOptional()
+  bankIban?: string;
+
+  @IsString()
+  @IsOptional()
+  bankBic?: string;
+
+  @IsString()
+  @IsOptional()
+  bankGlaeubigerId?: string;
 }

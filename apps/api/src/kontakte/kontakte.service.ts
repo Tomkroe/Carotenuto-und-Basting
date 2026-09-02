@@ -82,6 +82,12 @@ function toKontakt(kontakt: {
   adresseHausnummer: string | null;
   adressePlz: string | null;
   adresseOrt: string | null;
+  notizen: string | null;
+  bankKontoinhaber: string | null;
+  bankName: string | null;
+  bankIban: string | null;
+  bankBic: string | null;
+  bankGlaeubigerId: string | null;
   createdAt: Date;
 }): Kontakt {
   return {
@@ -99,6 +105,12 @@ function toKontakt(kontakt: {
     adresseHausnummer: kontakt.adresseHausnummer,
     adressePlz: kontakt.adressePlz,
     adresseOrt: kontakt.adresseOrt,
+    notizen: kontakt.notizen,
+    bankKontoinhaber: kontakt.bankKontoinhaber,
+    bankName: kontakt.bankName,
+    bankIban: kontakt.bankIban,
+    bankBic: kontakt.bankBic,
+    bankGlaeubigerId: kontakt.bankGlaeubigerId,
     createdAt: kontakt.createdAt.toISOString(),
   };
 }
