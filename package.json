@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "concurrently -n web,api -c blue,magenta \"pnpm --filter web dev\" \"pnpm --filter api start:dev\"",
-    "build": "pnpm --filter @maklerprogram/types build && pnpm --filter web build && pnpm --filter api build",
+    "build": "pnpm --filter web build && pnpm --filter api build",
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"   
+    "concurrently": "^9.1.0"
   },
   "engines": {
     "node": ">=22"
