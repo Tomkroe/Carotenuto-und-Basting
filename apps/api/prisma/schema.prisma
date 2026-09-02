@@ -370,6 +370,7 @@ model Zaehler {
   hauptzaehler  Boolean    @default(true)
   versorger     String?
   vertragsNr    String?
+  lage          String?
   createdAt     DateTime   @default(now())
 
   mandantId String

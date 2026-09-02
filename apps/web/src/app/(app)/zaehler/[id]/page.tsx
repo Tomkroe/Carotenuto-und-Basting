@@ -56,6 +56,7 @@ export default function ZaehlerDetailPage() {
   const [editZaehlernummer, setEditZaehlernummer] = useState("");
   const [editVersorger, setEditVersorger] = useState("");
   const [editVertragsNr, setEditVertragsNr] = useState("");
+  const [editLage, setEditLage] = useState("");
   const [editHauptzaehler, setEditHauptzaehler] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -77,6 +78,7 @@ export default function ZaehlerDetailPage() {
     setEditZaehlernummer(zaehler.zaehlernummer);
     setEditVersorger(zaehler.versorger ?? "");
     setEditVertragsNr(zaehler.vertragsNr ?? "");
+    setEditLage(zaehler.lage ?? "");
     setEditHauptzaehler(zaehler.hauptzaehler);
     setEditError(null);
     setEditing(true);
@@ -90,6 +92,7 @@ export default function ZaehlerDetailPage() {
         zaehlernummer: editZaehlernummer,
         versorger: editVersorger || undefined,
         vertragsNr: editVertragsNr || undefined,
+        lage: editLage || undefined,
         hauptzaehler: editHauptzaehler,
       });
       setEditing(false);
@@ -170,6 +173,7 @@ export default function ZaehlerDetailPage() {
                   {!zaehler.einheit && zaehler.objekt && ` · ${zaehler.objekt.name}`}
                   {zaehler.versorger && ` · ${zaehler.versorger}`}
                   {zaehler.vertragsNr && ` · Vertrag ${zaehler.vertragsNr}`}
+                  {zaehler.lage && ` · ${zaehler.lage}`}
                 </p>
               </div>
             </div>
@@ -255,6 +259,19 @@ export default function ZaehlerDetailPage() {
                   className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
                 />
               </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editLage">
+                Lage im Gebäude (optional)
+              </label>
+              <input
+                id="editLage"
+                type="text"
+                placeholder="z.B. Keller, Technikraum EG"
+                value={editLage}
+                onChange={(e) => setEditLage(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
             </div>
             <label className="flex items-center gap-2 text-sm text-text-muted">
               <input

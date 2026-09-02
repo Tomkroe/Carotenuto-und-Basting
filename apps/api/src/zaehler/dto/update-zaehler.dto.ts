@@ -25,6 +25,10 @@ export class UpdateZaehlerDto {
 
   @IsString()
   @IsOptional()
+  lage?: string;
+
+  @IsString()
+  @IsOptional()
   objektId?: string;
 
   @IsString()

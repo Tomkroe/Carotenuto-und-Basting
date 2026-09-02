@@ -438,6 +438,7 @@ export interface Zaehler {
   hauptzaehler: boolean;
   versorger: string | null;
   vertragsNr: string | null;
+  lage: string | null;
   createdAt: string;
   objekt: ObjektRef | null;
   einheit: EinheitRef | null;
@@ -449,6 +450,7 @@ export interface CreateZaehlerRequest {
   hauptzaehler?: boolean;
   versorger?: string;
   vertragsNr?: string;
+  lage?: string;
   objektId?: string;
   einheitId?: string;
 }

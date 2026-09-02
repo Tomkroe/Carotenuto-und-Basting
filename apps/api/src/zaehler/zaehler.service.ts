@@ -70,6 +70,7 @@ function toZaehler(zaehler: {
   hauptzaehler: boolean;
   versorger: string | null;
   vertragsNr: string | null;
+  lage: string | null;
   createdAt: Date;
   objekt: { id: string; name: string } | null;
   einheit: { id: string; name: string; objekt: { id: string; name: string } } | null;
@@ -81,6 +82,7 @@ function toZaehler(zaehler: {
     hauptzaehler: zaehler.hauptzaehler,
     versorger: zaehler.versorger,
     vertragsNr: zaehler.vertragsNr,
+    lage: zaehler.lage,
     createdAt: zaehler.createdAt.toISOString(),
     objekt: zaehler.objekt,
     einheit: zaehler.einheit,
