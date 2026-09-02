@@ -4,8 +4,8 @@
 
 :root {
   --color-bg: 240 249 255; /* sky-50 */
-  --color-surface: 224 242 254; /* sky-100 */
-  --color-border: 186 230 253; /* sky-200 */
+  --color-surface: 255 255 255; /* white — cards must contrast against the sky-50 page bg */
+  --color-border: 191 219 254; /* sky-200/blue-200, darker than before for visible card edges */
   --color-text: 24 24 27;
   --color-text-muted: 113 113 122;
   --color-primary: 255 45 154; /* Hot Pink #FF2D9A */
