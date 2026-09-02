@@ -78,7 +78,7 @@ export default function WorkflowsPage() {
         </button>
       </div>
       <p className="mb-6 text-sm text-text-muted">
-        Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows" als Ein-Klick-Vorschläge erscheinen.
+        Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows“ als Ein-Klick-Vorschläge erscheinen.
       </p>
 
       {showForm && (

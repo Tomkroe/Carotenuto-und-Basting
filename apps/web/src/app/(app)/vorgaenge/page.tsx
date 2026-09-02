@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, FormEvent } from "react";
+import { Suspense, useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
@@ -28,7 +28,7 @@ function kontaktName(k: { vorname: string | null; nachname: string | null; firma
   return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
 }
 
-export default function VorgaengePage() {
+function VorgaengePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filter = searchParams.get("filter");
@@ -390,5 +390,13 @@ export default function VorgaengePage() {
         </DataTable>
       )}
     </section>
+  );
+}
+
+export default function VorgaengePage() {
+  return (
+    <Suspense fallback={null}>
+      <VorgaengePageInner />
+    </Suspense>
   );
 }
