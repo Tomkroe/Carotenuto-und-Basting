@@ -8,8 +8,7 @@
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
-    "packageManager": "pnpm@9.15.0"
+    "concurrently": "^9.1.0"  
   },
   "engines": {
     "node": ">=22"
