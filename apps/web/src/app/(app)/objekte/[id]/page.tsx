@@ -589,7 +589,7 @@ export default function ObjektDetailPage() {
                     Ansprechpartner hinzufügen
                     {hausverwaltungKontakte.length === 0 && (
                       <span className="ml-auto text-xs">
-                        (erst als Kontakt vom Typ „Hausverwaltung" anlegen)
+                        (erst als Kontakt vom Typ "Hausverwaltung" anlegen)
                       </span>
                     )}
                   </button>
