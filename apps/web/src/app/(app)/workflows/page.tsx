@@ -77,9 +77,9 @@ export default function WorkflowsPage() {
           )}
         </button>
       </div>
-      <p className="mb-6 text-sm text-text-muted">
-        Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows" als Ein-Klick-Vorschläge erscheinen.
-      </p>
+     <p className="mb-6 text-sm text-text-muted">
+  Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows" als Ein-Klick-Vorschläge erscheinen.
+</p>
 
       {showForm && (
         <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
