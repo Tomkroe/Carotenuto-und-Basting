@@ -3,9 +3,31 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, Home, KeyRound, Mail, Pencil, Phone, Sparkles, Trash2, UserRound, Wrench } from "lucide-react";
-import { KontaktTyp } from "@maklerprogram/types";
-import { useCurrentUser, useKontakt, useKontaktObjekte, useUpdateKontakt, useDeleteKontakt } from "@/lib/hooks";
+import {
+  Building2,
+  CheckCircle2,
+  CircleDot,
+  Clock,
+  Home,
+  KeyRound,
+  Mail,
+  Pencil,
+  Phone,
+  Plus,
+  Sparkles,
+  Trash2,
+  UserRound,
+  Wrench,
+} from "lucide-react";
+import { KontaktTyp, VorgangStatus } from "@maklerprogram/types";
+import {
+  useCurrentUser,
+  useKontakt,
+  useKontaktObjekte,
+  useUpdateKontakt,
+  useDeleteKontakt,
+  useVorgaenge,
+} from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
@@ -31,12 +53,28 @@ const ROLLE_META: Record<"MIETER" | "EIGENTUEMER", { label: string; className: s
   EIGENTUEMER: { label: "Eigentümer", className: "bg-amber-500/10 text-amber-500" },
 };
 
+const VORGANG_STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
+  [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
+  [VorgangStatus.IN_BEARBEITUNG]: {
+    label: "In Bearbeitung",
+    icon: Clock,
+    className: "bg-amber-500/10 text-amber-500",
+  },
+  [VorgangStatus.ABGESCHLOSSEN]: {
+    label: "Abgeschlossen",
+    icon: CheckCircle2,
+    className: "bg-emerald-500/10 text-emerald-500",
+  },
+};
+
 export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const router = useRouter();
 
   const { isError: authError } = useCurrentUser();
   const { data: kontakt, isLoading, isError: kontaktError } = useKontakt(kontaktId);
   const { data: zuordnungen } = useKontaktObjekte(kontaktId);
+  const { data: alleVorgaenge } = useVorgaenge();
+  const vorgaenge = (alleVorgaenge ?? []).filter((v) => v.kontakt?.id === kontaktId);
   const updateKontakt = useUpdateKontakt(kontaktId);
   const deleteKontakt = useDeleteKontakt();
 
@@ -547,6 +585,47 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                   </span>
                 </li>
               ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Vorgänge</h2>
+            <Link
+              href={`/vorgaenge?neu=1&kontaktId=${kontaktId}`}
+              className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-text-muted transition hover:border-primary hover:text-primary"
+            >
+              <Plus size={12} />
+              Neuer Vorgang
+            </Link>
+          </div>
+          {vorgaenge.length === 0 && <p className="text-sm text-text-muted">Keine Vorgänge.</p>}
+          {vorgaenge.length > 0 && (
+            <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
+              {vorgaenge.map((v) => {
+                const statusMeta = VORGANG_STATUS_META[v.status];
+                const StatusIcon = statusMeta.icon;
+                return (
+                  <li key={v.id}>
+                    <Link
+                      href={`/vorgaenge/${v.id}`}
+                      className="flex items-center justify-between px-4 py-2.5 hover:bg-bg"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-text-muted">#{v.nummer}</span>
+                        <span>{v.titel}</span>
+                      </span>
+                      <span
+                        className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${statusMeta.className}`}
+                      >
+                        <StatusIcon size={13} />
+                        {statusMeta.label}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

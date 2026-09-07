@@ -46,7 +46,7 @@ function VorgaengePageInner() {
   const [beschreibung, setBeschreibung] = useState("");
   const [objektId, setObjektId] = useState("");
   const [einheitId, setEinheitId] = useState("");
-  const [kontaktId, setKontaktId] = useState("");
+  const [kontaktId, setKontaktId] = useState(searchParams.get("kontaktId") ?? "");
   const [verantwortlicherId, setVerantwortlicherId] = useState("");
   const [faelligkeit, setFaelligkeit] = useState("");
   const [error, setError] = useState<string | null>(null);
