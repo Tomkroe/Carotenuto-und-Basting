@@ -127,10 +127,10 @@ export default function MietvertragDetailPage() {
               </h1>
               <p className="mt-1 text-text-muted">Mieter: {kontaktName(mietvertrag.mieter)}</p>
               <p className="mt-1 text-text-muted">
-                {mietvertrag.kaltmiete.toFixed(2)} € kalt
+                {mietvertrag.kaltmiete.toLocaleString("de-DE")} € kalt
                 {mietvertrag.nebenkostenVorauszahlung > 0 &&
-                  ` · ${mietvertrag.nebenkostenVorauszahlung.toFixed(2)} € Nebenkosten`}
-                {` · ${(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toFixed(2)} € warm`}
+                  ` · ${mietvertrag.nebenkostenVorauszahlung.toLocaleString("de-DE")} € Nebenkosten`}
+                {` · ${(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toLocaleString("de-DE")} € warm`}
               </p>
               <p className="mt-1 text-sm text-text-muted">
                 Beginn {new Date(mietvertrag.beginn).toLocaleDateString("de-DE")}
@@ -141,7 +141,7 @@ export default function MietvertragDetailPage() {
                   {mietvertrag.kaution != null && (
                     <span className="flex items-center gap-1">
                       <Banknote size={13} />
-                      {mietvertrag.kaution.toFixed(2)} € Kaution
+                      {mietvertrag.kaution.toLocaleString("de-DE")} € Kaution
                     </span>
                   )}
                   {mietvertrag.iban && <span>IBAN {mietvertrag.iban}</span>}

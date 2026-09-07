@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, CheckCircle2, Archive, CircleDashed, Plus, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Archive, CircleDashed, Plus } from "lucide-react";
 import { MietvertragStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -16,6 +16,7 @@ import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const STATUS_META: Record<MietvertragStatus, { label: string; icon: typeof CalendarClock; className: string }> = {
   [MietvertragStatus.GEPLANT]: {
@@ -163,18 +164,10 @@ export default function MietvertraegePage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Mietverträge</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neuer Mietvertrag
-            </>
-          )}
+          <Plus size={16} /> Neuer Mietvertrag
         </button>
       </div>
 
@@ -186,7 +179,8 @@ export default function MietvertraegePage() {
       </div>
 
       {showForm && (
-          <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neuer Mietvertrag" onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="einheitId">
@@ -327,7 +321,8 @@ export default function MietvertraegePage() {
               {createMietvertrag.isPending ? "Wird angelegt…" : "Mietvertrag anlegen"}
             </button>
           </form>
-        )}
+        </Modal>
+      )}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex-1">
@@ -388,9 +383,9 @@ export default function MietvertraegePage() {
                 <td className="px-4 py-3">
                   {mietvertrag ? (
                     <div>
-                      <p className="font-medium">{mietvertrag.kaltmiete.toFixed(2)} €</p>
+                      <p className="font-medium">{mietvertrag.kaltmiete.toLocaleString("de-DE")} €</p>
                       <p className="text-xs text-text-muted">
-                        {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toFixed(2)} € warm
+                        {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toLocaleString("de-DE")} € warm
                       </p>
                     </div>
                   ) : (
