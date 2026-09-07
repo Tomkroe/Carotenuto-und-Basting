@@ -11,10 +11,24 @@ function kontaktName(k: { vorname: string | null; nachname: string | null; firma
 
 function statusBadge(einheitId: string, mietvertraege: Mietvertrag[] | undefined) {
   const aktiv = mietvertraege?.find((m) => m.einheit.id === einheitId && m.status === MietvertragStatus.AKTIV);
-  if (aktiv) return { label: "Vermietet", mieter: aktiv.mieter, className: "bg-primary/10 text-primary" };
+  if (aktiv) {
+    return { label: "Vermietet", mieter: aktiv.mieter, kaltmiete: aktiv.kaltmiete, className: "bg-primary/10 text-primary" };
+  }
   const geplant = mietvertraege?.find((m) => m.einheit.id === einheitId && m.status === MietvertragStatus.GEPLANT);
-  if (geplant) return { label: "Geplant", mieter: geplant.mieter, className: "bg-amber-500/10 text-amber-600" };
-  return { label: "Leerstand", mieter: null, className: "bg-red-500/10 text-red-500" };
+  if (geplant) {
+    return { label: "Geplant", mieter: geplant.mieter, kaltmiete: geplant.kaltmiete, className: "bg-amber-500/10 text-amber-600" };
+  }
+  return { label: "Leerstand", mieter: null, kaltmiete: null, className: "bg-red-500/10 text-red-500" };
+}
+
+function groupByKategorie(einheiten: Einheit[]): [string, Einheit[]][] {
+  const groups = new Map<string, Einheit[]>();
+  for (const e of einheiten) {
+    const key = e.kategorie || "Sonstige";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(e);
+  }
+  return Array.from(groups.entries());
 }
 
 interface ObjektEinheitenSidebarProps {
@@ -61,40 +75,55 @@ export function ObjektEinheitenSidebar({
 
       {children}
 
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
-        {einheiten && einheiten.length === 0 && (
-          <p className="p-4 text-sm text-text-muted">Noch keine Einheiten angelegt.</p>
-        )}
-        {einheiten?.map((e) => {
-          const badge = statusBadge(e.id, mietvertraege);
-          const active = e.id === activeEinheitId;
-          return (
-            <Link
-              key={e.id}
-              href={`/objekte/${objektId}/einheiten/${e.id}`}
-              className={`block border-b border-border px-4 py-3 last:border-b-0 transition ${
-                active ? "bg-primary/10" : "hover:bg-bg"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-medium">{e.name}</p>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
-                  {badge.label}
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-text-muted">
-                {e.kategorie}
-                {e.flaeche != null && ` · ${e.flaeche.toLocaleString("de-DE")} m²`}
+      {einheiten && einheiten.length === 0 && (
+        <p className="rounded-lg border border-border bg-surface p-4 text-sm text-text-muted">
+          Noch keine Einheiten angelegt.
+        </p>
+      )}
+      {einheiten && einheiten.length > 0 && (
+        <div className="space-y-3">
+          {groupByKategorie(einheiten).map(([kategorie, gruppe]) => (
+            <div key={kategorie}>
+              <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-text-muted/70">
+                {kategorie} · {gruppe.length}
               </p>
-              {badge.mieter && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
-                  <UserRound size={11} /> {kontaktName(badge.mieter)}
-                </p>
-              )}
-            </Link>
-          );
-        })}
-      </div>
+              <div className="overflow-hidden rounded-lg border border-border bg-surface">
+                {gruppe.map((e) => {
+                  const badge = statusBadge(e.id, mietvertraege);
+                  const kaltmiete = badge.kaltmiete ?? e.kaltmiete;
+                  const active = e.id === activeEinheitId;
+                  return (
+                    <Link
+                      key={e.id}
+                      href={`/objekte/${objektId}/einheiten/${e.id}`}
+                      className={`block border-b border-border px-4 py-3 last:border-b-0 transition ${
+                        active ? "bg-primary/10" : "hover:bg-bg"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{e.name}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+                          {badge.label}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-text-muted">
+                        {e.flaeche != null && `${e.flaeche.toLocaleString("de-DE")} m²`}
+                        {e.flaeche != null && kaltmiete != null && " · "}
+                        {kaltmiete != null && `${kaltmiete.toLocaleString("de-DE")} €`}
+                      </p>
+                      {badge.mieter && (
+                        <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+                          <UserRound size={11} /> {kontaktName(badge.mieter)}
+                        </p>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </aside>
   );
 }

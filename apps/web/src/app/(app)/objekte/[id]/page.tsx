@@ -111,6 +111,18 @@ export default function ObjektDetailPage() {
     return sum > 0 ? sum : objekt?.flaeche ?? null;
   }, [einheiten, objekt]);
 
+  const gesamtkaltmiete = useMemo(() => {
+    if (!einheiten || einheiten.length === 0) return objekt?.kaltmiete ?? null;
+    const einheitIds = new Set(einheiten.map((e) => e.id));
+    const sum = einheiten.reduce((acc, e) => {
+      const aktiverVertrag = mietvertraege?.find(
+        (m) => m.einheit.id === e.id && einheitIds.has(m.einheit.id) && m.status === MietvertragStatus.AKTIV,
+      );
+      return acc + (aktiverVertrag?.kaltmiete ?? e.kaltmiete ?? 0);
+    }, 0);
+    return sum > 0 ? sum : objekt?.kaltmiete ?? null;
+  }, [einheiten, mietvertraege, objekt]);
+
   const sevAnzahl = useMemo(() => {
     if (!einheiten || !eigentuemerschaften) return 0;
     const einheitIds = new Set(einheiten.map((e) => e.id));
@@ -688,6 +700,14 @@ export default function ObjektDetailPage() {
           {activeTab === "uebersicht" && (
             <>
               <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="flex items-center gap-1.5 text-xs text-text-muted">
+                    <Landmark size={13} /> Kaltmiete gesamt
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {gesamtkaltmiete != null ? `${gesamtkaltmiete.toLocaleString("de-DE")} €` : "–"}
+                  </p>
+                </div>
                 <div className="rounded-lg border border-border bg-surface p-4">
                   <p className="flex items-center gap-1.5 text-xs text-text-muted">
                     <Ruler size={13} /> Fläche
