@@ -9,9 +9,9 @@ export function DataTable({
     <div className="overflow-x-auto rounded-lg border border-border bg-surface">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-text-muted">
+          <tr className="border-b border-border bg-bg text-left text-text">
             {columns.map((c) => (
-              <th key={c.key} className={`whitespace-nowrap px-4 py-2.5 font-medium ${c.className ?? ""}`}>
+              <th key={c.key} className={`whitespace-nowrap px-4 py-2.5 font-semibold ${c.className ?? ""}`}>
                 {c.header}
               </th>
             ))}

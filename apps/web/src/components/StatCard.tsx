@@ -37,7 +37,7 @@ export function StatCard({
   return (
     <Wrapper
       onClick={onClick}
-      className={`w-full rounded-lg border-l-4 border border-border bg-surface px-4 py-3 text-left ${TONE_BORDER[tone]} ${
+      className={`w-full rounded-xl border-l-4 border border-border bg-surface px-5 py-4 text-left ${TONE_BORDER[tone]} ${
         onClick ? "cursor-pointer transition hover:bg-bg" : ""
       }`}
     >

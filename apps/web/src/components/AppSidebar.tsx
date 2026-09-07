@@ -69,7 +69,7 @@ export function AppSidebar() {
       <div className="px-4 pb-3">
         <Link
           href="/vorgaenge"
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          className="flex items-center justify-center gap-1.5 rounded-full bg-primary py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
           <Plus size={16} />
           Vorgang erstellen

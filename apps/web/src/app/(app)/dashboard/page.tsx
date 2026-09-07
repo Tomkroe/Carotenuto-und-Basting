@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
       <button
         onClick={() => router.push("/vorgaenge?neu=1")}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-medium text-primary-fg transition hover:opacity-90"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 font-medium text-primary-fg transition hover:opacity-90"
       >
         <Plus size={18} />
         Vorgang anlegen
