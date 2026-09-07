@@ -288,7 +288,9 @@ export default function EinheitDetailPage() {
     return <div className="flex min-h-[50vh] items-center justify-center text-text-muted">Lädt…</div>;
   }
 
-  const mietePerQm = einheit.kaltmiete != null && einheit.flaeche ? einheit.kaltmiete / einheit.flaeche : null;
+  const aktiverMietvertrag = mietverhaeltnisse.find((m) => m.status === MietvertragStatus.AKTIV);
+  const anzeigeKaltmiete = aktiverMietvertrag?.kaltmiete ?? einheit.kaltmiete;
+  const mietePerQm = anzeigeKaltmiete != null && einheit.flaeche ? anzeigeKaltmiete / einheit.flaeche : null;
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-10">
@@ -436,7 +438,7 @@ export default function EinheitDetailPage() {
               <div className="rounded-lg border border-border bg-surface p-4">
                 <p className="text-xs text-text-muted">Kaltmiete</p>
                 <p className="mt-1 text-lg font-semibold">
-                  {einheit.kaltmiete != null ? `${einheit.kaltmiete.toLocaleString("de-DE")} €` : "–"}
+                  {anzeigeKaltmiete != null ? `${anzeigeKaltmiete.toLocaleString("de-DE")} €` : "–"}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-surface p-4">
