@@ -11,7 +11,6 @@ import {
   Sparkles,
   UserRound,
   Wrench,
-  X,
 } from "lucide-react";
 import { KontaktTyp } from "@maklerprogram/types";
 import { useCurrentUser, useKontakte, useCreateKontakt } from "@/lib/hooks";
@@ -19,6 +18,7 @@ import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const KONTAKT_TYP_META: Record<
   KontaktTyp,
@@ -113,18 +113,10 @@ export default function KontaktePage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Kontakte</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neuer Kontakt
-            </>
-          )}
+          <Plus size={16} /> Neuer Kontakt
         </button>
       </div>
 
@@ -133,7 +125,8 @@ export default function KontaktePage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neuer Kontakt" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="typ">
               Typ
@@ -252,6 +245,7 @@ export default function KontaktePage() {
             {createKontakt.isPending ? "Wird angelegt…" : "Kontakt anlegen"}
           </button>
         </form>
+        </Modal>
       )}
 
       <div className="mb-4">

@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Plus, Ruler, X } from "lucide-react";
+import { Building2, Plus, Ruler } from "lucide-react";
 import { ObjektTyp } from "@maklerprogram/types";
 import { useCurrentUser, useObjekte, useCreateObjekt, useEinheitenFlat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
   [ObjektTyp.WOHN_GESCHAEFTSHAUS]: "Wohn-/Geschäftshaus",
@@ -83,18 +84,10 @@ export default function ObjektePage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Objekte</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neues Objekt
-            </>
-          )}
+          <Plus size={16} /> Neues Objekt
         </button>
       </div>
 
@@ -104,7 +97,8 @@ export default function ObjektePage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neues Objekt" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="typ">
               Typ
@@ -202,6 +196,7 @@ export default function ObjektePage() {
             {createObjekt.isPending ? "Wird angelegt…" : "Objekt anlegen"}
           </button>
         </form>
+        </Modal>
       )}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

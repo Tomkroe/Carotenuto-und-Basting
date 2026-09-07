@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "lucide-react";
+import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus } from "lucide-react";
 import { VorgangStatus } from "@maklerprogram/types";
 import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers, useEinheitenFlat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -10,6 +10,7 @@ import { labelStyle } from "@/lib/labelStyle";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
   [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
@@ -149,18 +150,10 @@ function VorgaengePageInner() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Vorgänge</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neuer Vorgang
-            </>
-          )}
+          <Plus size={16} /> Neuer Vorgang
         </button>
       </div>
 
@@ -179,7 +172,8 @@ function VorgaengePageInner() {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neuer Vorgang" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="titel">
               Titel
@@ -306,6 +300,7 @@ function VorgaengePageInner() {
             {createVorgang.isPending ? "Wird angelegt…" : "Vorgang anlegen"}
           </button>
         </form>
+        </Modal>
       )}
 
       <div className="mb-4">
