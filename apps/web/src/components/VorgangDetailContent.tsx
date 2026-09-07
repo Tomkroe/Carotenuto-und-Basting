@@ -43,6 +43,7 @@ import {
   useEinheitenFlat,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { labelStyle } from "@/lib/labelStyle";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
 import { TodoIcon } from "@/components/TodoIcon";
@@ -377,8 +378,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
           {vorgang.labels.map((l) => (
             <span
               key={l.id}
-              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"
-              style={{ backgroundColor: l.farbe }}
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+              style={labelStyle(l.farbe)}
             >
               {l.name}
               <button
@@ -409,8 +410,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                     <button
                       key={l.id}
                       onClick={() => attachLabel.mutate(l.id)}
-                      className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white transition hover:opacity-80"
-                      style={{ backgroundColor: l.farbe }}
+                      className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition hover:opacity-80"
+                      style={labelStyle(l.farbe)}
                     >
                       <Plus size={11} />
                       {l.name}
@@ -520,8 +521,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                       {t.labels.map((l) => (
                         <span
                           key={l.id}
-                          className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                          style={{ backgroundColor: l.farbe }}
+                          className="rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={labelStyle(l.farbe)}
                         >
                           {l.name}
                         </span>
@@ -574,8 +575,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                         {t.labels.map((l) => (
                           <span
                             key={l.id}
-                            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white"
-                            style={{ backgroundColor: l.farbe }}
+                            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                            style={labelStyle(l.farbe)}
                           >
                             {l.name}
                             <button
@@ -604,8 +605,8 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                               <button
                                 key={l.id}
                                 onClick={() => attachTodoLabel.mutate({ todoId: t.id, labelId: l.id })}
-                                className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white transition hover:opacity-80"
-                                style={{ backgroundColor: l.farbe }}
+                                className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition hover:opacity-80"
+                                style={labelStyle(l.farbe)}
                               >
                                 <Plus size={11} />
                                 {l.name}

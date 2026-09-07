@@ -6,6 +6,7 @@ import { CalendarDays, CircleDot, Clock, CheckCircle2, Flag, Plus, X } from "luc
 import { VorgangStatus } from "@maklerprogram/types";
 import { useCurrentUser, useVorgaenge, useCreateVorgang, useObjekte, useKontakte, useUsers, useEinheitenFlat } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { labelStyle } from "@/lib/labelStyle";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
@@ -369,8 +370,8 @@ function VorgaengePageInner() {
                       {v.labels.map((l) => (
                         <span
                           key={l.id}
-                          className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                          style={{ backgroundColor: l.farbe }}
+                          className="rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={labelStyle(l.farbe)}
                         >
                           {l.name}
                         </span>
