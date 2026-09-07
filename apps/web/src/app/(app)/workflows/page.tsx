@@ -2,10 +2,11 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useCurrentUser, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DEFAULT_WORKFLOWS } from "@/lib/defaultWorkflows";
+import { Modal } from "@/components/Modal";
 
 export default function WorkflowsPage() {
   const router = useRouter();
@@ -63,26 +64,19 @@ export default function WorkflowsPage() {
           Workflows
         </h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neuer Workflow
-            </>
-          )}
+          <Plus size={16} /> Neuer Workflow
         </button>
       </div>
       <p className="mb-6 text-sm text-text-muted">
-        Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows“ als Ein-Klick-Vorschläge erscheinen.
+        Kurze Prompt-Vorlagen, die im Jarvis-Chat unter „Workflows" als Ein-Klick-Vorschläge erscheinen.
       </p>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neuer Workflow" onClose={() => setShowForm(false)}>
+        <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="label">
               Name
@@ -120,6 +114,7 @@ export default function WorkflowsPage() {
             {createWorkflow.isPending ? "Wird angelegt…" : "Workflow anlegen"}
           </button>
         </form>
+        </Modal>
       )}
 
       {isLoading && <p className="text-text-muted">Lädt…</p>}

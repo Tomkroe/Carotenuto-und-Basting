@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarRange, FileEdit, Send, Plus, X } from "lucide-react";
+import { CalendarRange, FileEdit, Send, Plus } from "lucide-react";
 import { NebenkostenStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -15,6 +15,7 @@ import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const STATUS_META: Record<NebenkostenStatus, { label: string; icon: typeof FileEdit; className: string }> = {
   [NebenkostenStatus.ENTWURF]: { label: "Entwurf", icon: FileEdit, className: "bg-blue-500/10 text-blue-500" },
@@ -79,18 +80,10 @@ export default function NebenkostenabrechnungenPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nebenkostenabrechnungen</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neue Abrechnung
-            </>
-          )}
+          <Plus size={16} /> Neue Abrechnung
         </button>
       </div>
 
@@ -108,7 +101,8 @@ export default function NebenkostenabrechnungenPage() {
       </div>
 
       {showForm && (
-          <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neue Abrechnung" onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1 block text-sm text-text-muted" htmlFor="objektId">
                 Objekt
@@ -169,7 +163,8 @@ export default function NebenkostenabrechnungenPage() {
               {createAbrechnung.isPending ? "Wird angelegt…" : "Abrechnung anlegen"}
             </button>
           </form>
-        )}
+        </Modal>
+      )}
 
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Nach Objekt durchsuchen…" />

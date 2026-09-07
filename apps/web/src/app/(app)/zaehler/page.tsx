@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Zap, Flame, Droplet, Fuel, Plus, X, Star, Gauge, TrendingUp } from "lucide-react";
+import { Zap, Flame, Droplet, Fuel, Plus, Star, Gauge, TrendingUp } from "lucide-react";
 import { ZaehlerTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -16,6 +16,7 @@ import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { Modal } from "@/components/Modal";
 
 const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className: string; einheit: string }> = {
   [ZaehlerTyp.STROM]: { label: "Strom", icon: Zap, className: "bg-amber-500/10 text-amber-500", einheit: "kWh" },
@@ -98,18 +99,10 @@ export default function ZaehlerPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Zähler</h1>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
-          {showForm ? (
-            <>
-              <X size={16} /> Abbrechen
-            </>
-          ) : (
-            <>
-              <Plus size={16} /> Neuer Zähler
-            </>
-          )}
+          <Plus size={16} /> Neuer Zähler
         </button>
       </div>
 
@@ -118,7 +111,8 @@ export default function ZaehlerPage() {
       </div>
 
       {showForm && (
-          <form onSubmit={handleSubmit} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
+        <Modal title="Neuer Zähler" onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="typ">
@@ -221,7 +215,8 @@ export default function ZaehlerPage() {
               {createZaehler.isPending ? "Wird angelegt…" : "Zähler anlegen"}
             </button>
           </form>
-        )}
+        </Modal>
+      )}
 
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Zähler durchsuchen…" />
