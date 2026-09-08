@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Zap, Flame, Droplet, Fuel, Star, Pencil, Trash2, Gauge } from "lucide-react";
-import { ZaehlerTyp } from "@maklerprogram/types";
+import { Zap, Flame, Droplet, Fuel, Star, Pencil, Trash2, Gauge, UserRound } from "lucide-react";
+import { MietvertragStatus, ZaehlerTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
   useZaehler,
@@ -13,6 +13,7 @@ import {
   useZaehlerstaende,
   useCreateZaehlerstand,
   useDeleteZaehlerstand,
+  useMietvertraege,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
@@ -33,6 +34,10 @@ const EINHEIT: Record<ZaehlerTyp, string> = {
 
 const MS_PRO_TAG = 1000 * 60 * 60 * 24;
 
+function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }) {
+  return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
+}
+
 export default function ZaehlerDetailPage() {
   const params = useParams<{ id: string }>();
   const zaehlerId = params.id;
@@ -46,6 +51,7 @@ export default function ZaehlerDetailPage() {
   const { data: zaehlerstaende } = useZaehlerstaende(zaehlerId);
   const createZaehlerstand = useCreateZaehlerstand(zaehlerId);
   const deleteZaehlerstand = useDeleteZaehlerstand(zaehlerId);
+  const { data: mietvertraege } = useMietvertraege();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [datum, setDatum] = useState("");
@@ -145,6 +151,9 @@ export default function ZaehlerDetailPage() {
   const meta = TYP_META[zaehler.typ];
   const Icon = meta.icon;
   const einheit = EINHEIT[zaehler.typ];
+  const aktuellerMieter = zaehler.einheit
+    ? mietvertraege?.find((m) => m.einheit.id === zaehler.einheit!.id && m.status === MietvertragStatus.AKTIV)?.mieter
+    : null;
 
   return (
           <section className="mx-auto max-w-3xl px-6 py-10">
@@ -175,6 +184,11 @@ export default function ZaehlerDetailPage() {
                   {zaehler.vertragsNr && ` · Vertrag ${zaehler.vertragsNr}`}
                   {zaehler.lage && ` · ${zaehler.lage}`}
                 </p>
+                {aktuellerMieter && (
+                  <p className="mt-1 flex items-center gap-1 text-sm text-text-muted">
+                    <UserRound size={13} /> {kontaktName(aktuellerMieter)}
+                  </p>
+                )}
               </div>
             </div>
           )}
