@@ -8,6 +8,10 @@ export class UpdateKontaktDto {
 
   @IsString()
   @IsOptional()
+  typBezeichnung?: string;
+
+  @IsString()
+  @IsOptional()
   vorname?: string;
 
   @IsString()

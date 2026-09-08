@@ -70,6 +70,7 @@ export class KontakteService {
 function toKontakt(kontakt: {
   id: string;
   typ: string;
+  typBezeichnung: string | null;
   vorname: string | null;
   nachname: string | null;
   firma: string | null;
@@ -93,6 +94,7 @@ function toKontakt(kontakt: {
   return {
     id: kontakt.id,
     typ: kontakt.typ as Kontakt["typ"],
+    typBezeichnung: kontakt.typBezeichnung,
     vorname: kontakt.vorname,
     nachname: kontakt.nachname,
     firma: kontakt.firma,

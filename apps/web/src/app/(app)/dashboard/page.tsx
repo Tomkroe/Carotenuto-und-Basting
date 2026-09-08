@@ -110,8 +110,7 @@ export default function DashboardPage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-text-muted">{data.mandant.name}</p>
-          <h1 className="mt-1 text-2xl font-semibold">Willkommen, {data.user.name}.</h1>
+          <h1 className="text-2xl font-semibold">Willkommen, {data.user.name}.</h1>
         </div>
       </div>
 

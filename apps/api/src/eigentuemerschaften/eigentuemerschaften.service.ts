@@ -39,6 +39,7 @@ export class EigentuemerschaftenService {
         eigentuemerId: dto.eigentuemerId,
         hausgeldAnteil: dto.hausgeldAnteil,
         anteilProzent: dto.anteilProzent,
+        seit: dto.seit ? new Date(dto.seit) : undefined,
       },
       include: INCLUDE,
     });
@@ -50,7 +51,7 @@ export class EigentuemerschaftenService {
     await this.assertRefsBelongToMandant(mandantId, dto.einheitId, dto.eigentuemerId);
     const eigentuemerschaft = await this.prisma.eigentuemerschaft.update({
       where: { id },
-      data: dto,
+      data: { ...dto, seit: dto.seit ? new Date(dto.seit) : undefined },
       include: INCLUDE,
     });
     return toEigentuemerschaft(eigentuemerschaft);
@@ -79,6 +80,7 @@ function toEigentuemerschaft(eigentuemerschaft: {
   id: string;
   hausgeldAnteil: unknown;
   anteilProzent: unknown;
+  seit: Date | null;
   createdAt: Date;
   einheit: { id: string; name: string; objekt: { id: string; name: string } };
   eigentuemer: { id: string; vorname: string | null; nachname: string | null; firma: string | null };
@@ -87,6 +89,7 @@ function toEigentuemerschaft(eigentuemerschaft: {
     id: eigentuemerschaft.id,
     hausgeldAnteil: Number(eigentuemerschaft.hausgeldAnteil),
     anteilProzent: eigentuemerschaft.anteilProzent != null ? Number(eigentuemerschaft.anteilProzent) : null,
+    seit: eigentuemerschaft.seit != null ? eigentuemerschaft.seit.toISOString() : null,
     createdAt: eigentuemerschaft.createdAt.toISOString(),
     einheit: eigentuemerschaft.einheit,
     eigentuemer: eigentuemerschaft.eigentuemer,

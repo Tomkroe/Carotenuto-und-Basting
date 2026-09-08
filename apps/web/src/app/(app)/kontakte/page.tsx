@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
+  HardHat,
   KeyRound,
   Mail,
   Phone,
@@ -44,6 +45,11 @@ const KONTAKT_TYP_META: Record<
     icon: Wrench,
     className: "bg-emerald-500/10 text-emerald-500",
   },
+  [KontaktTyp.HAUSMEISTER]: {
+    label: "Hausmeister",
+    icon: HardHat,
+    className: "bg-orange-500/10 text-orange-500",
+  },
   [KontaktTyp.SONSTIGE]: {
     label: "Sonstige",
     icon: Sparkles,
@@ -59,6 +65,7 @@ export default function KontaktePage() {
 
   const [showForm, setShowForm] = useState(false);
   const [typ, setTyp] = useState<KontaktTyp>(KontaktTyp.MIETER);
+  const [typBezeichnung, setTypBezeichnung] = useState("");
   const [vorname, setVorname] = useState("");
   const [nachname, setNachname] = useState("");
   const [firma, setFirma] = useState("");
@@ -87,6 +94,7 @@ export default function KontaktePage() {
     try {
       await createKontakt.mutateAsync({
         typ,
+        typBezeichnung: typ === KontaktTyp.SONSTIGE ? typBezeichnung || undefined : undefined,
         vorname: vorname || undefined,
         nachname: nachname || undefined,
         firma: firma || undefined,
@@ -95,6 +103,7 @@ export default function KontaktePage() {
         debitorNr: debitorNr || undefined,
         kreditorNr: kreditorNr || undefined,
       });
+      setTypBezeichnung("");
       setVorname("");
       setNachname("");
       setFirma("");
@@ -144,6 +153,21 @@ export default function KontaktePage() {
               ))}
             </select>
           </div>
+          {typ === KontaktTyp.SONSTIGE && (
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="typBezeichnung">
+                Eigene Bezeichnung (optional)
+              </label>
+              <input
+                id="typBezeichnung"
+                type="text"
+                value={typBezeichnung}
+                onChange={(e) => setTypBezeichnung(e.target.value)}
+                placeholder="z. B. Notar, Versicherung…"
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm text-text-muted" htmlFor="vorname">
@@ -294,7 +318,9 @@ export default function KontaktePage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-text-muted">{meta.label}</td>
+                <td className="px-4 py-3 text-text-muted">
+                  {k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : meta.label}
+                </td>
                 <td className="px-4 py-3 text-text-muted">
                   <div className="flex flex-col gap-0.5 text-xs">
                     {k.email && (

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Pencil, Plus, Ruler, Trash2 } from "lucide-react";
-import { KontaktTyp, MietvertragStatus } from "@maklerprogram/types";
+import { KontaktTyp, MietvertragStatus, ObjektTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
   useObjekt,
@@ -70,6 +70,7 @@ export default function EinheitDetailPage() {
   const [editFlaeche, setEditFlaeche] = useState("");
   const [editKaltmiete, setEditKaltmiete] = useState("");
   const [editZimmer, setEditZimmer] = useState("");
+  const [editIstSev, setEditIstSev] = useState(false);
   const [eckdatenError, setEckdatenError] = useState<string | null>(null);
 
   const [showMietModal, setShowMietModal] = useState(false);
@@ -97,6 +98,7 @@ export default function EinheitDetailPage() {
   const [neuEigEmail, setNeuEigEmail] = useState("");
   const [eigHausgeldAnteil, setEigHausgeldAnteil] = useState("");
   const [eigAnteilProzent, setEigAnteilProzent] = useState("");
+  const [eigSeit, setEigSeit] = useState("");
   const [eigError, setEigError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -133,6 +135,7 @@ export default function EinheitDetailPage() {
     setEditFlaeche(einheit.flaeche != null ? String(einheit.flaeche) : "");
     setEditKaltmiete(einheit.kaltmiete != null ? String(einheit.kaltmiete) : "");
     setEditZimmer(einheit.zimmer != null ? String(einheit.zimmer) : "");
+    setEditIstSev(einheit.istSev);
     setEckdatenError(null);
     setEditingEckdaten(true);
   }
@@ -147,6 +150,7 @@ export default function EinheitDetailPage() {
           flaeche: editFlaeche ? Number(editFlaeche) : undefined,
           kaltmiete: editKaltmiete ? Number(editKaltmiete) : undefined,
           zimmer: editZimmer ? Number(editZimmer) : undefined,
+          istSev: editIstSev,
         },
       });
       setEditingEckdaten(false);
@@ -232,6 +236,7 @@ export default function EinheitDetailPage() {
     setNeuEigEmail("");
     setEigHausgeldAnteil("");
     setEigAnteilProzent("");
+    setEigSeit("");
     setEigError(null);
   }
 
@@ -263,6 +268,7 @@ export default function EinheitDetailPage() {
         eigentuemerId: finalEigentuemerId,
         hausgeldAnteil: Number(eigHausgeldAnteil),
         anteilProzent: eigAnteilProzent ? Number(eigAnteilProzent) : undefined,
+        seit: eigSeit || undefined,
       });
       setShowEigModal(false);
       resetEigForm();
@@ -291,6 +297,8 @@ export default function EinheitDetailPage() {
   const aktiverMietvertrag = mietverhaeltnisse.find((m) => m.status === MietvertragStatus.AKTIV);
   const anzeigeKaltmiete = aktiverMietvertrag?.kaltmiete ?? einheit.kaltmiete;
   const mietePerQm = anzeigeKaltmiete != null && einheit.flaeche ? anzeigeKaltmiete / einheit.flaeche : null;
+  const istWeg = objekt.typ === ObjektTyp.WEG;
+  const miteigentumsanteil = eigentuemerschaftenFuerEinheit[0]?.anteilProzent ?? null;
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-10">
@@ -312,6 +320,7 @@ export default function EinheitDetailPage() {
           objekt={objekt}
           einheiten={einheiten}
           mietvertraege={mietvertraege}
+          eigentuemerschaften={eigentuemerschaften}
           onNeueEinheitClick={() => setShowEinheitForm((v) => !v)}
           neueEinheitAktiv={showEinheitForm}
         >
@@ -378,20 +387,22 @@ export default function EinheitDetailPage() {
                     className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm text-text-muted" htmlFor="kaltmiete">
-                    Kaltmiete (€)
-                  </label>
-                  <input
-                    id="kaltmiete"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={editKaltmiete}
-                    onChange={(e) => setEditKaltmiete(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
-                  />
-                </div>
+                {!istWeg && (
+                  <div>
+                    <label className="mb-1 block text-sm text-text-muted" htmlFor="kaltmiete">
+                      Kaltmiete (€)
+                    </label>
+                    <input
+                      id="kaltmiete"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editKaltmiete}
+                      onChange={(e) => setEditKaltmiete(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="mb-1 block text-sm text-text-muted" htmlFor="zimmer">
                     Zimmer
@@ -407,6 +418,17 @@ export default function EinheitDetailPage() {
                   />
                 </div>
               </div>
+              {istWeg && (
+                <label className="flex items-center gap-2 text-sm text-text-muted">
+                  <input
+                    type="checkbox"
+                    checked={editIstSev}
+                    onChange={(e) => setEditIstSev(e.target.checked)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  Ist Sondereigentum (SEV)
+                </label>
+              )}
               {eckdatenError && <p className="text-sm text-red-500">{eckdatenError}</p>}
               <div className="flex gap-2">
                 <button
@@ -435,22 +457,33 @@ export default function EinheitDetailPage() {
                   {einheit.flaeche != null ? `${einheit.flaeche.toLocaleString("de-DE")} m²` : "–"}
                 </p>
               </div>
-              <div className="rounded-lg border border-border bg-surface p-4">
-                <p className="text-xs text-text-muted">Kaltmiete</p>
-                <p className="mt-1 text-lg font-semibold">
-                  {anzeigeKaltmiete != null ? `${anzeigeKaltmiete.toLocaleString("de-DE")} €` : "–"}
-                </p>
-              </div>
+              {istWeg ? (
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="text-xs text-text-muted">Miteigentumsanteil</p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {miteigentumsanteil != null ? `${miteigentumsanteil.toLocaleString("de-DE")} %` : "–"}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="text-xs text-text-muted">Kaltmiete</p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {anzeigeKaltmiete != null ? `${anzeigeKaltmiete.toLocaleString("de-DE")} €` : "–"}
+                  </p>
+                </div>
+              )}
               <div className="rounded-lg border border-border bg-surface p-4">
                 <p className="text-xs text-text-muted">Zimmer</p>
                 <p className="mt-1 text-lg font-semibold">{einheit.zimmer ?? "–"}</p>
               </div>
-              <div className="rounded-lg border border-border bg-surface p-4">
-                <p className="text-xs text-text-muted">Miete / m²</p>
-                <p className="mt-1 text-lg font-semibold">
-                  {mietePerQm != null ? `${mietePerQm.toLocaleString("de-DE", { maximumFractionDigits: 2 })} €` : "–"}
-                </p>
-              </div>
+              {!istWeg && (
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="text-xs text-text-muted">Miete / m²</p>
+                  <p className="mt-1 text-lg font-semibold">
+                    {mietePerQm != null ? `${mietePerQm.toLocaleString("de-DE", { maximumFractionDigits: 2 })} €` : "–"}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -551,6 +584,7 @@ export default function EinheitDetailPage() {
                     <th className="px-4 py-2.5 font-medium">Eigentümer</th>
                     <th className="px-4 py-2.5 font-medium">Hausgeld-Anteil</th>
                     <th className="px-4 py-2.5 font-medium">Miteigentumsanteil</th>
+                    <th className="px-4 py-2.5 font-medium">Seit</th>
                     <th className="px-4 py-2.5 font-medium"></th>
                   </tr>
                 </thead>
@@ -565,6 +599,9 @@ export default function EinheitDetailPage() {
                       <td className="px-4 py-3 text-text-muted">{w.hausgeldAnteil.toLocaleString("de-DE")} €</td>
                       <td className="px-4 py-3 text-text-muted">
                         {w.anteilProzent != null ? `${w.anteilProzent.toLocaleString("de-DE")} %` : "–"}
+                      </td>
+                      <td className="px-4 py-3 text-text-muted">
+                        {w.seit ? new Date(w.seit).toLocaleDateString("de-DE") : "–"}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -889,6 +926,19 @@ export default function EinheitDetailPage() {
                   className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="eigSeit">
+                Eigentümer seit (optional)
+              </label>
+              <input
+                id="eigSeit"
+                type="date"
+                value={eigSeit}
+                onChange={(e) => setEigSeit(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
 
             {eigError && <p className="text-sm text-red-500">{eigError}</p>}

@@ -74,6 +74,7 @@ function toEinheit(einheit: {
   kaltmiete: unknown;
   zimmer: unknown;
   ausstattung: unknown;
+  istSev: boolean;
   objektId: string;
   createdAt: Date;
 }): Einheit {
@@ -85,6 +86,7 @@ function toEinheit(einheit: {
     kaltmiete: einheit.kaltmiete != null ? Number(einheit.kaltmiete) : null,
     zimmer: einheit.zimmer != null ? Number(einheit.zimmer) : null,
     ausstattung: Array.isArray(einheit.ausstattung) ? (einheit.ausstattung as string[]) : [],
+    istSev: einheit.istSev,
     objektId: einheit.objektId,
     createdAt: einheit.createdAt.toISOString(),
   };

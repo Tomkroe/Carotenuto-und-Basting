@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CircleDot,
   Clock,
+  HardHat,
   Home,
   KeyRound,
   Mail,
@@ -45,6 +46,7 @@ const KONTAKT_TYP_META: Record<KontaktTyp, { label: string; icon: typeof UserRou
     icon: Wrench,
     className: "bg-emerald-500/10 text-emerald-500",
   },
+  [KontaktTyp.HAUSMEISTER]: { label: "Hausmeister", icon: HardHat, className: "bg-orange-500/10 text-orange-500" },
   [KontaktTyp.SONSTIGE]: { label: "Sonstige", icon: Sparkles, className: "bg-text-muted/10 text-text-muted" },
 };
 
@@ -81,6 +83,7 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTyp, setEditTyp] = useState<KontaktTyp>(KontaktTyp.MIETER);
+  const [editTypBezeichnung, setEditTypBezeichnung] = useState("");
   const [editVorname, setEditVorname] = useState("");
   const [editNachname, setEditNachname] = useState("");
   const [editFirma, setEditFirma] = useState("");
@@ -117,6 +120,7 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
   function startEdit() {
     if (!kontakt) return;
     setEditTyp(kontakt.typ);
+    setEditTypBezeichnung(kontakt.typBezeichnung ?? "");
     setEditVorname(kontakt.vorname ?? "");
     setEditNachname(kontakt.nachname ?? "");
     setEditFirma(kontakt.firma ?? "");
@@ -145,6 +149,7 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
     try {
       await updateKontakt.mutateAsync({
         typ: editTyp,
+        typBezeichnung: editTyp === KontaktTyp.SONSTIGE ? editTypBezeichnung || undefined : undefined,
         vorname: editVorname || undefined,
         nachname: editNachname || undefined,
         firma: editFirma || undefined,
@@ -204,7 +209,7 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
                 </p>
               )}
               <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-text-muted">
-                <span>{meta.label}</span>
+                <span>{kontakt.typ === KontaktTyp.SONSTIGE && kontakt.typBezeichnung ? kontakt.typBezeichnung : meta.label}</span>
                 {kontakt.firma && [kontakt.vorname, kontakt.nachname].filter(Boolean).length > 0 && (
                   <span>{kontakt.firma}</span>
                 )}
@@ -303,6 +308,21 @@ export function KontaktDetailContent({ kontaktId }: { kontaktId: string }) {
               ))}
             </select>
           </div>
+          {editTyp === KontaktTyp.SONSTIGE && (
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editTypBezeichnung">
+                Eigene Bezeichnung (optional)
+              </label>
+              <input
+                id="editTypBezeichnung"
+                type="text"
+                value={editTypBezeichnung}
+                onChange={(e) => setEditTypBezeichnung(e.target.value)}
+                placeholder="z. B. Notar, Versicherung…"
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm text-text-muted" htmlFor="editVorname">

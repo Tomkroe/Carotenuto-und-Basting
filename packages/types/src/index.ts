@@ -104,6 +104,7 @@ export interface Einheit {
   kaltmiete: number | null;
   zimmer: number | null;
   ausstattung: string[];
+  istSev: boolean;
   objektId: string;
   objekt?: ObjektRef;
   createdAt: string;
@@ -116,6 +117,7 @@ export interface CreateEinheitRequest {
   kaltmiete?: number;
   zimmer?: number;
   ausstattung?: string[];
+  istSev?: boolean;
 }
 
 export type UpdateEinheitRequest = Partial<CreateEinheitRequest>;
@@ -125,12 +127,14 @@ export enum KontaktTyp {
   EIGENTUEMER = "EIGENTUEMER",
   HAUSVERWALTUNG = "HAUSVERWALTUNG",
   DIENSTLEISTER = "DIENSTLEISTER",
+  HAUSMEISTER = "HAUSMEISTER",
   SONSTIGE = "SONSTIGE",
 }
 
 export interface Kontakt {
   id: string;
   typ: KontaktTyp;
+  typBezeichnung: string | null;
   vorname: string | null;
   nachname: string | null;
   firma: string | null;
@@ -160,6 +164,7 @@ export interface KontaktObjektZuordnung {
 
 export interface CreateKontaktRequest {
   typ: KontaktTyp;
+  typBezeichnung?: string;
   vorname?: string;
   nachname?: string;
   firma?: string;
@@ -417,6 +422,7 @@ export interface Eigentuemerschaft {
   id: string;
   hausgeldAnteil: number;
   anteilProzent: number | null;
+  seit: string | null;
   createdAt: string;
   einheit: EinheitRef;
   eigentuemer: KontaktRef;
@@ -427,6 +433,7 @@ export interface CreateEigentuemerschaftRequest {
   eigentuemerId: string;
   hausgeldAnteil: number;
   anteilProzent?: number;
+  seit?: string;
 }
 
 export type UpdateEigentuemerschaftRequest = Partial<CreateEigentuemerschaftRequest>;

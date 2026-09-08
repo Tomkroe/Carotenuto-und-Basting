@@ -7,6 +7,10 @@ export class CreateKontaktDto {
 
   @IsString()
   @IsOptional()
+  typBezeichnung?: string;
+
+  @IsString()
+  @IsOptional()
   vorname?: string;
 
   @IsString()

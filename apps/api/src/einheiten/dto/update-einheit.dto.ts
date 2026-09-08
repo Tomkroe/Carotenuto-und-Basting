@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 
 export class UpdateEinheitDto {
   @IsString()
@@ -27,4 +27,8 @@ export class UpdateEinheitDto {
   @IsString({ each: true })
   @IsOptional()
   ausstattung?: string[];
+
+  @IsBoolean()
+  @IsOptional()
+  istSev?: boolean;
 }

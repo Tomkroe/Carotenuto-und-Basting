@@ -114,6 +114,7 @@ model Einheit {
   kaltmiete Decimal? @db.Decimal(10, 2)
   zimmer    Decimal? @db.Decimal(3, 1)
   ausstattung Json   @default("[]")
+  istSev    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   objektId String
@@ -134,12 +135,14 @@ enum KontaktTyp {
   EIGENTUEMER
   HAUSVERWALTUNG
   DIENSTLEISTER
+  HAUSMEISTER
   SONSTIGE
 }
 
 model Kontakt {
   id         String     @id @default(cuid())
   typ        KontaktTyp
+  typBezeichnung String?
   vorname    String?
   nachname   String?
   firma      String?
@@ -210,6 +213,7 @@ model Eigentuemerschaft {
   id             String   @id @default(cuid())
   hausgeldAnteil Decimal  @db.Decimal(10, 2)
   anteilProzent  Decimal? @db.Decimal(5, 2)
+  seit           DateTime?
   createdAt      DateTime @default(now())
 
   einheitId String

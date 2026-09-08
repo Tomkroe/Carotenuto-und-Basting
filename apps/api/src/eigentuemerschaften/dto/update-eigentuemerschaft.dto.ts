@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, Max, Min, MinLength } from "class-validator";
+import { IsDateString, IsNumber, IsOptional, IsString, Max, Min, MinLength } from "class-validator";
 
 export class UpdateEigentuemerschaftDto {
   @IsString()
@@ -21,4 +21,8 @@ export class UpdateEigentuemerschaftDto {
   @Max(100)
   @IsOptional()
   anteilProzent?: number;
+
+  @IsDateString()
+  @IsOptional()
+  seit?: string;
 }

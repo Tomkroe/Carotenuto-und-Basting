@@ -73,6 +73,8 @@ export default function ObjektDetailPage() {
   const [showEinheitForm, setShowEinheitForm] = useState(false);
   const [einheitName, setEinheitName] = useState("");
   const [einheitKategorie, setEinheitKategorie] = useState("");
+  const [einheitIstSev, setEinheitIstSev] = useState(false);
+  const [showSevListe, setShowSevListe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [editingObjekt, setEditingObjekt] = useState(false);
@@ -123,13 +125,16 @@ export default function ObjektDetailPage() {
     return sum > 0 ? sum : objekt?.kaltmiete ?? null;
   }, [einheiten, mietvertraege, objekt]);
 
-  const sevAnzahl = useMemo(() => {
-    if (!einheiten || !eigentuemerschaften) return 0;
+  const sevEinheiten = useMemo(() => (einheiten ?? []).filter((e) => e.istSev), [einheiten]);
+  const sevAnzahl = sevEinheiten.length;
+
+  const gesamtMiteigentumsanteil = useMemo(() => {
+    if (!einheiten || !eigentuemerschaften) return null;
     const einheitIds = new Set(einheiten.map((e) => e.id));
-    const mitSev = new Set(
-      eigentuemerschaften.filter((w) => einheitIds.has(w.einheit.id)).map((w) => w.einheit.id),
-    );
-    return mitSev.size;
+    const sum = eigentuemerschaften
+      .filter((w) => einheitIds.has(w.einheit.id))
+      .reduce((acc, w) => acc + (w.anteilProzent ?? 0), 0);
+    return sum > 0 ? sum : null;
   }, [einheiten, eigentuemerschaften]);
 
   const hausverwaltungKontakte = useMemo(
@@ -146,9 +151,10 @@ export default function ObjektDetailPage() {
     e.preventDefault();
     setError(null);
     try {
-      await createEinheit.mutateAsync({ name: einheitName, kategorie: einheitKategorie });
+      await createEinheit.mutateAsync({ name: einheitName, kategorie: einheitKategorie, istSev: einheitIstSev });
       setEinheitName("");
       setEinheitKategorie("");
+      setEinheitIstSev(false);
       setShowEinheitForm(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Einheit konnte nicht angelegt werden.");
@@ -288,6 +294,7 @@ export default function ObjektDetailPage() {
           objekt={objekt}
           einheiten={einheiten}
           mietvertraege={mietvertraege}
+          eigentuemerschaften={eigentuemerschaften}
           onNeueEinheitClick={() => setShowEinheitForm((v) => !v)}
           neueEinheitAktiv={showEinheitForm}
         >
@@ -324,6 +331,17 @@ export default function ObjektDetailPage() {
                   placeholder="z.B. Wohnung, Gewerbe, Stellplatz"
                 />
               </div>
+              {istWeg && (
+                <label className="flex items-center gap-2 text-sm text-text-muted">
+                  <input
+                    type="checkbox"
+                    checked={einheitIstSev}
+                    onChange={(e) => setEinheitIstSev(e.target.checked)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  Ist Sondereigentum (SEV)
+                </label>
+              )}
               {error && <p className="text-sm text-red-500">{error}</p>}
               <button
                 type="submit"
@@ -700,14 +718,25 @@ export default function ObjektDetailPage() {
           {activeTab === "uebersicht" && (
             <>
               <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div className="rounded-lg border border-border bg-surface p-4">
-                  <p className="flex items-center gap-1.5 text-xs text-text-muted">
-                    <Landmark size={13} /> Kaltmiete gesamt
-                  </p>
-                  <p className="mt-1 text-lg font-semibold">
-                    {gesamtkaltmiete != null ? `${gesamtkaltmiete.toLocaleString("de-DE")} €` : "–"}
-                  </p>
-                </div>
+                {istWeg ? (
+                  <div className="rounded-lg border border-border bg-surface p-4">
+                    <p className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <Landmark size={13} /> Miteigentumsanteile gesamt
+                    </p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {gesamtMiteigentumsanteil != null ? `${gesamtMiteigentumsanteil.toLocaleString("de-DE")} %` : "–"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-border bg-surface p-4">
+                    <p className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <Landmark size={13} /> Kaltmiete gesamt
+                    </p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {gesamtkaltmiete != null ? `${gesamtkaltmiete.toLocaleString("de-DE")} €` : "–"}
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-lg border border-border bg-surface p-4">
                   <p className="flex items-center gap-1.5 text-xs text-text-muted">
                     <Ruler size={13} /> Fläche
@@ -730,17 +759,44 @@ export default function ObjektDetailPage() {
                         {objekt.hausgeld != null ? `${objekt.hausgeld.toLocaleString("de-DE")} €` : "–"}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-border bg-surface p-4">
+                    <button
+                      onClick={() => setShowSevListe((v) => !v)}
+                      className="rounded-lg border border-border bg-surface p-4 text-left transition hover:border-primary"
+                    >
                       <p className="flex items-center gap-1.5 text-xs text-text-muted">
                         <KeyRound size={13} /> Mit SEV
                       </p>
                       <p className="mt-1 text-lg font-semibold">
                         {sevAnzahl} / {einheiten?.length ?? 0}
                       </p>
-                    </div>
+                    </button>
                   </>
                 )}
               </div>
+
+              {istWeg && showSevListe && (
+                <div className="mb-6 overflow-hidden rounded-lg border border-border bg-surface">
+                  {sevEinheiten.length === 0 ? (
+                    <p className="p-4 text-sm text-text-muted">Keine Einheit ist als SEV markiert.</p>
+                  ) : (
+                    sevEinheiten.map((e) => {
+                      const eigentuemer = eigentuemerschaften?.find((w) => w.einheit.id === e.id)?.eigentuemer ?? null;
+                      return (
+                        <Link
+                          key={e.id}
+                          href={`/objekte/${objektId}/einheiten/${e.id}`}
+                          className="flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-b-0 transition hover:bg-bg"
+                        >
+                          <span className="font-medium">{e.name}</span>
+                          <span className="text-text-muted">
+                            {eigentuemer ? kontaktName(eigentuemer) : "Kein Eigentümer hinterlegt"}
+                          </span>
+                        </Link>
+                      );
+                    })
+                  )}
+                </div>
+              )}
 
               <div className="mb-8">
                 <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">

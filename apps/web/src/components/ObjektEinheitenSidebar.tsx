@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Plus, UserRound } from "lucide-react";
-import { Einheit, Mietvertrag, MietvertragStatus, Objekt } from "@maklerprogram/types";
+import { KeyRound, Plus, UserRound } from "lucide-react";
+import { Eigentuemerschaft, Einheit, Mietvertrag, MietvertragStatus, Objekt, ObjektTyp } from "@maklerprogram/types";
 
 function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }) {
   return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
@@ -36,6 +36,7 @@ interface ObjektEinheitenSidebarProps {
   objekt: Objekt;
   einheiten: Einheit[] | undefined;
   mietvertraege: Mietvertrag[] | undefined;
+  eigentuemerschaften?: Eigentuemerschaft[];
   onNeueEinheitClick: () => void;
   neueEinheitAktiv: boolean;
   children?: React.ReactNode;
@@ -46,12 +47,14 @@ export function ObjektEinheitenSidebar({
   objekt,
   einheiten,
   mietvertraege,
+  eigentuemerschaften,
   onNeueEinheitClick,
   neueEinheitAktiv,
   children,
 }: ObjektEinheitenSidebarProps) {
   const params = useParams<{ einheitId?: string }>();
   const activeEinheitId = params?.einheitId;
+  const istWeg = objekt.typ === ObjektTyp.WEG;
 
   return (
     <aside className="w-full shrink-0 space-y-4 lg:w-72">
@@ -92,6 +95,7 @@ export function ObjektEinheitenSidebar({
                   const badge = statusBadge(e.id, mietvertraege);
                   const kaltmiete = badge.kaltmiete ?? e.kaltmiete;
                   const active = e.id === activeEinheitId;
+                  const eigentuemer = eigentuemerschaften?.find((w) => w.einheit.id === e.id)?.eigentuemer ?? null;
                   return (
                     <Link
                       key={e.id}
@@ -102,20 +106,35 @@ export function ObjektEinheitenSidebar({
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-medium">{e.name}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
-                          {badge.label}
-                        </span>
+                        {!istWeg && (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        )}
                       </div>
-                      <p className="mt-0.5 text-xs text-text-muted">
-                        {e.flaeche != null && `${e.flaeche.toLocaleString("de-DE")} m²`}
-                        {e.flaeche != null && kaltmiete != null && " · "}
-                        {kaltmiete != null && `${kaltmiete.toLocaleString("de-DE")} €`}
-                      </p>
-                      {badge.mieter && (
+                      {!istWeg && (
+                        <p className="mt-0.5 text-xs text-text-muted">
+                          {e.flaeche != null && `${e.flaeche.toLocaleString("de-DE")} m²`}
+                          {e.flaeche != null && kaltmiete != null && " · "}
+                          {kaltmiete != null && `${kaltmiete.toLocaleString("de-DE")} €`}
+                        </p>
+                      )}
+                      {istWeg && e.flaeche != null && (
+                        <p className="mt-0.5 text-xs text-text-muted">{e.flaeche.toLocaleString("de-DE")} m²</p>
+                      )}
+                      {!istWeg && badge.mieter && (
                         <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
                           <UserRound size={11} /> {kontaktName(badge.mieter)}
                         </p>
                       )}
+                      {istWeg &&
+                        (eigentuemer ? (
+                          <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+                            <KeyRound size={11} /> {kontaktName(eigentuemer)}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-xs text-text-muted">Kein Eigentümer hinterlegt</p>
+                        ))}
                     </Link>
                   );
                 })}
