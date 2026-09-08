@@ -17,6 +17,7 @@ import type {
   CreateObjektRequest,
   CreateToDoRequest,
   CreateVorgangRequest,
+  CreateVorgangVorlageRequest,
   CreateZaehlerRequest,
   CreateZaehlerstandRequest,
   Dokument,
@@ -46,10 +47,12 @@ import type {
   UpdateObjektRequest,
   UpdateToDoRequest,
   UpdateVorgangRequest,
+  UpdateVorgangVorlageRequest,
   UpdateZaehlerRequest,
   UserListItem,
   Vorgang,
   VorgangVerlaufEintrag,
+  VorgangVorlage,
   Workflow,
   CreateWorkflowRequest,
   UpdateWorkflowRequest,
@@ -836,6 +839,45 @@ export function useDeleteLabel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels"] });
       queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
+    },
+  });
+}
+
+export function useVorgangVorlagen() {
+  return useQuery<VorgangVorlage[]>({
+    queryKey: ["vorgang-vorlagen"],
+    queryFn: () => apiFetch<VorgangVorlage[]>("/vorgang-vorlagen"),
+  });
+}
+
+export function useCreateVorgangVorlage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateVorgangVorlageRequest) =>
+      apiFetch<VorgangVorlage>("/vorgang-vorlagen", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgang-vorlagen"] });
+    },
+  });
+}
+
+export function useUpdateVorgangVorlage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateVorgangVorlageRequest }) =>
+      apiFetch<VorgangVorlage>(`/vorgang-vorlagen/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgang-vorlagen"] });
+    },
+  });
+}
+
+export function useDeleteVorgangVorlage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/vorgang-vorlagen/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vorgang-vorlagen"] });
     },
   });
 }

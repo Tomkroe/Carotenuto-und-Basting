@@ -265,6 +265,22 @@ export interface CreateVorgangRequest {
 
 export type UpdateVorgangRequest = Partial<CreateVorgangRequest>;
 
+export interface VorgangVorlage {
+  id: string;
+  titel: string;
+  beschreibung: string | null;
+  labels: Label[];
+  createdAt: string;
+}
+
+export interface CreateVorgangVorlageRequest {
+  titel: string;
+  beschreibung?: string;
+  labelIds?: string[];
+}
+
+export type UpdateVorgangVorlageRequest = Partial<CreateVorgangVorlageRequest>;
+
 export interface VorgangVerlaufEintrag {
   id: string;
   text: string;

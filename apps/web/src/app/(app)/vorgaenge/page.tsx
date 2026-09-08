@@ -12,6 +12,7 @@ import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
 import { Modal } from "@/components/Modal";
 import { LabelsManager } from "@/components/LabelsManager";
+import { VorlagenManager } from "@/components/VorlagenManager";
 
 const STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
   [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
@@ -53,7 +54,8 @@ function VorgaengePageInner() {
   const [faelligkeit, setFaelligkeit] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"aktiv" | "archiv" | "labels">("aktiv");
+  const [tab, setTab] = useState<"aktiv" | "archiv" | "labels" | "vorlagen">("aktiv");
+  const isListTab = tab === "aktiv" || tab === "archiv";
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -171,6 +173,7 @@ function VorgaengePageInner() {
           [
             { key: "aktiv", label: "Vorgänge" },
             { key: "archiv", label: "Archiv" },
+            { key: "vorlagen", label: "Vorlagen" },
             { key: "labels", label: "Labels" },
           ] as const
         ).map((t) => (
@@ -187,8 +190,9 @@ function VorgaengePageInner() {
       </div>
 
       {tab === "labels" && <LabelsManager />}
+      {tab === "vorlagen" && <VorlagenManager />}
 
-      {tab !== "labels" && filter && FILTER_LABEL[filter] && (
+      {isListTab && filter && FILTER_LABEL[filter] && (
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
           <span>Gefiltert: {FILTER_LABEL[filter]}</span>
           <button onClick={() => router.push("/vorgaenge")} className="ml-auto text-xs underline hover:opacity-80">
@@ -329,25 +333,25 @@ function VorgaengePageInner() {
         </Modal>
       )}
 
-      {tab !== "labels" && (
+      {isListTab && (
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Vorgänge durchsuchen…" />
       </div>
       )}
 
-      {tab !== "labels" && isLoading && <p className="text-text-muted">Lädt…</p>}
+      {isListTab && isLoading && <p className="text-text-muted">Lädt…</p>}
 
-      {tab !== "labels" && vorgaenge && vorgaenge.length === 0 && !showForm && (
+      {isListTab && vorgaenge && vorgaenge.length === 0 && !showForm && (
         <p className="text-text-muted">Noch keine Vorgänge angelegt.</p>
       )}
 
-      {tab !== "labels" && vorgaenge && vorgaenge.length > 0 && gefilterteVorgaenge.length === 0 && (
+      {isListTab && vorgaenge && vorgaenge.length > 0 && gefilterteVorgaenge.length === 0 && (
         <p className="text-text-muted">
           {tab === "archiv" ? "Noch keine abgeschlossenen Vorgänge." : "Keine Vorgänge gefunden."}
         </p>
       )}
 
-      {tab !== "labels" && gefilterteVorgaenge.length > 0 && (
+      {isListTab && gefilterteVorgaenge.length > 0 && (
         <DataTable
           columns={[
             { key: "nr", header: "Nr." },

@@ -28,6 +28,7 @@ model Mandant {
   zaehler                Zaehler[]
   dokumente              Dokument[]
   dokumentKategorien     DokumentKategorie[]
+  vorgangVorlagen        VorgangVorlage[]
   workflows              Workflow[]
 }
 
@@ -294,6 +295,7 @@ model Label {
 
   vorgaenge VorgangLabel[]
   todos     ToDoLabel[]
+  vorlagen  VorlageLabel[]
 
   @@index([mandantId])
 }
@@ -306,6 +308,30 @@ model VorgangLabel {
   label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
 
   @@id([vorgangId, labelId])
+}
+
+model VorgangVorlage {
+  id           String   @id @default(cuid())
+  titel        String
+  beschreibung String?
+  createdAt    DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  labels VorlageLabel[]
+
+  @@index([mandantId])
+}
+
+model VorlageLabel {
+  vorlageId String
+  vorlage   VorgangVorlage @relation(fields: [vorlageId], references: [id], onDelete: Cascade)
+
+  labelId String
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([vorlageId, labelId])
 }
 
 model ToDo {

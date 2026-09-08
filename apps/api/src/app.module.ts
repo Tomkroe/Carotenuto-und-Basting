@@ -21,6 +21,7 @@ import { NebenkostenpositionenModule } from "./nebenkostenpositionen/nebenkosten
 import { LabelsModule } from "./labels/labels.module";
 import { AssistantModule } from "./assistant/assistant.module";
 import { WorkflowsModule } from "./workflows/workflows.module";
+import { VorgangVorlagenModule } from "./vorgang-vorlagen/vorgang-vorlagen.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { WorkflowsModule } from "./workflows/workflows.module";
     LabelsModule,
     AssistantModule,
     WorkflowsModule,
+    VorgangVorlagenModule,
   ],
 })
 export class AppModule {}
