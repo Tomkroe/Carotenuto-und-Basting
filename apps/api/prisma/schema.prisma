@@ -27,6 +27,7 @@ model Mandant {
   labels                 Label[]
   zaehler                Zaehler[]
   dokumente              Dokument[]
+  dokumentKategorien     DokumentKategorie[]
   workflows              Workflow[]
 }
 
@@ -405,15 +406,17 @@ model Zaehlerstand {
 
 // ── Dokumente ─────────────────────────────────────────────────
 
-enum DokumentKategorie {
-  ANSCHAFFUNGSKOSTEN
-  BETRIEBS_NEBENKOSTEN
-  FINANZIERUNG_KREDITE_VERSICHERUNGEN
-  INDIVIDUELLE_KOSTEN
-  MIETE_NEBENKOSTEN_KAUTION
-  RENOVIERUNG_REPARATUR_INVESTITIONEN
-  SONSTIGE_AUSGABEN
-  SONSTIGE_EINNAHMEN
+model DokumentKategorie {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  dokumente Dokument[]
+
+  @@index([mandantId])
 }
 
 model Dokument {
@@ -422,8 +425,10 @@ model Dokument {
   speicherKey String  // Object-Storage Key/Pfad
   mimeType   String
   groesseBytes Int
-  kategorie  DokumentKategorie?
   createdAt  DateTime @default(now())
+
+  kategorieId String?
+  kategorie   DokumentKategorie? @relation(fields: [kategorieId], references: [id], onDelete: SetNull)
 
   mandantId String
   mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)

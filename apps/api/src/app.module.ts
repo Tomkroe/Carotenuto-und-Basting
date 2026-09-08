@@ -12,6 +12,7 @@ import { KommentareModule } from "./kommentare/kommentare.module";
 import { StorageModule } from "./storage/storage.module";
 import { MietvertraegeModule } from "./mietvertraege/mietvertraege.module";
 import { DokumenteModule } from "./dokumente/dokumente.module";
+import { DokumentKategorienModule } from "./dokument-kategorien/dokument-kategorien.module";
 import { EigentuemerschaftenModule } from "./eigentuemerschaften/eigentuemerschaften.module";
 import { ZaehlerModule } from "./zaehler/zaehler.module";
 import { ZaehlerstaendeModule } from "./zaehlerstaende/zaehlerstaende.module";
@@ -36,6 +37,7 @@ import { WorkflowsModule } from "./workflows/workflows.module";
     StorageModule,
     MietvertraegeModule,
     DokumenteModule,
+    DokumentKategorienModule,
     EigentuemerschaftenModule,
     ZaehlerModule,
     ZaehlerstaendeModule,

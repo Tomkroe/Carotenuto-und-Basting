@@ -6,7 +6,10 @@ import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
 import { UpdateDokumentDto } from "./dto/update-dokument.dto";
 
-const INCLUDE = { hochgeladenVon: { select: { id: true, name: true } } } as const;
+const INCLUDE = {
+  hochgeladenVon: { select: { id: true, name: true } },
+  kategorie: { select: { id: true, name: true } },
+} as const;
 
 @Injectable()
 export class DokumenteService {
@@ -117,9 +120,15 @@ export class DokumenteService {
   async update(mandantId: string, id: string, dto: UpdateDokumentDto): Promise<Dokument> {
     const existing = await this.prisma.dokument.findFirst({ where: { id, mandantId } });
     if (!existing) throw new NotFoundException("Dokument nicht gefunden.");
+    if (dto.kategorieId) {
+      const kategorie = await this.prisma.dokumentKategorie.findFirst({
+        where: { id: dto.kategorieId, mandantId },
+      });
+      if (!kategorie) throw new NotFoundException("Kategorie nicht gefunden.");
+    }
     const dokument = await this.prisma.dokument.update({
       where: { id },
-      data: { kategorie: dto.kategorie },
+      data: { kategorieId: dto.kategorieId ?? null },
       include: INCLUDE,
     });
     return toDokument(dokument);
@@ -207,7 +216,7 @@ function toDokument(dokument: {
   dateiname: string;
   mimeType: string;
   groesseBytes: number;
-  kategorie: string | null;
+  kategorie: { id: string; name: string } | null;
   createdAt: Date;
   hochgeladenVon: { id: string; name: string };
 }): Dokument {
@@ -216,7 +225,7 @@ function toDokument(dokument: {
     dateiname: dokument.dateiname,
     mimeType: dokument.mimeType,
     groesseBytes: dokument.groesseBytes,
-    kategorie: dokument.kategorie as Dokument["kategorie"],
+    kategorie: dokument.kategorie,
     createdAt: dokument.createdAt.toISOString(),
     hochgeladenVon: dokument.hochgeladenVon,
   };

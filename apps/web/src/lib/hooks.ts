@@ -9,6 +9,7 @@ import type {
   CreateEinheitRequest,
   CreateKommentarRequest,
   CreateKontaktRequest,
+  CreateDokumentKategorieRequest,
   CreateLabelRequest,
   CreateMietvertragRequest,
   CreateNebenkostenabrechnungRequest,
@@ -19,7 +20,9 @@ import type {
   CreateZaehlerRequest,
   CreateZaehlerstandRequest,
   Dokument,
+  DokumentKategorie,
   DokumentMitZuordnung,
+  UpdateDokumentKategorieRequest,
   UpdateDokumentRequest,
   Eigentuemerschaft,
   Einheit,
@@ -511,6 +514,7 @@ export function useUpdateDokument(parent?: DokumentParent) {
     onSuccess: () => {
       if (parent) queryClient.invalidateQueries({ queryKey: [parent.path, parent.id, "dokumente"] });
       queryClient.invalidateQueries({ queryKey: ["dokumente"] });
+      queryClient.invalidateQueries({ queryKey: ["dokument-kategorien"] });
     },
   });
 }
@@ -537,6 +541,47 @@ export function useDeleteDokumentGlobal() {
   return useMutation({
     mutationFn: (id: string) => apiFetch<void>(`/dokumente/${id}`, { method: "DELETE" }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dokumente"] });
+    },
+  });
+}
+
+export function useDokumentKategorien() {
+  return useQuery<DokumentKategorie[]>({
+    queryKey: ["dokument-kategorien"],
+    queryFn: () => apiFetch<DokumentKategorie[]>("/dokument-kategorien"),
+  });
+}
+
+export function useCreateDokumentKategorie() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateDokumentKategorieRequest) =>
+      apiFetch<DokumentKategorie>("/dokument-kategorien", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dokument-kategorien"] });
+    },
+  });
+}
+
+export function useUpdateDokumentKategorie() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateDokumentKategorieRequest }) =>
+      apiFetch<DokumentKategorie>(`/dokument-kategorien/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dokument-kategorien"] });
+      queryClient.invalidateQueries({ queryKey: ["dokumente"] });
+    },
+  });
+}
+
+export function useDeleteDokumentKategorie() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/dokument-kategorien/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dokument-kategorien"] });
       queryClient.invalidateQueries({ queryKey: ["dokumente"] });
     },
   });

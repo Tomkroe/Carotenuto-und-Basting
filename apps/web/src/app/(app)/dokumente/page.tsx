@@ -9,17 +9,17 @@ import {
   FileSignature,
   FileText,
   Receipt,
+  Settings2,
   Trash2,
   Users,
 } from "lucide-react";
-import { useCurrentUser, useAlleDokumente, useDeleteDokumentGlobal, useUpdateDokument } from "@/lib/hooks";
+import { useCurrentUser, useAlleDokumente, useDeleteDokumentGlobal, useUpdateDokument, useDokumentKategorien } from "@/lib/hooks";
 import { API_URL } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
-import { DokumentKategorie } from "@maklerprogram/types";
+import { DokumentKategorienManager } from "@/components/DokumentKategorienManager";
 import type { DokumentMitZuordnung } from "@maklerprogram/types";
-import { DOKUMENT_KATEGORIE_LABEL } from "@/lib/dokumentKategorien";
 
 const ZUORDNUNG_ICON: Record<NonNullable<DokumentMitZuordnung["zugeordnetTyp"]>, typeof Building2> = {
   objekt: Building2,
@@ -39,12 +39,14 @@ export default function DokumentePage() {
   const router = useRouter();
   const { isError: authError } = useCurrentUser();
   const { data: dokumente, isLoading } = useAlleDokumente();
+  const { data: kategorien } = useDokumentKategorien();
   const deleteDokument = useDeleteDokumentGlobal();
   const updateDokument = useUpdateDokument();
 
   const [search, setSearch] = useState("");
-  const [kategorieFilter, setKategorieFilter] = useState<DokumentKategorie | "ALLE" | "OHNE">("ALLE");
+  const [kategorieFilter, setKategorieFilter] = useState<string>("ALLE");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [showKategorienManager, setShowKategorienManager] = useState(false);
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -56,7 +58,7 @@ export default function DokumentePage() {
       .filter((d) => {
         if (kategorieFilter === "ALLE") return true;
         if (kategorieFilter === "OHNE") return !d.kategorie;
-        return d.kategorie === kategorieFilter;
+        return d.kategorie?.id === kategorieFilter;
       })
       .filter(
         (d) =>
@@ -72,7 +74,15 @@ export default function DokumentePage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Dokumente</h1>
+        <button
+          onClick={() => setShowKategorienManager((v) => !v)}
+          className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm text-text-muted transition hover:border-primary hover:text-primary"
+        >
+          <Settings2 size={15} /> Kategorien verwalten
+        </button>
       </div>
+
+      {showKategorienManager && <DokumentKategorienManager />}
 
       <div className="mb-6 grid grid-cols-3 gap-4">
         <StatCard value={dokumente?.length ?? 0} label="Dokumente" />
@@ -90,14 +100,14 @@ export default function DokumentePage() {
         </div>
         <select
           value={kategorieFilter}
-          onChange={(e) => setKategorieFilter(e.target.value as DokumentKategorie | "ALLE" | "OHNE")}
+          onChange={(e) => setKategorieFilter(e.target.value)}
           className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
         >
           <option value="ALLE">Alle Kategorien</option>
           <option value="OHNE">Ohne Kategorie</option>
-          {Object.values(DokumentKategorie).map((k) => (
-            <option key={k} value={k}>
-              {DOKUMENT_KATEGORIE_LABEL[k]}
+          {kategorien?.map((k) => (
+            <option key={k.id} value={k.id}>
+              {k.name}
             </option>
           ))}
         </select>
@@ -144,19 +154,19 @@ export default function DokumentePage() {
                 </td>
                 <td className="px-4 py-3">
                   <select
-                    value={d.kategorie ?? ""}
+                    value={d.kategorie?.id ?? ""}
                     onChange={(e) =>
                       updateDokument.mutate({
                         id: d.id,
-                        data: { kategorie: (e.target.value || null) as DokumentMitZuordnung["kategorie"] },
+                        data: { kategorieId: e.target.value || null },
                       })
                     }
                     className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
                   >
                     <option value="">Keine Kategorie</option>
-                    {Object.values(DokumentKategorie).map((k) => (
-                      <option key={k} value={k}>
-                        {DOKUMENT_KATEGORIE_LABEL[k]}
+                    {kategorien?.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
                       </option>
                     ))}
                   </select>

@@ -1,8 +1,7 @@
-import { IsEnum, IsOptional } from "class-validator";
-import { DokumentKategorie } from "@maklerprogram/types";
+import { IsOptional, IsString } from "class-validator";
 
 export class UpdateDokumentDto {
-  @IsEnum(DokumentKategorie)
+  @IsString()
   @IsOptional()
-  kategorie?: DokumentKategorie | null;
+  kategorieId?: string | null;
 }
