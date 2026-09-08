@@ -204,6 +204,13 @@ export interface Label {
   id: string;
   name: string;
   farbe: string;
+  vorgangCount?: number;
+  todoCount?: number;
+}
+
+export interface UpdateLabelRequest {
+  name?: string;
+  farbe?: string;
 }
 
 export interface Workflow {

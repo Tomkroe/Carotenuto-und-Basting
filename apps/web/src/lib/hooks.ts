@@ -37,6 +37,7 @@ import type {
   ToDoListItem,
   UpdateEinheitRequest,
   UpdateKontaktRequest,
+  UpdateLabelRequest,
   UpdateMietvertragRequest,
   UpdateNebenkostenabrechnungRequest,
   UpdateObjektRequest,
@@ -767,6 +768,18 @@ export function useCreateLabel() {
       apiFetch<Label>("/labels", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["labels"] });
+    },
+  });
+}
+
+export function useUpdateLabel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateLabelRequest }) =>
+      apiFetch<Label>(`/labels/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels"] });
+      queryClient.invalidateQueries({ queryKey: ["vorgaenge"] });
     },
   });
 }

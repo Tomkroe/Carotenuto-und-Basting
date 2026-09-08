@@ -11,6 +11,7 @@ import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
 import { Modal } from "@/components/Modal";
+import { LabelsManager } from "@/components/LabelsManager";
 
 const STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
   [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
@@ -52,6 +53,7 @@ function VorgaengePageInner() {
   const [faelligkeit, setFaelligkeit] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"aktiv" | "archiv" | "labels">("aktiv");
 
   useEffect(() => {
     if (authError) router.replace("/login");
@@ -73,7 +75,9 @@ function VorgaengePageInner() {
   const gefilterteVorgaenge = useMemo(() => {
     const query = search.trim().toLowerCase();
     return (vorgaenge ?? [])
+      .filter((v) => (tab === "archiv" ? v.status === VorgangStatus.ABGESCHLOSSEN : v.status !== VorgangStatus.ABGESCHLOSSEN))
       .filter((v) => {
+        if (tab === "archiv") return true;
         switch (filter) {
           case "offen":
             return v.status !== VorgangStatus.ABGESCHLOSSEN;
@@ -108,7 +112,7 @@ function VorgaengePageInner() {
             .filter(Boolean)
             .some((f) => f!.toLowerCase().includes(query)),
       );
-  }, [vorgaenge, search, filter, me, today]);
+  }, [vorgaenge, search, filter, me, today, tab]);
 
   const einheitenByObjekt = useMemo(() => {
     const groups = new Map<string, { objektName: string; einheiten: typeof einheiten }>();
@@ -162,7 +166,29 @@ function VorgaengePageInner() {
         <StatCard value={ueberfaellig.length} label="Überfällige Vorgänge" tone={ueberfaellig.length > 0 ? "danger" : "default"} />
       </div>
 
-      {filter && FILTER_LABEL[filter] && (
+      <div className="mb-6 flex items-center gap-1 border-b border-border">
+        {(
+          [
+            { key: "aktiv", label: "Vorgänge" },
+            { key: "archiv", label: "Archiv" },
+            { key: "labels", label: "Labels" },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition ${
+              tab === t.key ? "border-primary text-primary" : "border-transparent text-text-muted hover:text-text"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "labels" && <LabelsManager />}
+
+      {tab !== "labels" && filter && FILTER_LABEL[filter] && (
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
           <span>Gefiltert: {FILTER_LABEL[filter]}</span>
           <button onClick={() => router.push("/vorgaenge")} className="ml-auto text-xs underline hover:opacity-80">
@@ -303,17 +329,25 @@ function VorgaengePageInner() {
         </Modal>
       )}
 
+      {tab !== "labels" && (
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Vorgänge durchsuchen…" />
       </div>
+      )}
 
-      {isLoading && <p className="text-text-muted">Lädt…</p>}
+      {tab !== "labels" && isLoading && <p className="text-text-muted">Lädt…</p>}
 
-      {vorgaenge && vorgaenge.length === 0 && !showForm && (
+      {tab !== "labels" && vorgaenge && vorgaenge.length === 0 && !showForm && (
         <p className="text-text-muted">Noch keine Vorgänge angelegt.</p>
       )}
 
-      {gefilterteVorgaenge.length > 0 && (
+      {tab !== "labels" && vorgaenge && vorgaenge.length > 0 && gefilterteVorgaenge.length === 0 && (
+        <p className="text-text-muted">
+          {tab === "archiv" ? "Noch keine abgeschlossenen Vorgänge." : "Keine Vorgänge gefunden."}
+        </p>
+      )}
+
+      {tab !== "labels" && gefilterteVorgaenge.length > 0 && (
         <DataTable
           columns={[
             { key: "nr", header: "Nr." },

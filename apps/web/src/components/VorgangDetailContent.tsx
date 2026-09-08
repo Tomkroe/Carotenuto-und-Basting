@@ -44,11 +44,10 @@ import {
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { labelStyle } from "@/lib/labelStyle";
+import { LABEL_COLORS } from "@/lib/labelColors";
 import { DokumenteSection } from "@/components/DokumenteSection";
 import { KommentareSection } from "@/components/KommentareSection";
 import { TodoIcon } from "@/components/TodoIcon";
-
-const LABEL_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#f43f5e", "#f97316", "#06b6d4", "#64748b"];
 
 const STATUS_META: Record<VorgangStatus, { label: string; icon: typeof CircleDot; className: string }> = {
   [VorgangStatus.OFFEN]: { label: "Offen", icon: CircleDot, className: "bg-blue-500/10 text-blue-500" },
