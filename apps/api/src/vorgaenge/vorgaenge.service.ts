@@ -51,6 +51,7 @@ export class VorgaengeService {
         titel: dto.titel,
         beschreibung: dto.beschreibung,
         status: dto.status ?? VorgangStatus.OFFEN,
+        startDatum: dto.startDatum ? new Date(dto.startDatum) : undefined,
         faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
         objektId: dto.objektId,
         einheitId: dto.einheitId,
@@ -71,6 +72,7 @@ export class VorgaengeService {
       where: { id },
       data: {
         ...dto,
+        startDatum: dto.startDatum ? new Date(dto.startDatum) : undefined,
         faelligkeit: dto.faelligkeit ? new Date(dto.faelligkeit) : undefined,
       },
       include: INCLUDE,
@@ -146,6 +148,7 @@ function toVorgang(vorgang: {
   titel: string;
   beschreibung: string | null;
   status: string;
+  startDatum: Date | null;
   faelligkeit: Date | null;
   createdAt: Date;
   objekt: { id: string; name: string } | null;
@@ -160,6 +163,7 @@ function toVorgang(vorgang: {
     titel: vorgang.titel,
     beschreibung: vorgang.beschreibung,
     status: vorgang.status as Vorgang["status"],
+    startDatum: vorgang.startDatum ? vorgang.startDatum.toISOString() : null,
     faelligkeit: vorgang.faelligkeit ? vorgang.faelligkeit.toISOString() : null,
     createdAt: vorgang.createdAt.toISOString(),
     objekt: vorgang.objekt,

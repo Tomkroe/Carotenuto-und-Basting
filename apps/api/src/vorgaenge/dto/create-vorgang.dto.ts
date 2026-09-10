@@ -16,6 +16,10 @@ export class CreateVorgangDto {
 
   @IsDateString()
   @IsOptional()
+  startDatum?: string;
+
+  @IsDateString()
+  @IsOptional()
   faelligkeit?: string;
 
   @IsString()

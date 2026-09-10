@@ -243,6 +243,7 @@ export interface Vorgang {
   titel: string;
   beschreibung: string | null;
   status: VorgangStatus;
+  startDatum: string | null;
   faelligkeit: string | null;
   createdAt: string;
   objekt: ObjektRef | null;
@@ -256,6 +257,7 @@ export interface CreateVorgangRequest {
   titel: string;
   beschreibung?: string;
   status?: VorgangStatus;
+  startDatum?: string;
   faelligkeit?: string;
   objektId?: string;
   einheitId?: string;

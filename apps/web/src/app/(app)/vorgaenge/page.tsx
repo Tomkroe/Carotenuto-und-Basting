@@ -51,6 +51,7 @@ function VorgaengePageInner() {
   const [einheitId, setEinheitId] = useState("");
   const [kontaktId, setKontaktId] = useState(searchParams.get("kontaktId") ?? "");
   const [verantwortlicherId, setVerantwortlicherId] = useState("");
+  const [startDatum, setStartDatum] = useState("");
   const [faelligkeit, setFaelligkeit] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -136,6 +137,7 @@ function VorgaengePageInner() {
         einheitId: einheitId || undefined,
         kontaktId: kontaktId || undefined,
         verantwortlicherId: verantwortlicherId || undefined,
+        startDatum: startDatum || undefined,
         faelligkeit: faelligkeit || undefined,
       });
       setTitel("");
@@ -144,6 +146,7 @@ function VorgaengePageInner() {
       setEinheitId("");
       setKontaktId("");
       setVerantwortlicherId("");
+      setStartDatum("");
       setFaelligkeit("");
       setShowForm(false);
     } catch (err) {
@@ -307,17 +310,31 @@ function VorgaengePageInner() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-text-muted" htmlFor="faelligkeit">
-              Fälligkeit (optional)
-            </label>
-            <input
-              id="faelligkeit"
-              type="date"
-              value={faelligkeit}
-              onChange={(e) => setFaelligkeit(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="startDatum">
+                Startdatum (optional)
+              </label>
+              <input
+                id="startDatum"
+                type="date"
+                value={startDatum}
+                onChange={(e) => setStartDatum(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="faelligkeit">
+                Fälligkeit (optional)
+              </label>
+              <input
+                id="faelligkeit"
+                type="date"
+                value={faelligkeit}
+                onChange={(e) => setFaelligkeit(e.target.value)}
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -358,7 +375,7 @@ function VorgaengePageInner() {
             { key: "titel", header: "Titel" },
             { key: "objekt", header: "Objekt/Kontakt" },
             { key: "verantwortlicher", header: "Verantwortlich" },
-            { key: "erstellt", header: "Erstellt" },
+            { key: "start", header: "Start" },
             { key: "faelligkeit", header: "Fälligkeit" },
             { key: "labels", header: "Labels" },
             { key: "status", header: "Status" },
@@ -384,7 +401,7 @@ function VorgaengePageInner() {
                 <td className="px-4 py-3 text-text-muted">
                   <span className="flex items-center gap-1.5">
                     <CalendarDays size={13} />
-                    {new Date(v.createdAt).toLocaleDateString("de-DE")}
+                    {new Date(v.startDatum ?? v.createdAt).toLocaleDateString("de-DE")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-text-muted">

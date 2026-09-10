@@ -108,10 +108,13 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
   const [previousStatus, setPreviousStatus] = useState<VorgangStatus | null>(null);
+  const [nurOffeneTodos, setNurOffeneTodos] = useState(false);
+  const sichtbareTodos = (todos ?? []).filter((t) => !nurOffeneTodos || !t.erledigt);
 
   const [editing, setEditing] = useState(false);
   const [editTitel, setEditTitel] = useState("");
   const [editBeschreibung, setEditBeschreibung] = useState("");
+  const [editStartDatum, setEditStartDatum] = useState("");
   const [editFaelligkeit, setEditFaelligkeit] = useState("");
   const [editVerantwortlicherId, setEditVerantwortlicherId] = useState("");
   const [editEinheitId, setEditEinheitId] = useState("");
@@ -150,6 +153,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
     if (!vorgang) return;
     setEditTitel(vorgang.titel);
     setEditBeschreibung(vorgang.beschreibung ?? "");
+    setEditStartDatum(vorgang.startDatum ? vorgang.startDatum.slice(0, 10) : "");
     setEditFaelligkeit(vorgang.faelligkeit ? vorgang.faelligkeit.slice(0, 10) : "");
     setEditVerantwortlicherId(vorgang.verantwortlicher?.id ?? "");
     setEditEinheitId(vorgang.einheit?.id ?? "");
@@ -164,6 +168,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
       await updateVorgang.mutateAsync({
         titel: editTitel,
         beschreibung: editBeschreibung || undefined,
+        startDatum: editStartDatum || undefined,
         faelligkeit: editFaelligkeit || undefined,
         verantwortlicherId: editVerantwortlicherId || undefined,
         einheitId: editEinheitId || undefined,
@@ -225,6 +230,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
                 </Link>
               )}
               {vorgang.kontakt && <span>· {kontaktName(vorgang.kontakt)}</span>}
+              {vorgang.startDatum && <span>· Start {new Date(vorgang.startDatum).toLocaleDateString("de-DE")}</span>}
               {vorgang.faelligkeit && <span>· fällig {new Date(vorgang.faelligkeit).toLocaleDateString("de-DE")}</span>}
               {vorgang.verantwortlicher && <span>· {vorgang.verantwortlicher.name}</span>}
             </div>
@@ -298,17 +304,31 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
               className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
             />
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-text-muted" htmlFor="editFaelligkeit">
-              Fälligkeit
-            </label>
-            <input
-              id="editFaelligkeit"
-              type="date"
-              value={editFaelligkeit}
-              onChange={(e) => setEditFaelligkeit(e.target.value)}
-              className="rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
-            />
+          <div className="flex gap-3">
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editStartDatum">
+                Startdatum
+              </label>
+              <input
+                id="editStartDatum"
+                type="date"
+                value={editStartDatum}
+                onChange={(e) => setEditStartDatum(e.target.value)}
+                className="rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-text-muted" htmlFor="editFaelligkeit">
+                Fälligkeit
+              </label>
+              <input
+                id="editFaelligkeit"
+                type="date"
+                value={editFaelligkeit}
+                onChange={(e) => setEditFaelligkeit(e.target.value)}
+                className="rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+              />
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-sm text-text-muted" htmlFor="editVerantwortlicherId">
@@ -481,7 +501,18 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
       </div>
 
       <div className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">ToDos</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">ToDos</h2>
+          <label className="flex items-center gap-1.5 text-sm text-text-muted">
+            <input
+              type="checkbox"
+              checked={nurOffeneTodos}
+              onChange={(e) => setNurOffeneTodos(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-primary"
+            />
+            Nur offene ToDos anzeigen
+          </label>
+        </div>
         <form onSubmit={handleAddTodo} className="mb-3 flex gap-2">
           <input
             type="text"
@@ -500,9 +531,13 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
 
         {todos && todos.length === 0 && <p className="text-sm text-text-muted">Keine ToDos.</p>}
 
-        {todos && todos.length > 0 && (
+        {todos && todos.length > 0 && sichtbareTodos.length === 0 && (
+          <p className="text-sm text-text-muted">Keine offenen ToDos.</p>
+        )}
+
+        {sichtbareTodos.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
-            {todos.map((t) => {
+            {sichtbareTodos.map((t) => {
               const faelligkeitMeta = todoFaelligkeitMeta(t.faelligkeit, t.erledigt);
               const expanded = expandedTodoId === t.id;
               return (

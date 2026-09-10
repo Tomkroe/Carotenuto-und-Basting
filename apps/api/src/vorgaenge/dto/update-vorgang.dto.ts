@@ -17,6 +17,10 @@ export class UpdateVorgangDto {
 
   @IsDateString()
   @IsOptional()
+  startDatum?: string;
+
+  @IsDateString()
+  @IsOptional()
   faelligkeit?: string;
 
   @IsString()
