@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Download, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Beleg, BelegStatus, BelegTyp, Forderung, ForderungStatusWert, ForderungTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -17,6 +17,7 @@ import {
   useCreateDokumentKategorie,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
 import { Modal } from "@/components/Modal";
@@ -93,12 +94,36 @@ function ForderungenTab() {
     markForderung.mutate({ mietvertragId: f.mietvertragId, typ: f.typ, periode: f.periode, status });
   }
 
+  function handleExport() {
+    downloadCsv(
+      "mieten-forderungen.csv",
+      ["Mieter", "Objekt", "Einheit", "Zweck", "Fälligkeit", "Betrag (€)", "Status"],
+      gefiltert.map((f) => [
+        kontaktName(f.mieter),
+        f.objekt.name,
+        f.einheit.name,
+        f.zweck,
+        f.faelligkeitsdatum.slice(0, 10),
+        f.betrag,
+        FORDERUNG_STATUS_META[f.status].label,
+      ]),
+    );
+  }
+
   return (
     <div>
-      <div className="mb-6 grid grid-cols-3 gap-4">
-        <StatCard value={ueberfaellig.length} label="Überfällige Mieten" tone={ueberfaellig.length > 0 ? "danger" : "default"} />
-        <StatCard value={offen.length} label="Offene Mieten" />
-        <StatCard value={bezahlt.length} label="Bezahlte Mieten" tone="success" />
+      <div className="mb-6 flex items-center justify-between">
+        <div className="grid flex-1 grid-cols-3 gap-4">
+          <StatCard value={ueberfaellig.length} label="Überfällige Mieten" tone={ueberfaellig.length > 0 ? "danger" : "default"} />
+          <StatCard value={offen.length} label="Offene Mieten" />
+          <StatCard value={bezahlt.length} label="Bezahlte Mieten" tone="success" />
+        </div>
+        <button
+          onClick={handleExport}
+          className="ml-4 flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+        >
+          <Download size={16} /> Exportieren
+        </button>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -236,6 +261,23 @@ function BelegeTab() {
     }
   }
 
+  function handleExport() {
+    downloadCsv(
+      "belege.csv",
+      ["Name", "Objekt", "Kategorie", "Art", "Belegdatum", "Belegnummer", "Status", "Betrag (€)"],
+      (belege ?? []).map((b) => [
+        b.name,
+        b.objekt?.name ?? "",
+        b.kategorie?.name ?? "",
+        b.typ === BelegTyp.AUSGABE ? "Ausgabe" : "Einnahme",
+        b.belegdatum.slice(0, 10),
+        b.belegnummer ?? "",
+        b.status === BelegStatus.BEZAHLT ? "Bezahlt" : "Offen",
+        b.typ === BelegTyp.AUSGABE ? -b.betrag : b.betrag,
+      ]),
+    );
+  }
+
   function openCreate() {
     resetForm();
     setShowForm(true);
@@ -292,12 +334,20 @@ function BelegeTab() {
           <StatCard value={`${summeEinnahmen.toLocaleString("de-DE")} €`} label="Einnahmen" tone="success" />
           <StatCard value={`${summeAusgaben.toLocaleString("de-DE")} €`} label="Ausgaben" />
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          <Plus size={16} /> Beleg anlegen
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          >
+            <Download size={16} /> Exportieren
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          >
+            <Plus size={16} /> Beleg anlegen
+          </button>
+        </div>
       </div>
 
       {showForm && (

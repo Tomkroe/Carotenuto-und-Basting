@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
+  Download,
   HardHat,
   KeyRound,
   Mail,
@@ -16,6 +17,7 @@ import {
 import { KontaktTyp } from "@maklerprogram/types";
 import { useCurrentUser, useKontakte, useCreateKontakt } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
@@ -88,6 +90,25 @@ export default function KontaktePage() {
     );
   }, [kontakte, search]);
 
+  function handleExport() {
+    downloadCsv(
+      "kontakte.csv",
+      ["Name", "Typ", "Straße", "Hausnummer", "PLZ", "Ort", "E-Mail", "Telefon", "Debitor-Nr.", "Kreditor-Nr."],
+      gefilterteKontakte.map((k) => [
+        [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt",
+        k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : KONTAKT_TYP_META[k.typ].label,
+        k.adresseStrasse ?? "",
+        k.adresseHausnummer ?? "",
+        k.adressePlz ?? "",
+        k.adresseOrt ?? "",
+        k.email ?? "",
+        k.telefon ?? "",
+        k.debitorNr ?? "",
+        k.kreditorNr ?? "",
+      ]),
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -121,12 +142,20 @@ export default function KontaktePage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Kontakte</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          <Plus size={16} /> Neuer Kontakt
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          >
+            <Download size={16} /> Exportieren
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          >
+            <Plus size={16} /> Neuer Kontakt
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -287,6 +316,7 @@ export default function KontaktePage() {
           columns={[
             { key: "name", header: "Name" },
             { key: "typ", header: "Typ" },
+            { key: "adresse", header: "Adresse" },
             { key: "kontakt", header: "Kontakt" },
           ]}
         >
@@ -320,6 +350,17 @@ export default function KontaktePage() {
                 </td>
                 <td className="px-4 py-3 text-text-muted">
                   {k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : meta.label}
+                </td>
+                <td className="px-4 py-3 text-text-muted">
+                  {k.adresseStrasse || k.adresseOrt ? (
+                    <>
+                      {[k.adresseStrasse, k.adresseHausnummer].filter(Boolean).join(" ")}
+                      {(k.adresseStrasse || k.adresseHausnummer) && (k.adressePlz || k.adresseOrt) && <br />}
+                      {[k.adressePlz, k.adresseOrt].filter(Boolean).join(" ")}
+                    </>
+                  ) : (
+                    "–"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-text-muted">
                   <div className="flex flex-col gap-0.5 text-xs">

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Plus, Ruler } from "lucide-react";
-import { ObjektTyp } from "@maklerprogram/types";
-import { useCurrentUser, useObjekte, useCreateObjekt, useEinheitenFlat } from "@/lib/hooks";
+import { AlertTriangle, Building2, Download, Plus, Ruler } from "lucide-react";
+import { ForderungStatusWert, ObjektTyp } from "@maklerprogram/types";
+import { useCurrentUser, useObjekte, useCreateObjekt, useEinheitenFlat, useForderungen } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
@@ -23,6 +24,7 @@ export default function ObjektePage() {
   const { isError: authError } = useCurrentUser();
   const { data: objekte, isLoading } = useObjekte();
   const { data: einheiten } = useEinheitenFlat();
+  const { data: forderungen } = useForderungen();
   const createObjekt = useCreateObjekt();
 
   const [showForm, setShowForm] = useState(false);
@@ -56,12 +58,46 @@ export default function ObjektePage() {
     return sums;
   }, [einheiten]);
 
+  const saldoProObjekt = useMemo(() => {
+    const sums = new Map<string, { ueberfaellig: number; offen: number }>();
+    for (const f of forderungen ?? []) {
+      if (f.status !== ForderungStatusWert.UEBERFAELLIG && f.status !== ForderungStatusWert.OFFEN) continue;
+      const entry = sums.get(f.objekt.id) ?? { ueberfaellig: 0, offen: 0 };
+      if (f.status === ForderungStatusWert.UEBERFAELLIG) entry.ueberfaellig += f.betrag;
+      else entry.offen += f.betrag;
+      sums.set(f.objekt.id, entry);
+    }
+    return sums;
+  }, [forderungen]);
+
   const gefilterteObjekte = useMemo(() => {
     const query = search.trim().toLowerCase();
     return (objekte ?? [])
       .filter((o) => kategorieFilter === "ALLE" || o.typ === kategorieFilter)
       .filter((o) => !query || [o.name, o.strasse, o.ort].some((f) => f.toLowerCase().includes(query)));
   }, [objekte, search, kategorieFilter]);
+
+  function handleExport() {
+    downloadCsv(
+      "objekte.csv",
+      ["Objekt", "Typ", "Straße", "Hausnummer", "PLZ", "Ort", "Einheiten", "Gesamtfläche (m²)", "Überfällig (€)", "Erwartet (€)"],
+      gefilterteObjekte.map((o) => {
+        const saldo = saldoProObjekt.get(o.id);
+        return [
+          o.name,
+          OBJEKT_TYP_LABEL[o.typ],
+          o.strasse,
+          o.hausnummer,
+          o.plz,
+          o.ort,
+          einheitenProObjekt.get(o.id) ?? 0,
+          flaecheProObjekt.get(o.id) ?? "",
+          saldo?.ueberfaellig ?? "",
+          saldo?.offen ?? "",
+        ];
+      }),
+    );
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,12 +119,20 @@ export default function ObjektePage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Objekte</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          <Plus size={16} /> Neues Objekt
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          >
+            <Download size={16} /> Exportieren
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          >
+            <Plus size={16} /> Neues Objekt
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-2">
@@ -230,6 +274,7 @@ export default function ObjektePage() {
             { key: "typ", header: "Typ" },
             { key: "einheiten", header: "Einheiten" },
             { key: "flaeche", header: "Gesamtfläche" },
+            { key: "saldo", header: "Miete" },
           ]}
         >
           {gefilterteObjekte.map((o) => (
@@ -262,6 +307,23 @@ export default function ObjektePage() {
                 ) : (
                   "–"
                 )}
+              </td>
+              <td className="px-4 py-3">
+                {(() => {
+                  const saldo = saldoProObjekt.get(o.id);
+                  if (!saldo || (saldo.ueberfaellig === 0 && saldo.offen === 0)) {
+                    return <span className="text-text-muted">–</span>;
+                  }
+                  if (saldo.ueberfaellig > 0) {
+                    return (
+                      <span className="flex items-center gap-1.5 text-red-500">
+                        <AlertTriangle size={13} />
+                        Überfällig: {saldo.ueberfaellig.toLocaleString("de-DE")} €
+                      </span>
+                    );
+                  }
+                  return <span className="text-text-muted">Erwartet: {saldo.offen.toLocaleString("de-DE")} €</span>;
+                })()}
               </td>
             </tr>
           ))}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, CheckCircle2, Archive, CircleDashed, Plus } from "lucide-react";
+import { CalendarClock, CheckCircle2, Archive, CircleDashed, Download, Plus } from "lucide-react";
 import { MietvertragStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -13,6 +13,7 @@ import {
   useEigentuemerschaften,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
@@ -131,6 +132,23 @@ export default function MietvertraegePage() {
     return Array.from(groups.values());
   }, [einheiten]);
 
+  function handleExport() {
+    downloadCsv(
+      "mietaufstellung.csv",
+      ["Objekt", "Einheit", "Mieter", "Kaltmiete (€)", "Warmmiete (€)", "Beginn", "Ende", "Status"],
+      gefilterteEinheiten.map(({ einheit, mietvertrag }) => [
+        einheit.objekt.name,
+        einheit.name,
+        mietvertrag ? kontaktName(mietvertrag.mieter) : "",
+        mietvertrag?.kaltmiete ?? "",
+        mietvertrag ? mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung : "",
+        mietvertrag?.beginn.slice(0, 10) ?? "",
+        mietvertrag?.ende?.slice(0, 10) ?? "",
+        mietvertrag?.status ?? "",
+      ]),
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -164,12 +182,20 @@ export default function MietvertraegePage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Mietverträge</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          <Plus size={16} /> Neuer Mietvertrag
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          >
+            <Download size={16} /> Exportieren
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          >
+            <Plus size={16} /> Neuer Mietvertrag
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
