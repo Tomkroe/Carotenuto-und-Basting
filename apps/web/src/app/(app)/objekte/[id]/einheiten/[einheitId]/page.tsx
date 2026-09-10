@@ -219,6 +219,7 @@ export default function EinheitDetailPage() {
         sepaLastschrift: miSepa,
         beginn: miBeginn,
         ende: miEnde || undefined,
+        status: miBeginn <= new Date().toISOString().slice(0, 10) ? MietvertragStatus.AKTIV : MietvertragStatus.GEPLANT,
       });
       setShowMietModal(false);
       resetMietForm();

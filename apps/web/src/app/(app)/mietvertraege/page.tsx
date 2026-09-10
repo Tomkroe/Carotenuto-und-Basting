@@ -144,6 +144,7 @@ export default function MietvertraegePage() {
         iban: iban || undefined,
         sepaLastschrift,
         beginn,
+        status: beginn <= today ? MietvertragStatus.AKTIV : MietvertragStatus.GEPLANT,
       });
       setEinheitId("");
       setMieterId("");
