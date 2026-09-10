@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarRange, FileEdit, Send, Plus } from "lucide-react";
+import { CalendarRange, Copy, FileEdit, Send, Plus } from "lucide-react";
 import { NebenkostenStatus } from "@maklerprogram/types";
 import {
   useCurrentUser,
   useNebenkostenabrechnungen,
   useCreateNebenkostenabrechnung,
+  useDuplicateNebenkostenabrechnung,
   useObjekte,
   useAllNebenkostenPositionen,
 } from "@/lib/hooks";
@@ -36,6 +37,7 @@ export default function NebenkostenabrechnungenPage() {
   const { data: abrechnungen, isLoading } = useNebenkostenabrechnungen();
   const { data: objekte } = useObjekte();
   const createAbrechnung = useCreateNebenkostenabrechnung();
+  const duplicateAbrechnung = useDuplicateNebenkostenabrechnung();
   const positionenResults = useAllNebenkostenPositionen(abrechnungen);
 
   const gesamtbetragProAbrechnung = new Map<string, number>();
@@ -73,6 +75,12 @@ export default function NebenkostenabrechnungenPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Nebenkostenabrechnung konnte nicht angelegt werden.");
     }
+  }
+
+  async function handleDuplicate(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const neue = await duplicateAbrechnung.mutateAsync(id);
+    router.push(`/nebenkostenabrechnungen/${neue.id}`);
   }
 
   return (
@@ -183,6 +191,7 @@ export default function NebenkostenabrechnungenPage() {
             { key: "zeitraum", header: "Zeitraum" },
             { key: "betrag", header: "Gesamtbetrag" },
             { key: "status", header: "Status" },
+            { key: "aktionen", header: "" },
           ]}
         >
           {gefilterteAbrechnungen.map((a) => {
@@ -213,6 +222,17 @@ export default function NebenkostenabrechnungenPage() {
                     <Icon size={13} />
                     {meta.label}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={(e) => handleDuplicate(a.id, e)}
+                    disabled={duplicateAbrechnung.isPending}
+                    title="Abrechnung fürs nächste Jahr duplizieren"
+                    aria-label={`Abrechnung ${a.objekt.name} duplizieren`}
+                    className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text disabled:opacity-50"
+                  >
+                    <Copy size={15} />
+                  </button>
                 </td>
               </tr>
             );

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { KeyRound, Plus, UserRound } from "lucide-react";
-import { Eigentuemerschaft, Einheit, Mietvertrag, MietvertragStatus, Objekt, ObjektTyp } from "@maklerprogram/types";
+import { AlertTriangle, KeyRound, Plus, UserRound } from "lucide-react";
+import { Eigentuemerschaft, Einheit, Forderung, ForderungStatusWert, Mietvertrag, MietvertragStatus, Objekt, ObjektTyp } from "@maklerprogram/types";
 
 function kontaktName(k: { vorname: string | null; nachname: string | null; firma: string | null }) {
   return [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
@@ -19,6 +19,15 @@ function statusBadge(einheitId: string, mietvertraege: Mietvertrag[] | undefined
     return { label: "Geplant", mieter: geplant.mieter, kaltmiete: geplant.kaltmiete, className: "bg-amber-500/10 text-amber-600" };
   }
   return { label: "Leerstand", mieter: null, kaltmiete: null, className: "bg-red-500/10 text-red-500" };
+}
+
+function ueberfaelligByEinheit(forderungen: Forderung[] | undefined): Map<string, number> {
+  const sums = new Map<string, number>();
+  for (const f of forderungen ?? []) {
+    if (f.status !== ForderungStatusWert.UEBERFAELLIG) continue;
+    sums.set(f.einheit.id, (sums.get(f.einheit.id) ?? 0) + f.betrag);
+  }
+  return sums;
 }
 
 function groupByKategorie(einheiten: Einheit[]): [string, Einheit[]][] {
@@ -37,6 +46,7 @@ interface ObjektEinheitenSidebarProps {
   einheiten: Einheit[] | undefined;
   mietvertraege: Mietvertrag[] | undefined;
   eigentuemerschaften?: Eigentuemerschaft[];
+  forderungen?: Forderung[];
   onNeueEinheitClick: () => void;
   neueEinheitAktiv: boolean;
   children?: React.ReactNode;
@@ -48,6 +58,7 @@ export function ObjektEinheitenSidebar({
   einheiten,
   mietvertraege,
   eigentuemerschaften,
+  forderungen,
   onNeueEinheitClick,
   neueEinheitAktiv,
   children,
@@ -55,6 +66,7 @@ export function ObjektEinheitenSidebar({
   const params = useParams<{ einheitId?: string }>();
   const activeEinheitId = params?.einheitId;
   const istWeg = objekt.typ === ObjektTyp.WEG;
+  const ueberfaellig = ueberfaelligByEinheit(forderungen);
 
   return (
     <aside className="w-full shrink-0 space-y-4 lg:w-72">
@@ -96,6 +108,7 @@ export function ObjektEinheitenSidebar({
                   const kaltmiete = badge.kaltmiete ?? e.kaltmiete;
                   const active = e.id === activeEinheitId;
                   const eigentuemer = eigentuemerschaften?.find((w) => w.einheit.id === e.id)?.eigentuemer ?? null;
+                  const einheitUeberfaellig = ueberfaellig.get(e.id) ?? 0;
                   return (
                     <Link
                       key={e.id}
@@ -125,6 +138,11 @@ export function ObjektEinheitenSidebar({
                       {!istWeg && badge.mieter && (
                         <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
                           <UserRound size={11} /> {kontaktName(badge.mieter)}
+                        </p>
+                      )}
+                      {!istWeg && einheitUeberfaellig > 0 && (
+                        <p className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
+                          <AlertTriangle size={11} /> {einheitUeberfaellig.toLocaleString("de-DE")} € überfällig
                         </p>
                       )}
                       {istWeg &&

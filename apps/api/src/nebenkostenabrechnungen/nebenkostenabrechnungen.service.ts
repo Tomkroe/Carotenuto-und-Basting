@@ -64,6 +64,34 @@ export class NebenkostenabrechnungenService {
     return toNebenkostenabrechnung(abrechnung);
   }
 
+  async duplicate(mandantId: string, id: string): Promise<Nebenkostenabrechnung> {
+    const source = await this.prisma.nebenkostenabrechnung.findFirst({
+      where: { id, objekt: { mandantId } },
+      include: { positionen: true },
+    });
+    if (!source) throw new NotFoundException("Nebenkostenabrechnung nicht gefunden.");
+
+    const naechstesJahr = (d: Date) => new Date(d.getFullYear() + 1, d.getMonth(), d.getDate());
+
+    const abrechnung = await this.prisma.nebenkostenabrechnung.create({
+      data: {
+        objektId: source.objektId,
+        zeitraumVon: naechstesJahr(source.zeitraumVon),
+        zeitraumBis: naechstesJahr(source.zeitraumBis),
+        status: NebenkostenStatus.ENTWURF,
+        positionen: {
+          create: source.positionen.map((p) => ({
+            bezeichnung: p.bezeichnung,
+            betrag: p.betrag,
+            verteilerschluessel: p.verteilerschluessel,
+          })),
+        },
+      },
+      include: INCLUDE,
+    });
+    return toNebenkostenabrechnung(abrechnung);
+  }
+
   async remove(mandantId: string, id: string): Promise<void> {
     await this.findOne(mandantId, id);
     await this.prisma.nebenkostenabrechnung.delete({ where: { id } });

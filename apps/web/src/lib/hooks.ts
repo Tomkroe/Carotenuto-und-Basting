@@ -743,6 +743,17 @@ export function useCreateNebenkostenabrechnung() {
   });
 }
 
+export function useDuplicateNebenkostenabrechnung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<Nebenkostenabrechnung>(`/nebenkostenabrechnungen/${id}/duplizieren`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nebenkostenabrechnungen"] });
+    },
+  });
+}
+
 export function useUpdateNebenkostenabrechnung(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

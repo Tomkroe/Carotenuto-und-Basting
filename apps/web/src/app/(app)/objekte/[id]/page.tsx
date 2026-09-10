@@ -29,6 +29,7 @@ import {
   useKontakte,
   useUploadObjektTitelbild,
   useDeleteObjektTitelbild,
+  useForderungen,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { DokumenteSection } from "@/components/DokumenteSection";
@@ -67,6 +68,7 @@ export default function ObjektDetailPage() {
   const deleteTitelbild = useDeleteObjektTitelbild(objektId);
   const { data: mietvertraege } = useMietvertraege();
   const { data: eigentuemerschaften } = useEigentuemerschaften();
+  const { data: forderungen } = useForderungen();
   const { data: kontakte } = useKontakte();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -295,6 +297,7 @@ export default function ObjektDetailPage() {
           einheiten={einheiten}
           mietvertraege={mietvertraege}
           eigentuemerschaften={eigentuemerschaften}
+          forderungen={forderungen}
           onNeueEinheitClick={() => setShowEinheitForm((v) => !v)}
           neueEinheitAktiv={showEinheitForm}
         >

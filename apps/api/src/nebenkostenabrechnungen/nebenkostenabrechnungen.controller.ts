@@ -30,6 +30,11 @@ export class NebenkostenabrechnungenController {
     return this.nebenkostenabrechnungenService.create(user.mandantId, dto);
   }
 
+  @Post(":id/duplizieren")
+  duplicate(@CurrentUser() user: JwtPayload, @Param("id") id: string): Promise<Nebenkostenabrechnung> {
+    return this.nebenkostenabrechnungenService.duplicate(user.mandantId, id);
+  }
+
   @Patch(":id")
   update(
     @CurrentUser() user: JwtPayload,

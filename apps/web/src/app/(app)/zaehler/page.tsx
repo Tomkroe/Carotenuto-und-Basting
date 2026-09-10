@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Zap, Flame, Droplet, Fuel, Plus, Star, Gauge, TrendingUp } from "lucide-react";
+import { Zap, Flame, Droplet, Download, Fuel, Plus, Star, Gauge, TrendingUp } from "lucide-react";
 import { ZaehlerTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -13,6 +13,7 @@ import {
   useAllZaehlerstaende,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
@@ -71,6 +72,27 @@ export default function ZaehlerPage() {
     );
   }, [zaehlerListe, search]);
 
+  function handleExport() {
+    downloadCsv(
+      "zaehler.csv",
+      ["Zählernummer", "Typ", "Hauptzähler", "Objekt", "Einheit", "Letzter Zählerstand", "Datum", "Letzter Verbrauch", "Versorger"],
+      gefilterteZaehler.map((z) => {
+        const stand = standByZaehler.get(z.id);
+        return [
+          z.zaehlernummer,
+          TYP_META[z.typ].label,
+          z.hauptzaehler ? "Ja" : "Nein",
+          z.objekt?.name ?? z.einheit?.objekt.name ?? "",
+          z.einheit?.name ?? "",
+          stand?.letzter ?? "",
+          stand?.datum.slice(0, 10) ?? "",
+          stand?.verbrauch ?? "",
+          z.versorger ?? "",
+        ];
+      }),
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -98,12 +120,20 @@ export default function ZaehlerPage() {
     <section className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Zähler</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
-        >
-          <Plus size={16} /> Neuer Zähler
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          >
+            <Download size={16} /> Exportieren
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          >
+            <Plus size={16} /> Neuer Zähler
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">

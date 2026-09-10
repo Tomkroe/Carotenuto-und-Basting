@@ -20,6 +20,7 @@ import {
   useDeleteEigentuemerschaft,
   useKontakte,
   useCreateKontakt,
+  useForderungen,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { ObjektEinheitenSidebar } from "@/components/ObjektEinheitenSidebar";
@@ -53,6 +54,7 @@ export default function EinheitDetailPage() {
   const updateEinheit = useUpdateEinheit(objektId);
   const createEinheit = useCreateEinheit(objektId);
   const { data: mietvertraege } = useMietvertraege();
+  const { data: forderungen } = useForderungen();
   const createMietvertrag = useCreateMietvertrag();
   const deleteMietvertrag = useDeleteMietvertrag();
   const { data: eigentuemerschaften } = useEigentuemerschaften();
@@ -322,6 +324,7 @@ export default function EinheitDetailPage() {
           einheiten={einheiten}
           mietvertraege={mietvertraege}
           eigentuemerschaften={eigentuemerschaften}
+          forderungen={forderungen}
           onNeueEinheitClick={() => setShowEinheitForm((v) => !v)}
           neueEinheitAktiv={showEinheitForm}
         >
