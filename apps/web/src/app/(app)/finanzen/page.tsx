@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Beleg, BelegStatus, BelegTyp, Forderung, ForderungStatusWert, ForderungTyp } from "@maklerprogram/types";
 import {
   useCurrentUser,
@@ -14,6 +14,7 @@ import {
   useDeleteBeleg,
   useObjekte,
   useDokumentKategorien,
+  useCreateDokumentKategorie,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
@@ -175,6 +176,7 @@ function ForderungenTab() {
 }
 
 const BELEG_KATEGORIE_LEER = "__leer__";
+const BELEG_KATEGORIE_NEU = "__neu__";
 const BELEG_OBJEKT_LEER = "__leer__";
 
 function BelegeTab() {
@@ -184,6 +186,7 @@ function BelegeTab() {
   const createBeleg = useCreateBeleg();
   const updateBeleg = useUpdateBeleg();
   const deleteBeleg = useDeleteBeleg();
+  const createKategorie = useCreateDokumentKategorie();
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Beleg | null>(null);
@@ -199,6 +202,8 @@ function BelegeTab() {
   const [objektId, setObjektId] = useState(BELEG_OBJEKT_LEER);
   const [kategorieId, setKategorieId] = useState(BELEG_KATEGORIE_LEER);
   const [notiz, setNotiz] = useState("");
+  const [showNewKategorie, setShowNewKategorie] = useState(false);
+  const [newKategorieName, setNewKategorieName] = useState("");
 
   const summeAusgaben = (belege ?? []).filter((b) => b.typ === BelegTyp.AUSGABE).reduce((sum, b) => sum + b.betrag, 0);
   const summeEinnahmen = (belege ?? []).filter((b) => b.typ === BelegTyp.EINNAHME).reduce((sum, b) => sum + b.betrag, 0);
@@ -215,6 +220,20 @@ function BelegeTab() {
     setKategorieId(BELEG_KATEGORIE_LEER);
     setNotiz("");
     setError(null);
+    setShowNewKategorie(false);
+    setNewKategorieName("");
+  }
+
+  async function handleCreateKategorie() {
+    if (!newKategorieName.trim()) return;
+    try {
+      const kategorie = await createKategorie.mutateAsync({ name: newKategorieName.trim() });
+      setKategorieId(kategorie.id);
+      setShowNewKategorie(false);
+      setNewKategorieName("");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Kategorie konnte nicht angelegt werden.");
+    }
   }
 
   function openCreate() {
@@ -234,6 +253,8 @@ function BelegeTab() {
     setKategorieId(b.kategorie?.id ?? BELEG_KATEGORIE_LEER);
     setNotiz(b.notiz ?? "");
     setError(null);
+    setShowNewKategorie(false);
+    setNewKategorieName("");
     setShowForm(true);
   }
 
@@ -378,19 +399,65 @@ function BelegeTab() {
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="beleg-kategorie">
                   Kategorie (optional)
                 </label>
-                <select
-                  id="beleg-kategorie"
-                  value={kategorieId}
-                  onChange={(e) => setKategorieId(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
-                >
-                  <option value={BELEG_KATEGORIE_LEER}>Keine Kategorie</option>
-                  {kategorien?.map((k) => (
-                    <option key={k.id} value={k.id}>
-                      {k.name}
-                    </option>
-                  ))}
-                </select>
+                {showNewKategorie ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newKategorieName}
+                      onChange={(e) => setNewKategorieName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateKategorie();
+                        }
+                      }}
+                      placeholder="Neue Kategorie…"
+                      className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateKategorie}
+                      disabled={createKategorie.isPending}
+                      aria-label="Kategorie anlegen"
+                      className="rounded-lg p-2 text-emerald-500 transition hover:bg-bg disabled:opacity-50"
+                    >
+                      <Check size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewKategorie(false);
+                        setNewKategorieName("");
+                      }}
+                      aria-label="Abbrechen"
+                      className="rounded-lg p-2 text-text-muted transition hover:bg-bg hover:text-text"
+                    >
+                      <X size={17} />
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    id="beleg-kategorie"
+                    value={kategorieId}
+                    onChange={(e) => {
+                      if (e.target.value === BELEG_KATEGORIE_NEU) {
+                        setShowNewKategorie(true);
+                      } else {
+                        setKategorieId(e.target.value);
+                      }
+                    }}
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
+                  >
+                    <option value={BELEG_KATEGORIE_LEER}>Keine Kategorie</option>
+                    {kategorien?.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
+                      </option>
+                    ))}
+                    <option value={BELEG_KATEGORIE_NEU}>+ Neue Kategorie…</option>
+                  </select>
+                )}
               </div>
             </div>
             <div>
