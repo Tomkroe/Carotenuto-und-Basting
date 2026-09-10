@@ -86,24 +86,24 @@ export class ForderungenService {
       }
 
       if (mv.kaution && Number(mv.kaution) > 0) {
+        // Kaution ist einmalig, nicht periodenbezogen wie die Miete — sie soll unabhängig
+        // vom gewählten Zeitraum sichtbar bleiben, solange sie nicht als bezahlt/verloren markiert ist.
         const beginn = new Date(mv.beginn);
-        if (beginn >= von && beginn <= bis) {
-          const key = `${mv.id}:${ForderungTyp.KAUTION}:EINMALIG`;
-          const override = statusMap.get(key);
-          const status = override ?? (beginn < today ? ForderungStatusWert.UEBERFAELLIG : ForderungStatusWert.OFFEN);
-          forderungen.push({
-            mietvertragId: mv.id,
-            typ: ForderungTyp.KAUTION,
-            periode: "EINMALIG",
-            zweck: "Kaution",
-            faelligkeitsdatum: beginn.toISOString(),
-            betrag: Number(mv.kaution),
-            status: status as ForderungStatusWert,
-            objekt,
-            einheit,
-            mieter,
-          });
-        }
+        const key = `${mv.id}:${ForderungTyp.KAUTION}:EINMALIG`;
+        const override = statusMap.get(key);
+        const status = override ?? (beginn < today ? ForderungStatusWert.UEBERFAELLIG : ForderungStatusWert.OFFEN);
+        forderungen.push({
+          mietvertragId: mv.id,
+          typ: ForderungTyp.KAUTION,
+          periode: "EINMALIG",
+          zweck: "Kaution",
+          faelligkeitsdatum: beginn.toISOString(),
+          betrag: Number(mv.kaution),
+          status: status as ForderungStatusWert,
+          objekt,
+          einheit,
+          mieter,
+        });
       }
     }
 
