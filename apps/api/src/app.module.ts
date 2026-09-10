@@ -22,6 +22,8 @@ import { LabelsModule } from "./labels/labels.module";
 import { AssistantModule } from "./assistant/assistant.module";
 import { WorkflowsModule } from "./workflows/workflows.module";
 import { VorgangVorlagenModule } from "./vorgang-vorlagen/vorgang-vorlagen.module";
+import { ForderungenModule } from "./forderungen/forderungen.module";
+import { BelegeModule } from "./belege/belege.module";
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { VorgangVorlagenModule } from "./vorgang-vorlagen/vorgang-vorlagen.modul
     AssistantModule,
     WorkflowsModule,
     VorgangVorlagenModule,
+    ForderungenModule,
+    BelegeModule,
   ],
 })
 export class AppModule {}

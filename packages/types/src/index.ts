@@ -580,6 +580,80 @@ export interface AssistantChatRequest {
   attachment?: AssistantAttachment;
 }
 
+// ── Finanzen: Forderungen (Miete/Kaution) ────────────────────────
+
+export enum ForderungTyp {
+  MIETE = "MIETE",
+  KAUTION = "KAUTION",
+}
+
+export enum ForderungStatusWert {
+  OFFEN = "OFFEN",
+  UEBERFAELLIG = "UEBERFAELLIG",
+  BEZAHLT = "BEZAHLT",
+  VERLOREN = "VERLOREN",
+}
+
+export interface Forderung {
+  mietvertragId: string;
+  typ: ForderungTyp;
+  periode: string;
+  zweck: string;
+  faelligkeitsdatum: string;
+  betrag: number;
+  status: ForderungStatusWert;
+  objekt: { id: string; name: string };
+  einheit: { id: string; name: string };
+  mieter: KontaktRef;
+}
+
+export interface MarkForderungRequest {
+  mietvertragId: string;
+  typ: ForderungTyp;
+  periode: string;
+  status: "BEZAHLT" | "VERLOREN" | "OFFEN";
+}
+
+// ── Finanzen: Belege ──────────────────────────────────────────────
+
+export enum BelegTyp {
+  EINNAHME = "EINNAHME",
+  AUSGABE = "AUSGABE",
+}
+
+export enum BelegStatus {
+  OFFEN = "OFFEN",
+  BEZAHLT = "BEZAHLT",
+}
+
+export interface Beleg {
+  id: string;
+  name: string;
+  belegnummer: string | null;
+  typ: BelegTyp;
+  betrag: number;
+  belegdatum: string;
+  status: BelegStatus;
+  notiz: string | null;
+  createdAt: string;
+  objekt: { id: string; name: string } | null;
+  kategorie: DokumentKategorie | null;
+}
+
+export interface CreateBelegRequest {
+  name: string;
+  belegnummer?: string;
+  typ?: BelegTyp;
+  betrag: number;
+  belegdatum: string;
+  status?: BelegStatus;
+  notiz?: string;
+  objektId?: string;
+  kategorieId?: string;
+}
+
+export type UpdateBelegRequest = Partial<CreateBelegRequest>;
+
 export interface AssistantChatResponse {
   reply: string;
   actions: AssistantAction[];

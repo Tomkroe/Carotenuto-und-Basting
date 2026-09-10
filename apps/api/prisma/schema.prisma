@@ -30,6 +30,7 @@ model Mandant {
   dokumentKategorien     DokumentKategorie[]
   vorgangVorlagen        VorgangVorlage[]
   workflows              Workflow[]
+  belege                 Beleg[]
 }
 
 model Workflow {
@@ -104,6 +105,7 @@ model Objekt {
   dokumente                Dokument[]
   zaehler                  Zaehler[]
   nebenkostenabrechnungen  Nebenkostenabrechnung[]
+  belege                   Beleg[]
 
   @@index([mandantId])
 }
@@ -205,6 +207,7 @@ model Mietvertrag {
   mieter   Kontakt @relation(fields: [mieterId], references: [id])
 
   dokumente Dokument[]
+  forderungStatus ForderungStatus[]
 
   @@index([einheitId])
   @@index([mieterId])
@@ -441,6 +444,7 @@ model DokumentKategorie {
   mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
 
   dokumente Dokument[]
+  belege    Beleg[]
 
   @@index([mandantId])
 }
@@ -524,4 +528,70 @@ model NebenkostenPosition {
   nebenkostenabrechnung   Nebenkostenabrechnung @relation(fields: [nebenkostenabrechnungId], references: [id], onDelete: Cascade)
 
   @@index([nebenkostenabrechnungId])
+}
+
+// ── Finanzen: Forderungen (Miete/Kaution) ────────────────────────
+// Forderungen selbst (fällige Miete je Monat) werden nicht persistiert,
+// sondern zur Anfragezeit aus den Mietverträgen berechnet (siehe
+// ForderungenService). Hier wird nur der manuell gesetzte Status
+// (bezahlt/verloren) je Mietvertrag+Zeitraum abgelegt.
+
+enum ForderungTyp {
+  MIETE
+  KAUTION
+}
+
+enum ForderungStatusWert {
+  BEZAHLT
+  VERLOREN
+}
+
+model ForderungStatus {
+  id        String              @id @default(cuid())
+  typ       ForderungTyp
+  periode   String // "YYYY-MM" für MIETE, "EINMALIG" für KAUTION
+  status    ForderungStatusWert
+  createdAt DateTime            @default(now())
+
+  mietvertragId String
+  mietvertrag   Mietvertrag @relation(fields: [mietvertragId], references: [id], onDelete: Cascade)
+
+  @@unique([mietvertragId, typ, periode])
+  @@index([mietvertragId])
+}
+
+// ── Finanzen: Belege (manuelle Ausgaben-/Einnahmenerfassung) ─────
+
+enum BelegTyp {
+  EINNAHME
+  AUSGABE
+}
+
+enum BelegStatus {
+  OFFEN
+  BEZAHLT
+}
+
+model Beleg {
+  id          String      @id @default(cuid())
+  name        String
+  belegnummer String?
+  typ         BelegTyp    @default(AUSGABE)
+  betrag      Decimal     @db.Decimal(10, 2)
+  belegdatum  DateTime
+  status      BelegStatus @default(OFFEN)
+  notiz       String?
+  createdAt   DateTime    @default(now())
+
+  mandantId String
+  mandant   Mandant @relation(fields: [mandantId], references: [id], onDelete: Cascade)
+
+  objektId String?
+  objekt   Objekt? @relation(fields: [objektId], references: [id], onDelete: SetNull)
+
+  kategorieId String?
+  kategorie   DokumentKategorie? @relation(fields: [kategorieId], references: [id], onDelete: SetNull)
+
+  @@index([mandantId])
+  @@index([objektId])
 }

@@ -17,6 +17,7 @@ import {
 import { StatCard } from "@/components/StatCard";
 import { ProgressRing } from "@/components/ProgressRing";
 import { CashflowChart, type CashflowMonth } from "@/components/CashflowChart";
+import { HandlungsempfehlungenCard } from "@/components/HandlungsempfehlungenCard";
 
 const MONTH_LABEL = new Intl.DateTimeFormat("de-DE", { month: "short" });
 
@@ -121,6 +122,10 @@ export default function DashboardPage() {
         <Plus size={18} />
         Vorgang anlegen
       </button>
+
+      <div className="mt-6">
+        <HandlungsempfehlungenCard />
+      </div>
 
       <h2 className="mb-3 mt-6 text-sm font-semibold text-text-muted">Deine Objekte im Überblick</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

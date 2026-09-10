@@ -5,6 +5,13 @@ import type {
   AssistantAttachment,
   AssistantChatMessage,
   AssistantChatResponse,
+  Beleg,
+  BelegStatus,
+  CreateBelegRequest,
+  UpdateBelegRequest,
+  Forderung,
+  ForderungStatusWert,
+  MarkForderungRequest,
   CreateEigentuemerschaftRequest,
   CreateEinheitRequest,
   CreateKommentarRequest,
@@ -878,6 +885,72 @@ export function useDeleteVorgangVorlage() {
     mutationFn: (id: string) => apiFetch<void>(`/vorgang-vorlagen/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vorgang-vorlagen"] });
+    },
+  });
+}
+
+export function useForderungen(params: { von?: string; bis?: string; objektId?: string; status?: ForderungStatusWert } = {}) {
+  const search = new URLSearchParams();
+  if (params.von) search.set("von", params.von);
+  if (params.bis) search.set("bis", params.bis);
+  if (params.objektId) search.set("objektId", params.objektId);
+  if (params.status) search.set("status", params.status);
+  const query = search.toString();
+  return useQuery<Forderung[]>({
+    queryKey: ["forderungen", params],
+    queryFn: () => apiFetch<Forderung[]>(`/forderungen${query ? `?${query}` : ""}`),
+  });
+}
+
+export function useMarkForderung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: MarkForderungRequest) =>
+      apiFetch<void>("/forderungen/markieren", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["forderungen"] });
+    },
+  });
+}
+
+export function useBelege(params: { objektId?: string; status?: BelegStatus } = {}) {
+  const search = new URLSearchParams();
+  if (params.objektId) search.set("objektId", params.objektId);
+  if (params.status) search.set("status", params.status);
+  const query = search.toString();
+  return useQuery<Beleg[]>({
+    queryKey: ["belege", params],
+    queryFn: () => apiFetch<Beleg[]>(`/belege${query ? `?${query}` : ""}`),
+  });
+}
+
+export function useCreateBeleg() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateBelegRequest) => apiFetch<Beleg>("/belege", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["belege"] });
+    },
+  });
+}
+
+export function useUpdateBeleg() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateBelegRequest }) =>
+      apiFetch<Beleg>(`/belege/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["belege"] });
+    },
+  });
+}
+
+export function useDeleteBeleg() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/belege/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["belege"] });
     },
   });
 }
