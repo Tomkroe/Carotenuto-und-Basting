@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useCurrentUser } from "@/lib/hooks";
-import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_GROUPS = [
   {
@@ -59,11 +58,10 @@ export function AppSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface">
-      <div className="flex items-center justify-between px-5 py-4">
+      <div className="flex items-center px-5 py-4">
         <Link href="/dashboard" className="text-lg font-semibold text-primary">
           maklerprogram
         </Link>
-        <ThemeToggle />
       </div>
 
       <div className="px-4 pb-3">
