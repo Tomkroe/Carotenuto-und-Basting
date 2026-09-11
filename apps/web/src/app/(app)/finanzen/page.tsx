@@ -20,6 +20,7 @@ import { ApiError } from "@/lib/api";
 import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const FORDERUNG_STATUS_META: Record<ForderungStatusWert, { label: string; className: string }> = {
@@ -158,43 +159,79 @@ function ForderungenTab() {
       {forderungen && forderungen.length === 0 && <p className="text-text-muted">Keine Forderungen im aktuellen Jahr.</p>}
 
       {gefiltert.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "mieter", header: "Mieter" },
-            { key: "objekt", header: "Objekt" },
-            { key: "zweck", header: "Zweck" },
-            { key: "faelligkeit", header: "Fälligkeit" },
-            { key: "betrag", header: "Betrag" },
-            { key: "status", header: "Status" },
-          ]}
-        >
-          {gefiltert.map((f) => {
-            const meta = FORDERUNG_STATUS_META[f.status];
-            return (
-              <tr key={`${f.mietvertragId}:${f.typ}:${f.periode}`} className="transition hover:bg-bg">
-                <td className="px-4 py-3 font-medium">{kontaktName(f.mieter)}</td>
-                <td className="px-4 py-3 text-text-muted">
-                  {f.objekt.name}
-                  <span className="block text-xs">{f.einheit.name}</span>
-                </td>
-                <td className="px-4 py-3 text-text-muted">{f.zweck}</td>
-                <td className="px-4 py-3 text-text-muted">{new Date(f.faelligkeitsdatum).toLocaleDateString("de-DE")}</td>
-                <td className="px-4 py-3 font-medium">{f.betrag.toLocaleString("de-DE")} €</td>
-                <td className="px-4 py-3">
-                  <select
-                    value={f.status === ForderungStatusWert.UEBERFAELLIG ? ForderungStatusWert.OFFEN : f.status}
-                    onChange={(e) => handleStatusChange(f, e.target.value as "BEZAHLT" | "VERLOREN" | "OFFEN")}
-                    className={`w-fit rounded-full border-none px-2.5 py-1 text-xs outline-none ${meta.className}`}
-                  >
-                    <option value="OFFEN">{f.status === ForderungStatusWert.UEBERFAELLIG ? "Überfällig" : "Offen"}</option>
-                    <option value="BEZAHLT">Bezahlt</option>
-                    <option value="VERLOREN">Verloren</option>
-                  </select>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "mieter", header: "Mieter" },
+                { key: "objekt", header: "Objekt" },
+                { key: "zweck", header: "Zweck" },
+                { key: "faelligkeit", header: "Fälligkeit" },
+                { key: "betrag", header: "Betrag" },
+                { key: "status", header: "Status" },
+              ]}
+            >
+              {gefiltert.map((f) => {
+                const meta = FORDERUNG_STATUS_META[f.status];
+                return (
+                  <tr key={`${f.mietvertragId}:${f.typ}:${f.periode}`} className="transition hover:bg-bg">
+                    <td className="px-4 py-3 font-medium">{kontaktName(f.mieter)}</td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {f.objekt.name}
+                      <span className="block text-xs">{f.einheit.name}</span>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">{f.zweck}</td>
+                    <td className="px-4 py-3 text-text-muted">{new Date(f.faelligkeitsdatum).toLocaleDateString("de-DE")}</td>
+                    <td className="px-4 py-3 font-medium">{f.betrag.toLocaleString("de-DE")} €</td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={f.status === ForderungStatusWert.UEBERFAELLIG ? ForderungStatusWert.OFFEN : f.status}
+                        onChange={(e) => handleStatusChange(f, e.target.value as "BEZAHLT" | "VERLOREN" | "OFFEN")}
+                        className={`w-fit rounded-full border-none px-2.5 py-1 text-xs outline-none ${meta.className}`}
+                      >
+                        <option value="OFFEN">{f.status === ForderungStatusWert.UEBERFAELLIG ? "Überfällig" : "Offen"}</option>
+                        <option value="BEZAHLT">Bezahlt</option>
+                        <option value="VERLOREN">Verloren</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefiltert.map((f) => {
+              const meta = FORDERUNG_STATUS_META[f.status];
+              return (
+                <div key={`${f.mietvertragId}:${f.typ}:${f.periode}`} className="space-y-2 px-4 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{kontaktName(f.mieter)}</p>
+                      <p className="text-sm text-text-muted">
+                        {f.objekt.name} · {f.einheit.name}
+                      </p>
+                    </div>
+                    <select
+                      value={f.status === ForderungStatusWert.UEBERFAELLIG ? ForderungStatusWert.OFFEN : f.status}
+                      onChange={(e) => handleStatusChange(f, e.target.value as "BEZAHLT" | "VERLOREN" | "OFFEN")}
+                      className={`w-fit shrink-0 rounded-full border-none px-2.5 py-1 text-xs outline-none ${meta.className}`}
+                    >
+                      <option value="OFFEN">{f.status === ForderungStatusWert.UEBERFAELLIG ? "Überfällig" : "Offen"}</option>
+                      <option value="BEZAHLT">Bezahlt</option>
+                      <option value="VERLOREN">Verloren</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                    <span>{f.zweck}</span>
+                    <span>{new Date(f.faelligkeitsdatum).toLocaleDateString("de-DE")}</span>
+                    <span className="font-medium text-text">{f.betrag.toLocaleString("de-DE")} €</span>
+                  </div>
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </div>
   );
@@ -552,80 +589,155 @@ function BelegeTab() {
       {belege && belege.length === 0 && <p className="text-text-muted">Noch keine Belege erfasst.</p>}
 
       {belege && belege.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "name", header: "Name" },
-            { key: "objekt", header: "Objekt" },
-            { key: "kategorie", header: "Kategorie" },
-            { key: "datum", header: "Belegdatum" },
-            { key: "status", header: "Status" },
-            { key: "betrag", header: "Betrag" },
-            { key: "aktionen", header: "" },
-          ]}
-        >
-          {belege.map((b) => (
-            <tr key={b.id} className="transition hover:bg-bg">
-              <td className="px-4 py-3 font-medium">{b.name}</td>
-              <td className="px-4 py-3 text-text-muted">{b.objekt?.name ?? "–"}</td>
-              <td className="px-4 py-3 text-text-muted">{b.kategorie?.name ?? "–"}</td>
-              <td className="px-4 py-3 text-text-muted">{new Date(b.belegdatum).toLocaleDateString("de-DE")}</td>
-              <td className="px-4 py-3">
-                <span
-                  className={`w-fit rounded-full px-2.5 py-1 text-xs ${
-                    b.status === BelegStatus.BEZAHLT ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"
-                  }`}
-                >
-                  {b.status === BelegStatus.BEZAHLT ? "Bezahlt" : "Offen"}
-                </span>
-              </td>
-              <td className={`px-4 py-3 font-medium ${b.typ === BelegTyp.AUSGABE ? "text-red-500" : "text-emerald-500"}`}>
-                {b.typ === BelegTyp.AUSGABE ? "−" : "+"}
-                {b.betrag.toLocaleString("de-DE")} €
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-1">
-                  {confirmDeleteId === b.id ? (
-                    <>
-                      <span className="text-xs text-text-muted">Löschen?</span>
-                      <button
-                        onClick={() => {
-                          deleteBeleg.mutate(b.id);
-                          setConfirmDeleteId(null);
-                        }}
-                        className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10"
-                      >
-                        Ja
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="rounded-lg px-2 py-1 text-xs text-text-muted hover:bg-surface"
-                      >
-                        Abbrechen
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => openEdit(b)}
-                        aria-label={`Beleg ${b.name} bearbeiten`}
-                        className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(b.id)}
-                        aria-label={`Beleg ${b.name} löschen`}
-                        className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-red-500"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </>
-                  )}
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "name", header: "Name" },
+                { key: "objekt", header: "Objekt" },
+                { key: "kategorie", header: "Kategorie" },
+                { key: "datum", header: "Belegdatum" },
+                { key: "status", header: "Status" },
+                { key: "betrag", header: "Betrag" },
+                { key: "aktionen", header: "" },
+              ]}
+            >
+              {belege.map((b) => (
+                <tr key={b.id} className="transition hover:bg-bg">
+                  <td className="px-4 py-3 font-medium">{b.name}</td>
+                  <td className="px-4 py-3 text-text-muted">{b.objekt?.name ?? "–"}</td>
+                  <td className="px-4 py-3 text-text-muted">{b.kategorie?.name ?? "–"}</td>
+                  <td className="px-4 py-3 text-text-muted">{new Date(b.belegdatum).toLocaleDateString("de-DE")}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`w-fit rounded-full px-2.5 py-1 text-xs ${
+                        b.status === BelegStatus.BEZAHLT ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"
+                      }`}
+                    >
+                      {b.status === BelegStatus.BEZAHLT ? "Bezahlt" : "Offen"}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 font-medium ${b.typ === BelegTyp.AUSGABE ? "text-red-500" : "text-emerald-500"}`}>
+                    {b.typ === BelegTyp.AUSGABE ? "−" : "+"}
+                    {b.betrag.toLocaleString("de-DE")} €
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      {confirmDeleteId === b.id ? (
+                        <>
+                          <span className="text-xs text-text-muted">Löschen?</span>
+                          <button
+                            onClick={() => {
+                              deleteBeleg.mutate(b.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10"
+                          >
+                            Ja
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="rounded-lg px-2 py-1 text-xs text-text-muted hover:bg-surface"
+                          >
+                            Abbrechen
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => openEdit(b)}
+                            aria-label={`Beleg ${b.name} bearbeiten`}
+                            className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(b.id)}
+                            aria-label={`Beleg ${b.name} löschen`}
+                            className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-red-500"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {belege.map((b) => (
+              <div key={b.id} className="space-y-2 px-4 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{b.name}</p>
+                    <p className="text-sm text-text-muted">
+                      {b.objekt?.name ?? "–"}
+                      {b.kategorie && ` · ${b.kategorie.name}`}
+                    </p>
+                  </div>
+                  <span className={`font-medium ${b.typ === BelegTyp.AUSGABE ? "text-red-500" : "text-emerald-500"}`}>
+                    {b.typ === BelegTyp.AUSGABE ? "−" : "+"}
+                    {b.betrag.toLocaleString("de-DE")} €
+                  </span>
                 </div>
-              </td>
-            </tr>
-          ))}
-        </DataTable>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                    <span>{new Date(b.belegdatum).toLocaleDateString("de-DE")}</span>
+                    <span
+                      className={`w-fit rounded-full px-2.5 py-1 text-xs ${
+                        b.status === BelegStatus.BEZAHLT ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"
+                      }`}
+                    >
+                      {b.status === BelegStatus.BEZAHLT ? "Bezahlt" : "Offen"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {confirmDeleteId === b.id ? (
+                      <>
+                        <span className="text-xs text-text-muted">Löschen?</span>
+                        <button
+                          onClick={() => {
+                            deleteBeleg.mutate(b.id);
+                            setConfirmDeleteId(null);
+                          }}
+                          className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10"
+                        >
+                          Ja
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="rounded-lg px-2 py-1 text-xs text-text-muted hover:bg-surface"
+                        >
+                          Abbrechen
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => openEdit(b)}
+                          aria-label={`Beleg ${b.name} bearbeiten`}
+                          className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(b.id)}
+                          aria-label={`Beleg ${b.name} löschen`}
+                          className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-red-500"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </MobileCardList>
+        </>
       )}
     </div>
   );

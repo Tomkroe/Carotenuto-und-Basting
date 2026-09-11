@@ -16,6 +16,7 @@ import { ApiError } from "@/lib/api";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const STATUS_META: Record<NebenkostenStatus, { label: string; icon: typeof FileEdit; className: string }> = {
@@ -185,59 +186,109 @@ export default function NebenkostenabrechnungenPage() {
       )}
 
       {gefilterteAbrechnungen.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "objekt", header: "Objekt" },
-            { key: "zeitraum", header: "Zeitraum" },
-            { key: "betrag", header: "Gesamtbetrag" },
-            { key: "status", header: "Status" },
-            { key: "aktionen", header: "" },
-          ]}
-        >
-          {gefilterteAbrechnungen.map((a) => {
-            const meta = STATUS_META[a.status];
-            const Icon = meta.icon;
-            return (
-              <tr
-                key={a.id}
-                onClick={() => router.push(`/nebenkostenabrechnungen/${a.id}`)}
-                className="cursor-pointer transition hover:bg-bg"
-              >
-                <td className="px-4 py-3 font-medium">{a.objekt.name}</td>
-                <td className="px-4 py-3 text-text-muted">
-                  <span className="flex items-center gap-1.5">
-                    <CalendarRange size={13} />
-                    {formatDate(a.zeitraumVon)} – {formatDate(a.zeitraumBis)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {(gesamtbetragProAbrechnung.get(a.id) ?? 0).toLocaleString("de-DE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  €
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
-                    <Icon size={13} />
-                    {meta.label}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={(e) => handleDuplicate(a.id, e)}
-                    disabled={duplicateAbrechnung.isPending}
-                    title="Abrechnung fürs nächste Jahr duplizieren"
-                    aria-label={`Abrechnung ${a.objekt.name} duplizieren`}
-                    className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text disabled:opacity-50"
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "objekt", header: "Objekt" },
+                { key: "zeitraum", header: "Zeitraum" },
+                { key: "betrag", header: "Gesamtbetrag" },
+                { key: "status", header: "Status" },
+                { key: "aktionen", header: "" },
+              ]}
+            >
+              {gefilterteAbrechnungen.map((a) => {
+                const meta = STATUS_META[a.status];
+                const Icon = meta.icon;
+                return (
+                  <tr
+                    key={a.id}
+                    onClick={() => router.push(`/nebenkostenabrechnungen/${a.id}`)}
+                    className="cursor-pointer transition hover:bg-bg"
                   >
-                    <Copy size={15} />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+                    <td className="px-4 py-3 font-medium">{a.objekt.name}</td>
+                    <td className="px-4 py-3 text-text-muted">
+                      <span className="flex items-center gap-1.5">
+                        <CalendarRange size={13} />
+                        {formatDate(a.zeitraumVon)} – {formatDate(a.zeitraumBis)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {(gesamtbetragProAbrechnung.get(a.id) ?? 0).toLocaleString("de-DE", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      €
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
+                        <Icon size={13} />
+                        {meta.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={(e) => handleDuplicate(a.id, e)}
+                        disabled={duplicateAbrechnung.isPending}
+                        title="Abrechnung fürs nächste Jahr duplizieren"
+                        aria-label={`Abrechnung ${a.objekt.name} duplizieren`}
+                        className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text disabled:opacity-50"
+                      >
+                        <Copy size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteAbrechnungen.map((a) => {
+              const meta = STATUS_META[a.status];
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={a.id}
+                  onClick={() => router.push(`/nebenkostenabrechnungen/${a.id}`)}
+                  className="cursor-pointer space-y-2 px-4 py-3 transition hover:bg-bg"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium">{a.objekt.name}</p>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
+                        <Icon size={13} />
+                        {meta.label}
+                      </span>
+                      <button
+                        onClick={(e) => handleDuplicate(a.id, e)}
+                        disabled={duplicateAbrechnung.isPending}
+                        title="Abrechnung fürs nächste Jahr duplizieren"
+                        aria-label={`Abrechnung ${a.objekt.name} duplizieren`}
+                        className="rounded-lg p-1.5 text-text-muted transition hover:bg-bg hover:text-text disabled:opacity-50"
+                      >
+                        <Copy size={15} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarRange size={13} />
+                      {formatDate(a.zeitraumVon)} – {formatDate(a.zeitraumBis)}
+                    </span>
+                    <span>
+                      {(gesamtbetragProAbrechnung.get(a.id) ?? 0).toLocaleString("de-DE", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      €
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </section>
   );
