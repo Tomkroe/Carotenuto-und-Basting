@@ -71,12 +71,12 @@ export default function DokumentePage() {
   const gesamtgroesse = (dokumente ?? []).reduce((sum, d) => sum + d.groesseBytes, 0);
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">Dokumente</h1>
         <button
           onClick={() => setShowKategorienManager((v) => !v)}
-          className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm text-text-muted transition hover:border-primary hover:text-primary"
+          className="flex items-center justify-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm text-text-muted transition hover:border-primary hover:text-primary"
         >
           <Settings2 size={15} /> Kategorien verwalten
         </button>
@@ -84,7 +84,7 @@ export default function DokumentePage() {
 
       {showKategorienManager && <DokumentKategorienManager />}
 
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard value={dokumente?.length ?? 0} label="Dokumente" />
         <StatCard value={formatSize(gesamtgroesse)} label="Gesamtgröße" />
         <StatCard

@@ -304,7 +304,7 @@ export default function EinheitDetailPage() {
   const miteigentumsanteil = eigentuemerschaftenFuerEinheit[0]?.anteilProzent ?? null;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <nav className="mb-4 flex items-center gap-2 text-sm text-text-muted">
         <Link href="/objekte" className="hover:text-primary">
           Objekte
@@ -376,7 +376,7 @@ export default function EinheitDetailPage() {
 
           {editingEckdaten ? (
             <form onSubmit={handleSaveEckdaten} className="mb-8 space-y-4 rounded-lg border border-border bg-surface p-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-sm text-text-muted" htmlFor="flaeche">
                     Fläche (m²)
@@ -678,7 +678,7 @@ export default function EinheitDetailPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input
                   type="text"
                   value={neuVorname}
@@ -710,7 +710,7 @@ export default function EinheitDetailPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="miKaltmiete">
                   Kaltmiete (€)
@@ -742,7 +742,7 @@ export default function EinheitDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="miBeginn">
                   Beginn
@@ -770,7 +770,7 @@ export default function EinheitDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="miKaution">
                   Kaution (€, optional)
@@ -867,7 +867,7 @@ export default function EinheitDetailPage() {
                 </select>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input
                   type="text"
                   value={neuEigVorname}
@@ -899,7 +899,7 @@ export default function EinheitDetailPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="eigHausgeldAnteil">
                   Hausgeld-Anteil (€)

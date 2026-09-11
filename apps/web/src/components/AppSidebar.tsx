@@ -46,7 +46,7 @@ const NAV_GROUPS = [
   },
 ];
 
-export function AppSidebar() {
+export function SidebarNavContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -59,9 +59,9 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface">
+    <>
       <div className="flex items-center px-5 py-4">
-        <Link href="/dashboard" className="text-lg font-semibold text-primary">
+        <Link href="/dashboard" className="text-lg font-semibold text-primary" onClick={onNavigate}>
           maklerprogram
         </Link>
       </div>
@@ -69,6 +69,7 @@ export function AppSidebar() {
       <div className="px-4 pb-3">
         <Link
           href="/vorgaenge"
+          onClick={onNavigate}
           className="flex items-center justify-center gap-1.5 rounded-full bg-primary py-2 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
           <Plus size={16} />
@@ -89,6 +90,7 @@ export function AppSidebar() {
                   <Link
                     key={href}
                     href={href}
+                    onClick={onNavigate}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition ${
                       active
                         ? "bg-primary/10 text-primary"
@@ -123,6 +125,14 @@ export function AppSidebar() {
           Abmelden
         </button>
       </div>
+    </>
+  );
+}
+
+export function AppSidebar() {
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-surface md:flex">
+      <SidebarNavContent />
     </aside>
   );
 }

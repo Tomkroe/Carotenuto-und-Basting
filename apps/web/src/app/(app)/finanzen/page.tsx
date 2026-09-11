@@ -39,12 +39,12 @@ export default function FinanzenPage() {
   }, [authError, router]);
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Finanzen</h1>
       </div>
 
-      <div className="mb-6 flex items-center gap-1 border-b border-border">
+      <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-border">
         {(
           [
             { key: "forderungen", label: "Mieten & Forderungen" },
@@ -112,15 +112,15 @@ function ForderungenTab() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="grid flex-1 grid-cols-3 gap-4">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard value={ueberfaellig.length} label="Überfällige Mieten" tone={ueberfaellig.length > 0 ? "danger" : "default"} />
           <StatCard value={offen.length} label="Offene Mieten" />
           <StatCard value={bezahlt.length} label="Bezahlte Mieten" tone="success" />
         </div>
         <button
           onClick={handleExport}
-          className="ml-4 flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
+          className="flex items-center justify-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface sm:ml-4"
         >
           <Download size={16} /> Exportieren
         </button>
@@ -329,12 +329,12 @@ function BelegeTab() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="grid grid-cols-2 gap-4">
           <StatCard value={`${summeEinnahmen.toLocaleString("de-DE")} €`} label="Einnahmen" tone="success" />
           <StatCard value={`${summeAusgaben.toLocaleString("de-DE")} €`} label="Ausgaben" />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleExport}
             className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
@@ -366,7 +366,7 @@ function BelegeTab() {
                 className="w-full rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="beleg-typ">
                   Art
@@ -397,7 +397,7 @@ function BelegeTab() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="beleg-datum">
                   Belegdatum
@@ -426,7 +426,7 @@ function BelegeTab() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="beleg-objekt">
                   Objekt (optional)

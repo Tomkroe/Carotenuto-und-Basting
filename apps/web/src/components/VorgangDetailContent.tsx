@@ -471,7 +471,7 @@ export function VorgangDetailContent({ vorgangId }: { vorgangId: string }) {
         )}
       </div>
 
-      <div className="mb-8 flex items-center gap-2">
+      <div className="mb-8 flex flex-wrap items-center gap-2">
         {Object.values(VorgangStatus).map((s) => {
           const meta = STATUS_META[s];
           const Icon = meta.icon;

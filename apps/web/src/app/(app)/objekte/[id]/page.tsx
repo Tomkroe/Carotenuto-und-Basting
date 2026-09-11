@@ -242,7 +242,7 @@ export default function ObjektDetailPage() {
   const istWeg = objekt.typ === ObjektTyp.WEG;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <nav className="mb-4 flex items-center gap-2 text-sm text-text-muted">
         <Link href="/objekte" className="hover:text-primary">
           Objekte
@@ -499,7 +499,7 @@ export default function ObjektDetailPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm text-text-muted" htmlFor="editKaltmiete">
                     Kaltmiete (€)
@@ -548,7 +548,7 @@ export default function ObjektDetailPage() {
 
               <div>
                 <p className="mb-1 text-sm text-text-muted">Abrechnungszeitraum für Betriebskosten (TT-MM)</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <input
                     type="text"
                     placeholder="01-01"
@@ -571,7 +571,7 @@ export default function ObjektDetailPage() {
               <div>
                 <p className="mb-2 text-sm font-medium">Bankkonto des Objekts (optional)</p>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <input
                       type="text"
                       placeholder="Kontoinhaber"

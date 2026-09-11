@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const einheitenVermietetPercent = einheitenGesamt > 0 ? (vermieteteEinheitIds.size / einheitenGesamt) * 100 : 0;
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-10">
+    <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Willkommen, {data.user.name}.</h1>

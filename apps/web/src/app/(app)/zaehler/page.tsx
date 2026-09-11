@@ -117,10 +117,10 @@ export default function ZaehlerPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">Zähler</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleExport}
             className="flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text transition hover:bg-surface"
@@ -143,7 +143,7 @@ export default function ZaehlerPage() {
       {showForm && (
         <Modal title="Neuer Zähler" onClose={() => setShowForm(false)}>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="typ">
                   Typ
@@ -175,7 +175,7 @@ export default function ZaehlerPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="objektId">
                   Objekt (optional)

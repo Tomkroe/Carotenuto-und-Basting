@@ -84,18 +84,18 @@ export default function NebenkostenabrechnungenPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">Nebenkostenabrechnungen</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
+          className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-fg transition hover:opacity-90"
         >
           <Plus size={16} /> Neue Abrechnung
         </button>
       </div>
 
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard value={abrechnungen?.length ?? 0} label="Abrechnungen" />
         <StatCard
           value={(abrechnungen ?? []).filter((a) => a.status === NebenkostenStatus.ENTWURF).length}
@@ -132,7 +132,7 @@ export default function NebenkostenabrechnungenPage() {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="zeitraumVon">
                   Zeitraum von

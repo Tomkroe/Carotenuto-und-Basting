@@ -181,7 +181,7 @@ export default function NebenkostenabrechnungDetailPage() {
 
         {editing && (
           <form onSubmit={handleSaveEdit} className="mb-6 space-y-4 rounded-lg border border-border bg-surface p-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-text-muted" htmlFor="editVon">
                   Zeitraum von
