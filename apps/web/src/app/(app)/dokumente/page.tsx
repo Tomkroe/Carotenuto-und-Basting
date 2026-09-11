@@ -19,6 +19,7 @@ import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
 import { DokumentKategorienManager } from "@/components/DokumentKategorienManager";
+import { MobileCardList } from "@/components/MobileCardList";
 import type { DokumentMitZuordnung } from "@maklerprogram/types";
 
 const ZUORDNUNG_ICON: Record<NonNullable<DokumentMitZuordnung["zugeordnetTyp"]>, typeof Building2> = {
@@ -118,104 +119,197 @@ export default function DokumentePage() {
       {dokumente && dokumente.length === 0 && <p className="text-text-muted">Noch keine Dokumente hochgeladen.</p>}
 
       {gefilterteDokumente.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "dokument", header: "Dokument" },
-            { key: "zuordnung", header: "Zugeordnet zu" },
-            { key: "kategorie", header: "Kategorie" },
-            { key: "hochgeladen", header: "Hochgeladen von" },
-            { key: "aktionen", header: "" },
-          ]}
-        >
-          {gefilterteDokumente.map((d) => {
-            const ZuordnungIcon = d.zugeordnetTyp ? ZUORDNUNG_ICON[d.zugeordnetTyp] : null;
-            return (
-              <tr key={d.id}>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <FileText size={17} className="shrink-0 text-text-muted" />
-                    <div>
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "dokument", header: "Dokument" },
+                { key: "zuordnung", header: "Zugeordnet zu" },
+                { key: "kategorie", header: "Kategorie" },
+                { key: "hochgeladen", header: "Hochgeladen von" },
+                { key: "aktionen", header: "" },
+              ]}
+            >
+              {gefilterteDokumente.map((d) => {
+                const ZuordnungIcon = d.zugeordnetTyp ? ZUORDNUNG_ICON[d.zugeordnetTyp] : null;
+                return (
+                  <tr key={d.id}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <FileText size={17} className="shrink-0 text-text-muted" />
+                        <div>
+                          <p className="text-sm font-medium">{d.dateiname}</p>
+                          <p className="text-xs text-text-muted">
+                            {formatSize(d.groesseBytes)} · {new Date(d.createdAt).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {d.zugeordnetZu ? (
+                        <span className="flex items-center gap-1.5">
+                          {ZuordnungIcon && <ZuordnungIcon size={13} />}
+                          {d.zugeordnetZu}
+                        </span>
+                      ) : (
+                        <span className="text-amber-500">Ohne Zuordnung</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={d.kategorie?.id ?? ""}
+                        onChange={(e) =>
+                          updateDokument.mutate({
+                            id: d.id,
+                            data: { kategorieId: e.target.value || null },
+                          })
+                        }
+                        className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
+                      >
+                        <option value="">Keine Kategorie</option>
+                        {kategorien?.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {k.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">{d.hochgeladenVon.name}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-3">
+                        <a
+                          href={`${API_URL}/dokumente/${d.id}/download`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-text-muted transition hover:text-primary"
+                          aria-label="Herunterladen"
+                        >
+                          <Download size={16} />
+                        </a>
+                        {pendingDelete === d.id ? (
+                          <div className="flex items-center gap-2 text-xs">
+                            <button
+                              onClick={() => {
+                                deleteDokument.mutate(d.id);
+                                setPendingDelete(null);
+                              }}
+                              className="rounded-full bg-red-500 px-2.5 py-1 text-white transition hover:opacity-90"
+                            >
+                              Löschen
+                            </button>
+                            <button
+                              onClick={() => setPendingDelete(null)}
+                              className="rounded-full border border-border px-2.5 py-1 text-text-muted"
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setPendingDelete(d.id)}
+                            className="text-text-muted transition hover:text-red-500"
+                            aria-label="Dokument löschen"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteDokumente.map((d) => {
+              const ZuordnungIcon = d.zugeordnetTyp ? ZUORDNUNG_ICON[d.zugeordnetTyp] : null;
+              return (
+                <div key={d.id} className="space-y-2 px-4 py-3">
+                  <div className="flex items-start gap-2.5">
+                    <FileText size={17} className="mt-0.5 shrink-0 text-text-muted" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{d.dateiname}</p>
                       <p className="text-xs text-text-muted">
                         {formatSize(d.groesseBytes)} · {new Date(d.createdAt).toLocaleDateString("de-DE")}
                       </p>
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {d.zugeordnetZu ? (
-                    <span className="flex items-center gap-1.5">
-                      {ZuordnungIcon && <ZuordnungIcon size={13} />}
-                      {d.zugeordnetZu}
-                    </span>
-                  ) : (
-                    <span className="text-amber-500">Ohne Zuordnung</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={d.kategorie?.id ?? ""}
-                    onChange={(e) =>
-                      updateDokument.mutate({
-                        id: d.id,
-                        data: { kategorieId: e.target.value || null },
-                      })
-                    }
-                    className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
-                  >
-                    <option value="">Keine Kategorie</option>
-                    {kategorien?.map((k) => (
-                      <option key={k.id} value={k.id}>
-                        {k.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-4 py-3 text-text-muted">{d.hochgeladenVon.name}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-3">
-                    <a
-                      href={`${API_URL}/dokumente/${d.id}/download`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-text-muted transition hover:text-primary"
-                      aria-label="Herunterladen"
-                    >
-                      <Download size={16} />
-                    </a>
-                    {pendingDelete === d.id ? (
-                      <div className="flex items-center gap-2 text-xs">
-                        <button
-                          onClick={() => {
-                            deleteDokument.mutate(d.id);
-                            setPendingDelete(null);
-                          }}
-                          className="rounded-full bg-red-500 px-2.5 py-1 text-white transition hover:opacity-90"
-                        >
-                          Löschen
-                        </button>
-                        <button
-                          onClick={() => setPendingDelete(null)}
-                          className="rounded-full border border-border px-2.5 py-1 text-text-muted"
-                        >
-                          Abbrechen
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setPendingDelete(d.id)}
-                        className="text-text-muted transition hover:text-red-500"
-                        aria-label="Dokument löschen"
+                    <div className="flex shrink-0 items-center gap-3">
+                      <a
+                        href={`${API_URL}/dokumente/${d.id}/download`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-text-muted transition hover:text-primary"
+                        aria-label="Herunterladen"
                       >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                        <Download size={16} />
+                      </a>
+                      {pendingDelete !== d.id && (
+                        <button
+                          onClick={() => setPendingDelete(d.id)}
+                          className="text-text-muted transition hover:text-red-500"
+                          aria-label="Dokument löschen"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+                  <p className="text-sm text-text-muted">
+                    {d.zugeordnetZu ? (
+                      <span className="flex items-center gap-1.5">
+                        {ZuordnungIcon && <ZuordnungIcon size={13} />}
+                        {d.zugeordnetZu}
+                      </span>
+                    ) : (
+                      <span className="text-amber-500">Ohne Zuordnung</span>
+                    )}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <select
+                      value={d.kategorie?.id ?? ""}
+                      onChange={(e) =>
+                        updateDokument.mutate({
+                          id: d.id,
+                          data: { kategorieId: e.target.value || null },
+                        })
+                      }
+                      className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-muted outline-none focus:border-primary"
+                    >
+                      <option value="">Keine Kategorie</option>
+                      {kategorien?.map((k) => (
+                        <option key={k.id} value={k.id}>
+                          {k.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-xs text-text-muted">{d.hochgeladenVon.name}</span>
+                  </div>
+                  {pendingDelete === d.id && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-text-muted">Dokument löschen?</span>
+                      <button
+                        onClick={() => {
+                          deleteDokument.mutate(d.id);
+                          setPendingDelete(null);
+                        }}
+                        className="rounded-full bg-red-500 px-2.5 py-1 text-white transition hover:opacity-90"
+                      >
+                        Löschen
+                      </button>
+                      <button
+                        onClick={() => setPendingDelete(null)}
+                        className="rounded-full border border-border px-2.5 py-1 text-text-muted"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </section>
   );
