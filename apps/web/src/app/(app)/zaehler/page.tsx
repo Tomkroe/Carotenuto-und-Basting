@@ -17,6 +17,7 @@ import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const TYP_META: Record<ZaehlerTyp, { label: string; icon: typeof Zap; className: string; einheit: string }> = {
@@ -259,68 +260,120 @@ export default function ZaehlerPage() {
       )}
 
       {gefilterteZaehler.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "nummer", header: "Zählernummer" },
-            { key: "objekt", header: "Objekt/Einheit" },
-            { key: "stand", header: "Letzter Zählerstand" },
-            { key: "verbrauch", header: "Letzter Verbrauch" },
-            { key: "versorger", header: "Versorger" },
-          ]}
-        >
-          {gefilterteZaehler.map((z) => {
-            const meta = TYP_META[z.typ];
-            const Icon = meta.icon;
-            const stand = standByZaehler.get(z.id);
-            return (
-              <tr
-                key={z.id}
-                onClick={() => router.push(`/zaehler/${z.id}`)}
-                className="cursor-pointer transition hover:bg-bg"
-              >
-                <td className="px-4 py-3">
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "nummer", header: "Zählernummer" },
+                { key: "objekt", header: "Objekt/Einheit" },
+                { key: "stand", header: "Letzter Zählerstand" },
+                { key: "verbrauch", header: "Letzter Verbrauch" },
+                { key: "versorger", header: "Versorger" },
+              ]}
+            >
+              {gefilterteZaehler.map((z) => {
+                const meta = TYP_META[z.typ];
+                const Icon = meta.icon;
+                const stand = standByZaehler.get(z.id);
+                return (
+                  <tr
+                    key={z.id}
+                    onClick={() => router.push(`/zaehler/${z.id}`)}
+                    className="cursor-pointer transition hover:bg-bg"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`flex h-8 w-8 items-center justify-center rounded-full ${meta.className}`}>
+                          <Icon size={15} />
+                        </span>
+                        <div>
+                          <p className="flex items-center gap-1.5 font-medium">
+                            {z.zaehlernummer}
+                            {z.hauptzaehler && <Star size={13} className="text-amber-500" />}
+                          </p>
+                          <p className="text-xs text-text-muted">{meta.label}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {z.einheit && `${z.einheit.objekt.name} · ${z.einheit.name}`}
+                      {!z.einheit && z.objekt && z.objekt.name}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {stand ? (
+                        <span className="flex items-center gap-1.5">
+                          <Gauge size={13} />
+                          {stand.letzter.toLocaleString("de-DE")} {meta.einheit}
+                        </span>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {stand?.verbrauch != null ? (
+                        <span className="flex items-center gap-1.5">
+                          <TrendingUp size={13} />
+                          {stand.verbrauch.toLocaleString("de-DE")} {meta.einheit}
+                        </span>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">{z.versorger ?? "–"}</td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteZaehler.map((z) => {
+              const meta = TYP_META[z.typ];
+              const Icon = meta.icon;
+              const stand = standByZaehler.get(z.id);
+              return (
+                <div
+                  key={z.id}
+                  onClick={() => router.push(`/zaehler/${z.id}`)}
+                  className="cursor-pointer space-y-2 px-4 py-3 transition hover:bg-bg"
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full ${meta.className}`}>
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${meta.className}`}>
                       <Icon size={15} />
                     </span>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 font-medium">
                         {z.zaehlernummer}
-                        {z.hauptzaehler && <Star size={13} className="text-amber-500" />}
+                        {z.hauptzaehler && <Star size={13} className="shrink-0 text-amber-500" />}
                       </p>
                       <p className="text-xs text-text-muted">{meta.label}</p>
                     </div>
                   </div>
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {z.einheit && `${z.einheit.objekt.name} · ${z.einheit.name}`}
-                  {!z.einheit && z.objekt && z.objekt.name}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {stand ? (
-                    <span className="flex items-center gap-1.5">
-                      <Gauge size={13} />
-                      {stand.letzter.toLocaleString("de-DE")} {meta.einheit}
-                    </span>
-                  ) : (
-                    "–"
+                  {(z.einheit || z.objekt) && (
+                    <p className="text-sm text-text-muted">
+                      {z.einheit ? `${z.einheit.objekt.name} · ${z.einheit.name}` : z.objekt?.name}
+                    </p>
                   )}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {stand?.verbrauch != null ? (
-                    <span className="flex items-center gap-1.5">
-                      <TrendingUp size={13} />
-                      {stand.verbrauch.toLocaleString("de-DE")} {meta.einheit}
-                    </span>
-                  ) : (
-                    "–"
-                  )}
-                </td>
-                <td className="px-4 py-3 text-text-muted">{z.versorger ?? "–"}</td>
-              </tr>
-            );
-          })}
-        </DataTable>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                    {stand && (
+                      <span className="flex items-center gap-1.5">
+                        <Gauge size={13} />
+                        {stand.letzter.toLocaleString("de-DE")} {meta.einheit}
+                      </span>
+                    )}
+                    {stand?.verbrauch != null && (
+                      <span className="flex items-center gap-1.5">
+                        <TrendingUp size={13} />
+                        {stand.verbrauch.toLocaleString("de-DE")} {meta.einheit}
+                      </span>
+                    )}
+                    {z.versorger && <span>{z.versorger}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </section>
   );

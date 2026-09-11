@@ -10,6 +10,7 @@ import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const OBJEKT_TYP_LABEL: Record<ObjektTyp, string> = {
@@ -76,6 +77,22 @@ export default function ObjektePage() {
       .filter((o) => kategorieFilter === "ALLE" || o.typ === kategorieFilter)
       .filter((o) => !query || [o.name, o.strasse, o.ort].some((f) => f.toLowerCase().includes(query)));
   }, [objekte, search, kategorieFilter]);
+
+  function renderSaldo(objektId: string) {
+    const saldo = saldoProObjekt.get(objektId);
+    if (!saldo || (saldo.ueberfaellig === 0 && saldo.offen === 0)) {
+      return <span className="text-text-muted">–</span>;
+    }
+    if (saldo.ueberfaellig > 0) {
+      return (
+        <span className="flex items-center gap-1.5 text-red-500">
+          <AlertTriangle size={13} />
+          Überfällig: {saldo.ueberfaellig.toLocaleString("de-DE")} €
+        </span>
+      );
+    }
+    return <span className="text-text-muted">Erwartet: {saldo.offen.toLocaleString("de-DE")} €</span>;
+  }
 
   function handleExport() {
     downloadCsv(
@@ -268,66 +285,87 @@ export default function ObjektePage() {
       )}
 
       {gefilterteObjekte.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "objekt", header: "Objekt" },
-            { key: "typ", header: "Typ" },
-            { key: "einheiten", header: "Einheiten" },
-            { key: "flaeche", header: "Gesamtfläche" },
-            { key: "saldo", header: "Miete" },
-          ]}
-        >
-          {gefilterteObjekte.map((o) => (
-            <tr
-              key={o.id}
-              onClick={() => router.push(`/objekte/${o.id}`)}
-              className="cursor-pointer transition hover:bg-bg"
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "objekt", header: "Objekt" },
+                { key: "typ", header: "Typ" },
+                { key: "einheiten", header: "Einheiten" },
+                { key: "flaeche", header: "Gesamtfläche" },
+                { key: "saldo", header: "Miete" },
+              ]}
             >
-              <td className="px-4 py-3">
+              {gefilterteObjekte.map((o) => (
+                <tr
+                  key={o.id}
+                  onClick={() => router.push(`/objekte/${o.id}`)}
+                  className="cursor-pointer transition hover:bg-bg"
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Building2 size={15} />
+                      </span>
+                      <div>
+                        <p className="font-medium">{o.name}</p>
+                        <p className="text-xs text-text-muted">
+                          {o.strasse} {o.hausnummer}, {o.plz} {o.ort}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-text-muted">{OBJEKT_TYP_LABEL[o.typ]}</td>
+                  <td className="px-4 py-3 text-text-muted">{einheitenProObjekt.get(o.id) ?? 0}</td>
+                  <td className="px-4 py-3 text-text-muted">
+                    {flaecheProObjekt.has(o.id) ? (
+                      <span className="flex items-center gap-1.5">
+                        <Ruler size={13} />
+                        {flaecheProObjekt.get(o.id)!.toLocaleString("de-DE")} m²
+                      </span>
+                    ) : (
+                      "–"
+                    )}
+                  </td>
+                  <td className="px-4 py-3">{renderSaldo(o.id)}</td>
+                </tr>
+              ))}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteObjekte.map((o) => (
+              <div
+                key={o.id}
+                onClick={() => router.push(`/objekte/${o.id}`)}
+                className="cursor-pointer space-y-2 px-4 py-3 transition hover:bg-bg"
+              >
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Building2 size={15} />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium">{o.name}</p>
                     <p className="text-xs text-text-muted">
                       {o.strasse} {o.hausnummer}, {o.plz} {o.ort}
                     </p>
                   </div>
                 </div>
-              </td>
-              <td className="px-4 py-3 text-text-muted">{OBJEKT_TYP_LABEL[o.typ]}</td>
-              <td className="px-4 py-3 text-text-muted">{einheitenProObjekt.get(o.id) ?? 0}</td>
-              <td className="px-4 py-3 text-text-muted">
-                {flaecheProObjekt.has(o.id) ? (
-                  <span className="flex items-center gap-1.5">
-                    <Ruler size={13} />
-                    {flaecheProObjekt.get(o.id)!.toLocaleString("de-DE")} m²
-                  </span>
-                ) : (
-                  "–"
-                )}
-              </td>
-              <td className="px-4 py-3">
-                {(() => {
-                  const saldo = saldoProObjekt.get(o.id);
-                  if (!saldo || (saldo.ueberfaellig === 0 && saldo.offen === 0)) {
-                    return <span className="text-text-muted">–</span>;
-                  }
-                  if (saldo.ueberfaellig > 0) {
-                    return (
-                      <span className="flex items-center gap-1.5 text-red-500">
-                        <AlertTriangle size={13} />
-                        Überfällig: {saldo.ueberfaellig.toLocaleString("de-DE")} €
-                      </span>
-                    );
-                  }
-                  return <span className="text-text-muted">Erwartet: {saldo.offen.toLocaleString("de-DE")} €</span>;
-                })()}
-              </td>
-            </tr>
-          ))}
-        </DataTable>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                  <span>{OBJEKT_TYP_LABEL[o.typ]}</span>
+                  <span>{einheitenProObjekt.get(o.id) ?? 0} Einheiten</span>
+                  {flaecheProObjekt.has(o.id) && (
+                    <span className="flex items-center gap-1.5">
+                      <Ruler size={13} />
+                      {flaecheProObjekt.get(o.id)!.toLocaleString("de-DE")} m²
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm">{renderSaldo(o.id)}</div>
+              </div>
+            ))}
+          </MobileCardList>
+        </>
       )}
     </section>
   );
