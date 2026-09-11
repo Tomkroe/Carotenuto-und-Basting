@@ -21,6 +21,7 @@ import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const KONTAKT_TYP_META: Record<
@@ -312,74 +313,129 @@ export default function KontaktePage() {
       )}
 
       {gefilterteKontakte.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "name", header: "Name" },
-            { key: "typ", header: "Typ" },
-            { key: "adresse", header: "Adresse" },
-            { key: "kontakt", header: "Kontakt" },
-          ]}
-        >
-          {gefilterteKontakte.map((k) => {
-            const meta = KONTAKT_TYP_META[k.typ];
-            const Icon = meta.icon;
-            const displayName = [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "name", header: "Name" },
+                { key: "typ", header: "Typ" },
+                { key: "adresse", header: "Adresse" },
+                { key: "kontakt", header: "Kontakt" },
+              ]}
+            >
+              {gefilterteKontakte.map((k) => {
+                const meta = KONTAKT_TYP_META[k.typ];
+                const Icon = meta.icon;
+                const displayName = [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
 
-            return (
-              <tr
-                key={k.id}
-                onClick={() => router.push(`/kontakte/${k.id}`)}
-                className="cursor-pointer transition hover:bg-bg"
-              >
-                <td className="px-4 py-3">
+                return (
+                  <tr
+                    key={k.id}
+                    onClick={() => router.push(`/kontakte/${k.id}`)}
+                    className="cursor-pointer transition hover:bg-bg"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`flex h-8 w-8 items-center justify-center rounded-full ${meta.className}`}>
+                          <Icon size={15} />
+                        </span>
+                        <div>
+                          <p className="font-medium">{displayName}</p>
+                          {(k.kreditorNr || k.debitorNr) && (
+                            <p className="text-xs text-text-muted">
+                              {k.kreditorNr && `Kreditor-ID: ${k.kreditorNr}`}
+                              {k.kreditorNr && k.debitorNr && " | "}
+                              {k.debitorNr && `Debitor-ID: ${k.debitorNr}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : meta.label}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {k.adresseStrasse || k.adresseOrt ? (
+                        <>
+                          {[k.adresseStrasse, k.adresseHausnummer].filter(Boolean).join(" ")}
+                          {(k.adresseStrasse || k.adresseHausnummer) && (k.adressePlz || k.adresseOrt) && <br />}
+                          {[k.adressePlz, k.adresseOrt].filter(Boolean).join(" ")}
+                        </>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      <div className="flex flex-col gap-0.5 text-xs">
+                        {k.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail size={12} /> {k.email}
+                          </span>
+                        )}
+                        {k.telefon && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={12} /> {k.telefon}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteKontakte.map((k) => {
+              const meta = KONTAKT_TYP_META[k.typ];
+              const Icon = meta.icon;
+              const displayName = [k.vorname, k.nachname].filter(Boolean).join(" ") || k.firma || "Unbenannt";
+
+              return (
+                <div
+                  key={k.id}
+                  onClick={() => router.push(`/kontakte/${k.id}`)}
+                  className="cursor-pointer space-y-2 px-4 py-3 transition hover:bg-bg"
+                >
                   <div className="flex items-center gap-2.5">
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full ${meta.className}`}>
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${meta.className}`}>
                       <Icon size={15} />
                     </span>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">{displayName}</p>
-                      {(k.kreditorNr || k.debitorNr) && (
-                        <p className="text-xs text-text-muted">
-                          {k.kreditorNr && `Kreditor-ID: ${k.kreditorNr}`}
-                          {k.kreditorNr && k.debitorNr && " | "}
-                          {k.debitorNr && `Debitor-ID: ${k.debitorNr}`}
-                        </p>
-                      )}
+                      <p className="text-xs text-text-muted">
+                        {k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : meta.label}
+                      </p>
                     </div>
                   </div>
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {k.typ === KontaktTyp.SONSTIGE && k.typBezeichnung ? k.typBezeichnung : meta.label}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {k.adresseStrasse || k.adresseOrt ? (
-                    <>
+                  {(k.adresseStrasse || k.adresseOrt) && (
+                    <p className="text-sm text-text-muted">
                       {[k.adresseStrasse, k.adresseHausnummer].filter(Boolean).join(" ")}
-                      {(k.adresseStrasse || k.adresseHausnummer) && (k.adressePlz || k.adresseOrt) && <br />}
+                      {(k.adresseStrasse || k.adresseHausnummer) && (k.adressePlz || k.adresseOrt) && ", "}
                       {[k.adressePlz, k.adresseOrt].filter(Boolean).join(" ")}
-                    </>
-                  ) : (
-                    "–"
+                    </p>
                   )}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  <div className="flex flex-col gap-0.5 text-xs">
-                    {k.email && (
-                      <span className="flex items-center gap-1">
-                        <Mail size={12} /> {k.email}
-                      </span>
-                    )}
-                    {k.telefon && (
-                      <span className="flex items-center gap-1">
-                        <Phone size={12} /> {k.telefon}
-                      </span>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+                  {(k.email || k.telefon || k.kreditorNr || k.debitorNr) && (
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                      {k.email && (
+                        <span className="flex items-center gap-1.5">
+                          <Mail size={13} /> {k.email}
+                        </span>
+                      )}
+                      {k.telefon && (
+                        <span className="flex items-center gap-1.5">
+                          <Phone size={13} /> {k.telefon}
+                        </span>
+                      )}
+                      {k.kreditorNr && <span>Kreditor-ID: {k.kreditorNr}</span>}
+                      {k.debitorNr && <span>Debitor-ID: {k.debitorNr}</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </section>
   );

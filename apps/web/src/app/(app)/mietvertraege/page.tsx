@@ -17,6 +17,7 @@ import { downloadCsv } from "@/lib/csvExport";
 import { StatCard } from "@/components/StatCard";
 import { SearchInput } from "@/components/SearchInput";
 import { DataTable } from "@/components/DataTable";
+import { MobileCardList } from "@/components/MobileCardList";
 import { Modal } from "@/components/Modal";
 
 const STATUS_META: Record<MietvertragStatus, { label: string; icon: typeof CalendarClock; className: string }> = {
@@ -131,6 +132,12 @@ export default function MietvertraegePage() {
     }
     return Array.from(groups.values());
   }, [einheiten]);
+
+  function mietstatusMeta(mietstatus: "vermietet" | "reserviert" | "leerstand") {
+    if (mietstatus === "vermietet") return STATUS_META[MietvertragStatus.AKTIV];
+    if (mietstatus === "reserviert") return { label: "Reserviert", icon: CalendarClock, className: "bg-blue-500/10 text-blue-500" };
+    return { label: "Leerstand", icon: CircleDashed, className: "bg-amber-500/10 text-amber-500" };
+  }
 
   function handleExport() {
     downloadCsv(
@@ -378,60 +385,94 @@ export default function MietvertraegePage() {
       )}
 
       {gefilterteEinheiten.length > 0 && (
-        <DataTable
-          columns={[
-            { key: "objekt", header: "Objekt" },
-            { key: "einheit", header: "Einheit" },
-            { key: "mieter", header: "Mieter" },
-            { key: "miete", header: "Kaltmiete" },
-            { key: "vertragsart", header: "Vertragsart" },
-            { key: "status", header: "Mietstatus" },
-          ]}
-        >
-          {gefilterteEinheiten.map(({ einheit, mietvertrag, mietstatus }) => {
-            const meta =
-              mietstatus === "vermietet"
-                ? STATUS_META[MietvertragStatus.AKTIV]
-                : mietstatus === "reserviert"
-                  ? { label: "Reserviert", icon: CalendarClock, className: "bg-blue-500/10 text-blue-500" }
-                  : { label: "Leerstand", icon: CircleDashed, className: "bg-amber-500/10 text-amber-500" };
-            const Icon = meta.icon;
-            return (
-              <tr
-                key={einheit.id}
-                onClick={() => mietvertrag && router.push(`/mietvertraege/${mietvertrag.id}`)}
-                className={mietvertrag ? "cursor-pointer transition hover:bg-bg" : "transition hover:bg-bg"}
-              >
-                <td className="px-4 py-3 text-text-muted">{einheit.objekt.name}</td>
-                <td className="px-4 py-3 font-medium">{einheit.name}</td>
-                <td className="px-4 py-3 text-text-muted">
-                  {mietvertrag ? kontaktName(mietvertrag.mieter) : "–"}
-                </td>
-                <td className="px-4 py-3">
-                  {mietvertrag ? (
+        <>
+          <div className="hidden md:block">
+            <DataTable
+              columns={[
+                { key: "objekt", header: "Objekt" },
+                { key: "einheit", header: "Einheit" },
+                { key: "mieter", header: "Mieter" },
+                { key: "miete", header: "Kaltmiete" },
+                { key: "vertragsart", header: "Vertragsart" },
+                { key: "status", header: "Mietstatus" },
+              ]}
+            >
+              {gefilterteEinheiten.map(({ einheit, mietvertrag, mietstatus }) => {
+                const meta = mietstatusMeta(mietstatus);
+                const Icon = meta.icon;
+                return (
+                  <tr
+                    key={einheit.id}
+                    onClick={() => mietvertrag && router.push(`/mietvertraege/${mietvertrag.id}`)}
+                    className={mietvertrag ? "cursor-pointer transition hover:bg-bg" : "transition hover:bg-bg"}
+                  >
+                    <td className="px-4 py-3 text-text-muted">{einheit.objekt.name}</td>
+                    <td className="px-4 py-3 font-medium">{einheit.name}</td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {mietvertrag ? kontaktName(mietvertrag.mieter) : "–"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {mietvertrag ? (
+                        <div>
+                          <p className="font-medium">{mietvertrag.kaltmiete.toLocaleString("de-DE")} €</p>
+                          <p className="text-xs text-text-muted">
+                            {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toLocaleString("de-DE")} € warm
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-text-muted">–</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {mietvertrag ? (mietvertrag.ende ? "Befristet" : "Unbefristet") : "–"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
+                        <Icon size={13} />
+                        {meta.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          </div>
+
+          <MobileCardList>
+            {gefilterteEinheiten.map(({ einheit, mietvertrag, mietstatus }) => {
+              const meta = mietstatusMeta(mietstatus);
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={einheit.id}
+                  onClick={() => mietvertrag && router.push(`/mietvertraege/${mietvertrag.id}`)}
+                  className={`space-y-2 px-4 py-3 transition hover:bg-bg ${mietvertrag ? "cursor-pointer" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium">{mietvertrag.kaltmiete.toLocaleString("de-DE")} €</p>
-                      <p className="text-xs text-text-muted">
-                        {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toLocaleString("de-DE")} € warm
-                      </p>
+                      <p className="font-medium">{einheit.name}</p>
+                      <p className="text-sm text-text-muted">{einheit.objekt.name}</p>
                     </div>
-                  ) : (
-                    <span className="text-text-muted">–</span>
+                    <span className={`flex w-fit shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
+                      <Icon size={13} />
+                      {meta.label}
+                    </span>
+                  </div>
+                  {mietvertrag && (
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
+                      <span>{kontaktName(mietvertrag.mieter)}</span>
+                      <span>
+                        {mietvertrag.kaltmiete.toLocaleString("de-DE")} € (
+                        {(mietvertrag.kaltmiete + mietvertrag.nebenkostenVorauszahlung).toLocaleString("de-DE")} € warm)
+                      </span>
+                      <span>{mietvertrag.ende ? "Befristet" : "Unbefristet"}</span>
+                    </div>
                   )}
-                </td>
-                <td className="px-4 py-3 text-text-muted">
-                  {mietvertrag ? (mietvertrag.ende ? "Befristet" : "Unbefristet") : "–"}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${meta.className}`}>
-                    <Icon size={13} />
-                    {meta.label}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </DataTable>
+                </div>
+              );
+            })}
+          </MobileCardList>
+        </>
       )}
     </section>
   );
